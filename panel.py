@@ -234,8 +234,8 @@ class MessagePanel(Panel):
     def _max_scroll(self):
         return max(0, len(self._log) - self._height)
 
-    def info(self, msg):
-        self._log.append(msg)
+    def info(self, msg, colour=tcod.white):
+        self._log.append((msg, colour))
         if self._scroll_y == self._max_scroll() - 1:
             self._scroll_y += 1
 
@@ -243,9 +243,12 @@ class MessagePanel(Panel):
         x, y = origin
         yy = 1
         console.print_(x=x, y=y, string="Messages")
-        for msg in self._log[self._scroll_y : self._height + self._scroll_y]:
+        old_fg = console.default_fg
+        for msg, colour in self._log[self._scroll_y : self._height + self._scroll_y]:
+            console.default_fg = colour
             console.print_(x=x, y=yy+y, string=msg)
             yy += 1
+        console.default_fg = old_fg
 
     def handle_event(self, event, menu):
         if not self._has_focus:

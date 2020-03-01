@@ -34,9 +34,9 @@ class MapDirector:
             mapp = Cave(30, 30)
             w,h=30,30
         elif area == 'TWO_ROOMS':
-            mapp = TwoRooms(30, 30)
+            mapp = TwoRooms(30, 30, room_size=9)
             w,h=30,30
-        n_items = random.randint(2, 10)
+        n_items = random.randint(2, 7)
         for _ in range(n_items):
             item = loot_director.ground_loot(area, level)
             x, y = random.randint(0, w-1), random.randint(0,h-1)
@@ -78,57 +78,57 @@ map_director = MapDirector()
 
 class MonsterDirector:
     monsters = [
-        monster.Slime.generator(tier=1),
-        # monster.Slime.generator(tier=2),
-        # monster.Slime.generator(tier=3),
-        # monster.Slime.generator(tier=4),
-        # monster.Slime.generator(tier=5),
-        monster.Mage.generator(tier=1),
-        # monster.Mage.generator(tier=2),
-        # monster.Mage.generator(tier=3),
-        # monster.Mage.generator(tier=4),
-        # monster.Mage.generator(tier=5),
-        monster.Golem.generator(tier=1),
-        # monster.Golem.generator(tier=2),
-        # monster.Golem.generator(tier=3),
-        # monster.Golem.generator(tier=4),
-        # monster.Golem.generator(tier=5),
+        monster.Slime,
+        # monster.Slime,
+        # monster.Slime,
+        # monster.Slime,
+        # monster.Slime,
+        monster.Mage,
+        # monster.Mage,
+        # monster.Mage,
+        # monster.Mage,
+        # monster.Mage,
+        monster.Golem,
+        # monster.Golem,
+        # monster.Golem,
+        # monster.Golem,
+        # monster.Golem,
     ]
     def __init__(self):
         pass
 
     def monster(self, area, level):
-        return random.choice(MonsterDirector.monsters)
+        return random.choice(MonsterDirector.monsters).generator(tier=1, level=level)
 
 monster_director = MonsterDirector()
 
 class LootDirector:
     items = [
-        loot.Healing.generator(tier=1),
-        # loot.Healing.generator(tier=2),
-        # loot.Healing.generator(tier=3),
-        # loot.Healing.generator(tier=4),
-        # loot.Healing.generator(tier=5),
-        # loot.Healing.generator(tier=6),
-        # loot.Healing.generator(tier=7),
-        loot.Refreshing.generator(tier=1),
-        # loot.Refreshing.generator(tier=2),
-        # loot.Refreshing.generator(tier=3),
-        # loot.Refreshing.generator(tier=4),
-        loot.Sword.generator(tier=1),
-        # loot.Sword.generator(tier=2),
-        # loot.Sword.generator(tier=3),
-        # loot.Sword.generator(tier=4),
-        # loot.Sword.generator(tier=5),
-        # loot.Sword.generator(tier=6),
-        # loot.Sword.generator(tier=7),
-        loot.Staff.generator(tier=1),
-        # loot.Staff.generator(tier=2),
-        # loot.Staff.generator(tier=3),
-        # loot.Staff.generator(tier=4),
-        # loot.Staff.generator(tier=5),
-        # loot.Staff.generator(tier=6),
-        # loot.Staff.generator(tier=7),
+        loot.Healing,
+        # loot.Healing,
+        # loot.Healing,
+        # loot.Healing,
+        # loot.Healing,
+        # loot.Healing,
+        # loot.Healing,
+        loot.Refreshing,
+        # loot.Refreshing,
+        # loot.Refreshing,
+        # loot.Refreshing,
+        loot.Sword,
+        # loot.Sword,
+        # loot.Sword,
+        # loot.Sword,
+        # loot.Sword,
+        # loot.Sword,
+        # loot.Sword,
+        loot.Staff,
+        # loot.Staff,
+        # loot.Staff,
+        # loot.Staff,
+        # loot.Staff,
+        # loot.Staff,
+        # loot.Staff,
         loot.Cleave,
         loot.Pierce,
         loot.Fire,
@@ -143,13 +143,47 @@ class LootDirector:
         loot.Blink,
     ]
 
+    weapons = [
+        loot.Staff,
+        loot.Sword,
+    ]
+
+    attack_skills = [
+        loot.Cleave,
+        loot.Pierce,
+        loot.Fire,
+        loot.Ice,
+        loot.Lightning,
+    ]
+
+    support_skills = [
+        loot.Paralyze,
+        loot.Poison,
+        loot.GuardBreak,
+        loot.MindBreak,
+        loot.Weaken,
+        loot.Stoneskin,
+        loot.Blink,
+    ]
+
     def __init__(self):
-        print(loot)
+        pass
 
     def monster_loot(self, area, level):
         return random.choice(LootDirector.items)
 
     def ground_loot(self, area, level):
+        roll = random.randint(0,500)
+        if roll < 150:
+            return loot.Healing.generator(tier=1)
+        elif roll < 300:
+            return loot.Refreshing.generator(tier=1)
+        elif roll < 400:
+            return random.choice(LootDirector.weapons).generator(tier=1)
+        elif roll < 450:
+            return random.choice(LootDirector.attack_skills)
+        else:
+            return random.choice(LootDirector.support_skills)
         return random.choice(LootDirector.items)
 
 loot_director = LootDirector()

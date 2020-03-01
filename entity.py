@@ -241,7 +241,8 @@ class SkillSpell(Usable):
             defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             itl_over_res = user_stats.get_value('itl') / target.component('Stats').get_value('res')
             amount = math.floor(itl_over_res * skill_stats.get_value('itl'))
-            message_panel.info("{}'s spell hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)))
+            colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
+            message_panel.info("{}'s spell hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
             dam = damage.Damage(user_entity, amount)
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
@@ -273,7 +274,8 @@ class SkillStatusSpell(Usable):
             itl_over_res = user_stats.get_value('itl') / max(1, target.component('Stats').get_value('res'))
             strength = math.floor(itl_over_res * skill_stats.get_value('itl'))
             dam = damage.WithStatusEffect(self._status_effect, strength, self._status_duration, damage.Damage(user_entity, 0))
-            message_panel.info("{} inflicts {} with {} for {} turns!".format(attacker_name, defender_name, self._status_effect, str(self._status_duration)))
+            colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
+            message_panel.info("{} inflicts {} with {} for {} turns!".format(attacker_name, defender_name, self._status_effect, str(self._status_duration)), colour)
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
         return False
@@ -299,7 +301,8 @@ class SkillMelee(Usable):
             defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             atk_over_dfn = user_stats.get_value('atk') / max(1, target.component('Stats').get_value('dfn'))
             amount = math.floor(atk_over_dfn * skill_stats.get_value('atk'))
-            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)))
+            colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
+            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
             dam = damage.Damage(user_entity, amount)
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
@@ -409,11 +412,12 @@ class Stats(Component):
 
     def increase_level(self, num):
         self.add_base('max_exp', num * 100)
+        self.add_base('level', num)
         for stat in Stats.primary_stats:
             print(self.add_base(stat, self._base_stats[stat] * num * 0.2))
 
     def grant_exp(self, exp):
-        message_panel.info("Gained {} EXP".format(exp))
+        message_panel.info("Gained {} EXP".format(exp), tcod.yellow)
         self.add_base('cur_exp', exp)
         levels = 0
         while self.get_base('cur_exp') >= self.get_base('max_exp'):
@@ -422,17 +426,21 @@ class Stats(Component):
             self.increase_level(1)
             levels += 1
         if levels > 0:
-            message_panel.info("Level up!" + ("" if levels == 1 else " x{}".format(levels)))
-            message_panel.info("You are now level {}".format(self.get_base('level')))
+            message_panel.info("Level up!" + ("" if levels == 1 else " x{}".format(levels)), tcod.yellow)
+            message_panel.info("You are now level {}".format(self.get_base('level') + 1), tcod.yellow)
 
     def handle_event(self, entity, event, resident_map):
         event_type, event_data = event
+        ent_name = entity.component('NPC').name() if entity.component('NPC') else 'Player'
         removed = []
         if event_type == 'NPC_TURN':
             if self.has_status('REGEN'):
                 self.apply_healing(entity, resident_map, 0.02 * self.get_value('max_hp'))
             if self.has_status('POISON'):
-                self.deal_damage(entity, resident_map, 0.05 * self.get_value('max_hp'))
+                psn_dam_amt = math.floor(0.05 * self.get_value('max_hp'))
+                colour = tcod.red if ent_name == 'Player' else tcod.white
+                message_panel.info("{} takes damage from poison ".format(ent_name, amt), colour)
+                self.deal_damage(entity, resident_map, psn_dam_amt)
             for status_effect in self._status_effects.keys():
                 self._status_effects[status_effect] -= 1
                 if self._status_effects[status_effect] == 0:
@@ -444,14 +452,22 @@ class Stats(Component):
                 resident_map.entities().transform(lambda ent: ent.handle_event(status_lost_event, resident_map))
 
     def _lost_status(self, entity, resident_map, status):
+        ent_name = entity.component('NPC').name() if entity.component('NPC') else 'Player'
+        colour = tcod.red if ent_name == 'Player' else tcod.white
         if status == 'WEAKEN':
+            message_panel.info("{} is no longer weakened".format(ent_name), colour)
             self.add_multiplicative_modifier('atk', 0.5)
-        if status == 'GUARD_BREAK':
+        elif status == 'GUARD_BREAK':
+            message_panel.info("{} is no longer guard-broken".format(ent_name), colour)
             self.add_multiplicative_modifier('dfn', 0.3)
-        if status == 'MIND_BREAK':
+        elif status == 'MIND_BREAK':
+            message_panel.info("{} is no longer mind-broken".format(ent_name), colour)
             self.add_multiplicative_modifier('res', 0.3)
-        if status == 'STONESKIN':
+        elif status == 'STONESKIN':
+            message_panel.info("{} no longer has stoneskin".format(ent_name), colour)
             self.sub_multiplicative_modifier('dfn', 0.5)
+        else:
+            message_panel.info("{} no longer has ".format(ent_name, status), colour)
 
     def has_status(self, status):
         return status in self._status_effects
@@ -661,7 +677,8 @@ class Combat(Component):
             my_stats = entity.component('Stats')
             dam = damage.Damage(entity, 20 * my_stats.get_value('atk') / stats.get_value('dfn'))
             amount = dam.inflict(ent, resident_map)
-            settings.message_panel.info("{} lunges at {}! ({} HP)".format(attacker_name, defender_name, str(int(amount))))
+            colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
+            settings.message_panel.info("{} lunges at {}! ({} HP)".format(attacker_name, defender_name, str(int(amount))), colour)
 
         resident_map.entities().without_components(['Item']).with_all_components(['Stats', 'Position']).where(lambda ent : ent.component('Position').get() == position).transform(do_attack)
 
