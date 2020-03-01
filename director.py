@@ -154,6 +154,7 @@ class LootDirector:
         loot.Fire,
         loot.Ice,
         loot.Lightning,
+        loot.RollingStab,
     ]
 
     support_skills = [
@@ -164,6 +165,7 @@ class LootDirector:
         loot.Weaken,
         loot.Stoneskin,
         loot.Blink,
+        loot.Dash,
     ]
 
     def __init__(self):

@@ -119,7 +119,7 @@ class TargetFormation(TargetMode):
         self._formation = formation
         self._directional = directional
         self._max_range = max_range
-        self._targets = {}
+        self._targets = {'x': (EntityListView([]), [])}
 
     def targets(self, group='x'):
         if group not in self._targets:
@@ -306,7 +306,7 @@ class SkillMelee(Usable):
             dam = damage.Damage(user_entity, amount)
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
-        obstructing_ents, mov_pos = self._targeting_mode.targets(group='U')
+        obstructing_ents, mov_pos = self._targeting_mode.targets(group='P')
         if mov_pos is not None:
             new_pos = mov_pos[0]
             if mapp.is_passable_for(user_entity, new_pos):

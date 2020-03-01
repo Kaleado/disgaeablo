@@ -134,9 +134,12 @@ class PlaceFormationOnMapPanel(MapPanel):
     def _render(self, console, origin):
         super()._render(console, origin)
         x, y = origin
-        in_formation = self._formation.positions_in_formation(self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation)
+        in_formation = self._formation.positions_in_formation(self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation, group='x')
         for (xx, yy) in in_formation:
-            console.fg[x + xx][y+yy] = tcod.red
+            console.fg[x+xx][y+yy] = tcod.red
+        in_user_movement = self._formation.positions_in_formation(self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation, group='P')
+        for (xx, yy) in in_user_movement:
+            console.fg[x+xx][y+yy] = tcod.green
 
     def _done(self, menu):
         menu.resolve((self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation))
@@ -147,7 +150,7 @@ class PlaceFormationOnMapPanel(MapPanel):
         event_type, event_data = event
         cx, cy = self._cursor_position
         if event_type == "TCOD" and event_data.type == "KEYDOWN":
-            lshift_held = event_data.mod & tcod.event.KMOD_LSHIFT == 1
+            lshift_held = (event_data.mod & tcod.event.KMOD_LSHIFT == 1)
             if event_data.sym == tcod.event.K_KP_8:
                 PlaceFormationOnMapPanel._cursor_rotation = 0
                 if not lshift_held:
@@ -169,8 +172,7 @@ class PlaceFormationOnMapPanel(MapPanel):
                     self._done(menu)
                 return True
             if event_data.sym == tcod.event.K_r:
-                PlaceFormationOnMapPanel._cursor_rotation = (PlaceFormationOnMapPanel._cursor_rotation - \
-                                                             (1 if lshift_held else -1)) % 4
+                PlaceFormationOnMapPanel._cursor_rotation = (PlaceFormationOnMapPanel._cursor_rotation - (1 if lshift_held else -1)) % 4
                 return True
             if event_data.sym == tcod.event.K_e:
                 self._done(menu)
@@ -194,31 +196,34 @@ class PlaceFormationOnMapPanel(MapPanel):
         event_type, event_data = event
         cx, cy = self._cursor_position
         w, h = self._map.dimensions()
-        if event_type == "TCOD":
+        if event_type == "TCOD" and event_data.type == "KEYDOWN":
+            lshift_held = (event_data.mod & tcod.event.KMOD_LSHIFT == 1)
             new_cursor_position = self._cursor_position
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_8:
+            if event_data.sym == tcod.event.K_KP_8:
                 new_cursor_position = cx, max(cy - 1, 0)
-            elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_2:
+            elif event_data.sym == tcod.event.K_KP_2:
                 new_cursor_position = cx, min(cy + 1, h - 1)
-            elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_6:
+            elif event_data.sym == tcod.event.K_KP_6:
                 new_cursor_position = min(cx + 1, w - 1), cy
-            elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_4:
+            elif event_data.sym == tcod.event.K_KP_4:
                 new_cursor_position = max(cx - 1, 0), cy
-            elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_7:
+            elif event_data.sym == tcod.event.K_KP_7:
                 new_cursor_position = max(cx - 1, 0), max(cy - 1, 0)
-            elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_9:
+            elif event_data.sym == tcod.event.K_KP_9:
                 new_cursor_position = min(cx + 1, w - 1), max(cy - 1, 0)
-            elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_1:
+            elif event_data.sym == tcod.event.K_KP_1:
                 new_cursor_position = max(cx - 1, 0), min(cy + 1, h - 1)
-            elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_3:
+            elif event_data.sym == tcod.event.K_KP_3:
                 new_cursor_position = min(cx + 1, w - 1), min(cy + 1, h - 1)
+            elif event_data.sym == tcod.event.K_r:
+                PlaceFormationOnMapPanel._cursor_rotation = (PlaceFormationOnMapPanel._cursor_rotation - (1 if lshift_held else -1)) % 4
             elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_r:
                 self._cursor_rotation = (PlaceFormationOnMapPanel._cursor_rotation - \
-                                         (1 if event_data.mod & tcod.event.KMOD_LSHIFT == 1 else -1)) % 4
+                                        (1 if lshift_held else -1)) % 4
+                return True
             elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_e:
                 menu.resolve((self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation))
                 return True
-            print(new_cursor_position)
             if self._max_range is None or self._user_position is None or distance(self._user_position, new_cursor_position) <= self._max_range:
                 self._cursor_position = new_cursor_position
             return True

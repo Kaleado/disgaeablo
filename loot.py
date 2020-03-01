@@ -141,7 +141,7 @@ def Dash(position):
                                                    ['.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats(),
+        'Stats': entity.Stats({}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Skill: Dash'),
