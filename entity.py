@@ -288,6 +288,31 @@ class ForceTargetSelf(Usable):
         pos = user_entity.component('Position').get()
         self._usable.use_on_targets(entity, user_entity, mapp, [(user_entity, pos)], menu)
 
+class SkillRanged(Usable):
+    def __init__(self, formation, max_range):
+        super().__init__(ExcludeItems(TargetFormation(formation, directional=False, max_range=max_range)))
+
+    def use_on_targets(self, entity, user_entity, mapp, targets, menu):
+        global message_panel
+        skill_stats = entity.component('Stats')
+        user_stats = user_entity.component('Stats')
+        def damage_target(target):
+            attacker_name = user_entity.component('NPC').name() if user_entity.component('NPC') is not None else 'Player'
+            defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
+            atk_over_dfn = user_stats.get_value('atk') / max(1, target.component('Stats').get_value('dfn'))
+            amount = math.floor(atk_over_dfn * skill_stats.get_value('atk'))
+            colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
+            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
+            dam = damage.Damage(user_entity, amount)
+            dam.inflict(target, mapp)
+        targets[0].transform(damage_target)
+        obstructing_ents, mov_pos = self._targeting_mode.targets(group='P')
+        if mov_pos is not None:
+            new_pos = mov_pos[0]
+            if mapp.is_passable_for(user_entity, new_pos):
+                user_entity.component('Position').set(new_pos[0], new_pos[1])
+        return False
+
 class SkillMelee(Usable):
     def __init__(self, formation):
         super().__init__(ExcludeItems(TargetFormation(formation, True)))
@@ -435,11 +460,11 @@ class Stats(Component):
         removed = []
         if event_type == 'NPC_TURN':
             if self.has_status('REGEN'):
-                self.apply_healing(entity, resident_map, 0.02 * self.get_value('max_hp'))
+                self.apply_healing(entity, resident_map, 0.05 * self.get_value('max_hp'))
             if self.has_status('POISON'):
-                psn_dam_amt = math.floor(0.05 * self.get_value('max_hp'))
+                psn_dam_amt = math.floor(0.10 * self.get_value('max_hp'))
                 colour = tcod.red if ent_name == 'Player' else tcod.white
-                message_panel.info("{} takes damage from poison ".format(ent_name, psn_dam_amt), colour)
+                message_panel.info("{} takes damage from poison ({} HP)".format(ent_name, psn_dam_amt), colour)
                 self.deal_damage(entity, resident_map, psn_dam_amt)
             for status_effect in self._status_effects.keys():
                 self._status_effects[status_effect] -= 1

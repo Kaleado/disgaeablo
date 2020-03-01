@@ -38,4 +38,7 @@ settings.current_map._entities = {
     })
 }
 
+settings.current_map.add_entity(loot.AerialDrop((6,5)))
+settings.current_map.add_entity(loot.RollingStab((7,5)))
+
 settings.root_menu.run(settings.root_console)
