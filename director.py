@@ -11,7 +11,7 @@ class MapDirector:
     def _area_for_floor(self, floor):
        if floor == 0:
            return 'TOWN'
-       if floor == 2:
+       if floor % 5 == 0:
            return 'TWO_ROOMS'
        elif floor > 0 and floor < 10:
            return 'CAVE'
