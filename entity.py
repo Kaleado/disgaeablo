@@ -439,7 +439,7 @@ class Stats(Component):
             if self.has_status('POISON'):
                 psn_dam_amt = math.floor(0.05 * self.get_value('max_hp'))
                 colour = tcod.red if ent_name == 'Player' else tcod.white
-                message_panel.info("{} takes damage from poison ".format(ent_name, amt), colour)
+                message_panel.info("{} takes damage from poison ".format(ent_name, psn_dam_amt), colour)
                 self.deal_damage(entity, resident_map, psn_dam_amt)
             for status_effect in self._status_effects.keys():
                 self._status_effects[status_effect] -= 1

@@ -6,6 +6,8 @@ import util
 import uuid
 import loot
 
+LEVEL_PC_STAT_INC = 0.07
+
 class Slime:
     base_stats = {
         'max_hp': 120,
@@ -30,7 +32,7 @@ class Slime:
         actual_stats = util.copy_dict(Slime.base_stats)
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
             actual_stats[stat] = (Slime.base_stats[stat] + Slime.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return Entity(str(uuid.uuid4()), components={
@@ -67,7 +69,7 @@ class Mage:
         actual_stats = util.copy_dict(Mage.base_stats)
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
             actual_stats[stat] = (Mage.base_stats[stat] + Mage.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return Entity(str(uuid.uuid4()), components={
@@ -104,7 +106,7 @@ class Golem:
         actual_stats = util.copy_dict(Golem.base_stats)
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
             actual_stats[stat] = (Golem.base_stats[stat] + Golem.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return Entity(str(uuid.uuid4()), components={
