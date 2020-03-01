@@ -108,11 +108,12 @@ class Staff:
 ##################################################### SKLLS
 
 def Cleave(position):
-    formation = Formation(origin=(1,1), formation=[['x','x','x'],
+    formation = Formation(origin=(1,2), formation=[['x','x','x'],
+                                                   ['x','x','x'],
                                                    ['.','.',',']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 25}),
+        'Stats': entity.Stats({'atk': 30}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Skill: Cleave'),
@@ -120,23 +121,52 @@ def Cleave(position):
     })
 
 def Pierce(position):
-    formation = Formation(origin=(0,2), formation=[['x'],
+    formation = Formation(origin=(0,4), formation=[['x'],
+                                                   ['x'],
+                                                   ['x'],
                                                    ['x'],
                                                    ['.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 35}),
+        'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Skill: Pierce'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
 
+def Dash(position):
+    formation = Formation(origin=(0,2), formation=[['P'],
+                                                   ['.'],
+                                                   ['.']])
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats(),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='&', colour=tcod.green),
+        'Item': entity.Item('Skill: Dash'),
+        'Usable': entity.Cost(sp=10, usable=entity.SkillMelee(formation)),
+    })
+
+def RollingStab(position):
+    formation = Formation(origin=(0,2), formation=[['P'],
+                                                   ['.'],
+                                                   ['x'],
+                                                   ['.']])
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'atk': 20}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='&', colour=tcod.green),
+        'Item': entity.Item('Skill: Rolling stab'),
+        'Usable': entity.Cost(sp=10, usable=entity.SkillMelee(formation)),
+    })
+
 def Fire(position):
     formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 35}),
+        'Stats': entity.Stats({'itl': 30}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Fire'),
@@ -144,10 +174,10 @@ def Fire(position):
     })
 
 def Ice(position):
-    formation = Formation(origin=(1,0), formation=[['x', 'x', 'x']])
+    formation = Formation(origin=(1,0), formation=[['x', 'x', 'x', 'x', 'x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 30}),
+        'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Ice'),
@@ -155,12 +185,12 @@ def Ice(position):
     })
 
 def Lightning(position):
-    formation = Formation(origin=(1,1), formation=[['.', 'x', '.'],
+    formation = Formation(origin=(1,1), formation=[['x', 'x', 'x'],
                                                    ['x', 'x', 'x'],
-                                                   ['.', 'x', '.']])
+                                                   ['x', 'x', 'x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 25}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Lightning'),
@@ -168,58 +198,71 @@ def Lightning(position):
     })
 
 def Paralyze(position):
-    formation = Formation(origin=(0,0), formation=[['x']])
+    formation = Formation(origin=(0,0), formation=[['x','x'],
+                                                   ['x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Paralyze'),
-        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'PARALYZE', 5)),
+        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'PARALYZE', 6)),
     })
 
 def Poison(position):
-    formation = Formation(origin=(0,0), formation=[['x']])
+    formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Poison'),
-        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'POISON', 5)),
+        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'POISON', 8)),
     })
 
 def GuardBreak(position):
-    formation = Formation(origin=(0,0), formation=[['x']])
+    formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Guard Break'),
-        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'GUARD_BREAK', 5)),
+        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'GUARD_BREAK', 12)),
     })
 
 def MindBreak(position):
-    formation = Formation(origin=(0,0), formation=[['x']])
+    formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Mind Break'),
-        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'MIND_BREAK', 5)),
+        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'MIND_BREAK', 12)),
     })
 
 def Weaken(position):
-    formation = Formation(origin=(0,0), formation=[['x']])
+    formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x'],
+                                                   ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Weaken'),
-        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'WEAKEN', 5)),
+        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'WEAKEN', 12)),
     })
 
 def Stoneskin(position):
@@ -230,7 +273,7 @@ def Stoneskin(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Spell: Stoneskin'),
-        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'STONESKIN', 5)),
+        'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'STONESKIN', 10)),
     })
 
 def Blink(position):
