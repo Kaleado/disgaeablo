@@ -11,8 +11,8 @@ import math
 
 class Healing:
     base_stats = {
-        'max_hp': 700,
-        'cur_hp': 700,
+        'max_hp': 50,
+        'cur_hp': 50,
     }
     names = ['Rosemary', 'Sage', 'Daffodil', 'Nettle', 'Chamomile', 'Ginseng', 'Valerian']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.red]
