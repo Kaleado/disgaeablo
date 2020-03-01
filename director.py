@@ -13,9 +13,9 @@ class MapDirector:
            return 'TOWN'
        if floor == 2:
            return 'TWO_ROOMS'
-       elif floor > 0 and floor < 15:
+       elif floor > 0 and floor < 10:
            return 'CAVE'
-       elif floor >= 15 and floor < 30:
+       elif floor >= 10 and floor < 20:
            return 'ROOMS'
        else:
            return 'GRID'
