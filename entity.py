@@ -237,10 +237,11 @@ class SkillSpell(Usable):
         skill_stats = entity.component('Stats')
         user_stats = user_entity.component('Stats')
         def damage_target(target):
+            attacker_name = user_entity.component('NPC').name() if user_entity.component('NPC') is not None else 'Player'
+            defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             itl_over_res = user_stats.get_value('itl') / target.component('Stats').get_value('res')
-            message_panel.info(str(itl_over_res))
             amount = math.floor(itl_over_res * skill_stats.get_value('itl'))
-            message_panel.info("Dealt " + str(amount) + " damage")
+            message_panel.info("{}'s spell hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)))
             dam = damage.Damage(user_entity, amount)
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
@@ -267,10 +268,12 @@ class SkillStatusSpell(Usable):
         skill_stats = entity.component('Stats')
         user_stats = user_entity.component('Stats')
         def damage_target(target):
+            attacker_name = user_entity.component('NPC').name() if user_entity.component('NPC') is not None else 'Player'
+            defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             itl_over_res = user_stats.get_value('itl') / max(1, target.component('Stats').get_value('res'))
-            message_panel.info(str(itl_over_res))
             strength = math.floor(itl_over_res * skill_stats.get_value('itl'))
             dam = damage.WithStatusEffect(self._status_effect, strength, self._status_duration, damage.Damage(user_entity, 0))
+            message_panel.info("{} inflicts {} with {} for {} turns!".format(attacker_name, defender_name, self._status_effect, str(self._status_duration)))
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
         return False
@@ -292,10 +295,11 @@ class SkillMelee(Usable):
         skill_stats = entity.component('Stats')
         user_stats = user_entity.component('Stats')
         def damage_target(target):
+            attacker_name = user_entity.component('NPC').name() if user_entity.component('NPC') is not None else 'Player'
+            defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             atk_over_dfn = user_stats.get_value('atk') / max(1, target.component('Stats').get_value('dfn'))
-            message_panel.info(str(atk_over_dfn))
             amount = math.floor(atk_over_dfn * skill_stats.get_value('atk'))
-            message_panel.info("Dealt " + str(amount) + " damage")
+            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)))
             dam = damage.Damage(user_entity, amount)
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
@@ -419,6 +423,7 @@ class Stats(Component):
             levels += 1
         if levels > 0:
             message_panel.info("Level up!" + ("" if levels == 1 else " x{}".format(levels)))
+            message_panel.info("You are now level {}".format(self.get_base('level')))
 
     def handle_event(self, entity, event, resident_map):
         event_type, event_data = event
@@ -644,16 +649,19 @@ class Combat(Component):
 
     def attack(self, entity, resident_map, position):
         def do_attack(ent):
+            attacker_name = 'Player'
+            defender_name = 'Player'
             npc = entity.component('NPC')
+            ent_npc = ent.component('NPC')
             if npc is not None:
-                settings.message_panel.info(npc.name() + " lunges!")
-            else:
-                settings.message_panel.info("You lunge!")
+                attacker_name = npc.name()
+            if ent_npc is not None:
+                defender_name = ent_npc.name()
             stats = ent.component('Stats')
             my_stats = entity.component('Stats')
-            dam = damage.Damage(entity, 15 * my_stats.get_value('atk') / stats.get_value('dfn'))
+            dam = damage.Damage(entity, 20 * my_stats.get_value('atk') / stats.get_value('dfn'))
             amount = dam.inflict(ent, resident_map)
-            message_panel.info("Dealt " + str(amount) + " damage")
+            settings.message_panel.info("{} lunges at {}! ({} HP)".format(attacker_name, defender_name, str(int(amount))))
 
         resident_map.entities().without_components(['Item']).with_all_components(['Stats', 'Position']).where(lambda ent : ent.component('Position').get() == position).transform(do_attack)
 

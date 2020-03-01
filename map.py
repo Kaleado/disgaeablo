@@ -50,7 +50,7 @@ class Map:
                     console.default_fg = tcod.gray
                     fg_changed = True
                 if self._position_threatened((x - origin[0], y - origin[1])):
-                    console.default_fg = tcod.orange
+                    console.default_fg = tcod.yellow
                     fg_changed = True
                 console.print_(x=x, y=y, string=tile)
                 if fg_changed:
