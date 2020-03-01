@@ -76,7 +76,7 @@ class Sword:
             return entity.Entity(str(uuid.uuid4()), components={
                 'Stats': entity.Stats(actual_stats),
                 'Position': entity.Position(x, y),
-                'Equipment': entity.Equipment(),
+                'Equipment': entity.Equipment(mod_slots=[None]),
                 'Render': entity.Render(character='/', colour=Sword.colours[tier-1]),
                 'Item': entity.Item(Sword.names[tier-1]),
             })
@@ -297,4 +297,84 @@ def Blink(position):
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Blink'),
         'Usable': entity.Cost(sp=15, usable=entity.TeleportToPosition(4)),
+    })
+
+def AtkMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'atk': 7}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.peach),
+        'Item': entity.Item('ATK Up'),
+        'Mod': entity.Mod(),
+    })
+
+def DfnMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'dfn': 7}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.peach),
+        'Item': entity.Item('DFN Up'),
+        'Mod': entity.Mod(),
+    })
+
+def ItlMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'itl': 7}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.peach),
+        'Item': entity.Item('ITL Up'),
+        'Mod': entity.Mod(),
+    })
+
+def ResMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'res': 7}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.peach),
+        'Item': entity.Item('RES Up'),
+        'Mod': entity.Mod(),
+    })
+
+def SpdMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'spd': 7}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.peach),
+        'Item': entity.Item('SPD Up'),
+        'Mod': entity.Mod(),
+    })
+
+def HitMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'hit': 7}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.peach),
+        'Item': entity.Item('HIT Up'),
+        'Mod': entity.Mod(),
+    })
+
+def MeleeLifeDrainMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'lifedrain': 10}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.red),
+        'Item': entity.Item('Melee LifeDrain Up'),
+        'Mod': entity.Mod(),
+    })
+
+def MeleeDeathblowMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'deathblow': 2}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.crimson),
+        'Item': entity.Item('Melee Deathblow Up'),
+        'Mod': entity.Mod(),
     })

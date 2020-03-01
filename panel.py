@@ -185,6 +185,8 @@ class PlaceFormationOnMapPanel(MapPanel):
         return False
 
     def handle_event(self, event, menu):
+        under_cursor = settings.current_map.entities().where(lambda e: e.component('Position').get() == self._cursor_position).as_list()
+        menu.panel('EntityStatsPanel')[1].set_entity(None if len(under_cursor) == 0 else under_cursor[0])
         if self._directional:
             return self._handle_event_directional(event, menu)
         else:
@@ -299,7 +301,7 @@ class EquipmentSlotPanel(Panel):
             for slot in slots[slot_type]:
                 if self._selection_index == index and self._has_focus:
                     console.default_fg = tcod.orange
-                console.print_(x=x, y=yy+y, string=slot_type if slot is None else slot.component('Item').name())
+                console.print_(x=x, y=yy+y, string="({})".format(slot_type) if slot is None else slot.component('Item').name())
                 console.default_fg = old_fg
                 yy += 1
                 index += 1
@@ -312,12 +314,89 @@ class EquipmentSlotPanel(Panel):
         slots_size = sum(len(v) for v in equipment_slots.slots().values())
         event_type, event_data = event
         if event_type == "TCOD" and slots_size > 0:
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_w:
+            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_8:
                 self._selection_index = max(self._selection_index - 1, 0)
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_s:
+            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_2:
                 self._selection_index = min(self._selection_index + 1, slots_size-1)
         item_ent = self._selected_entity()
         menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
+        menu.panel('ModSlotPanel')[1].set_entity(item_ent)
+
+class ModSlotPanel(Panel):
+    def __init__(self, equipment_entity):
+        super().__init__()
+        self._equipment_entity = equipment_entity
+        self._selection_index = 0
+
+    def set_entity(self, equipment_entity):
+        self._equipment_entity = equipment_entity
+
+    def _render(self, console, origin):
+        x, y = origin
+        yy = 1
+        old_fg = console.default_fg
+        console.print_(x=x, y=y, string='Mod slots')
+        if self._equipment_entity is None:
+            return
+        slots = self._equipment_entity.component('Equipment').mod_slots()
+        index = 0
+        for mod in slots:
+            if self._selection_index == index and self._has_focus:
+                console.default_fg = tcod.orange
+            if mod is not None:
+                mod.component('Render').render(mod, console, (x, yy+y))
+            console.print_(x=x+2, y=yy+y, string="(Empty)" if mod is None else mod.component('Item').name())
+            console.default_fg = old_fg
+            yy += 1
+            index += 1
+
+    def _selected_entity(self):
+        equipment = self._equipment_entity.component('Equipment')
+        mod_slots = equipment.mod_slots()
+        return mod_slots[self._selection_index]
+
+    def handle_event(self, event, menu):
+        if not self._has_focus or not self._equipment_entity:
+            return False
+        equipment = self._equipment_entity.component('Equipment')
+        mod_slots = equipment.mod_slots()
+        event_type, event_data = event
+        if event_type == "TCOD" and len(mod_slots) > 0:
+            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_8:
+                self._selection_index = max(self._selection_index - 1, 0)
+            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_2:
+                self._selection_index = min(self._selection_index + 1, len(mod_slots)-1)
+        item_ent = self._selected_entity()
+        if menu.panel('EntityStatsPanel') is not None:
+            menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
+
+class ChooseModSlotPanel(ModSlotPanel):
+    def __init__(self, equipment_entity):
+        super().__init__(equipment_entity)
+
+    def _finalise_selection(self, menu):
+        menu.resolve(self._selection_index)
+
+    def _cancel_selection(self, menu):
+        menu.resolve()
+
+    def handle_event(self, event, menu):
+        if not self._has_focus:
+            return False
+        super().handle_event(event, menu)
+        if self._equipment_entity is None:
+            print("ChooseModSlotPanel: equipment_entity is None")
+            return
+        equipment = self._equipment_entity.component('Equipment')
+        slots = equipment.mod_slots()
+        event_type, event_data = event
+        if event_type == "TCOD" and event_data.type == "KEYDOWN":
+           if event_data.sym == tcod.event.K_e:
+               self._finalise_selection(menu)
+               return
+           elif event_data.sym == tcod.event.K_ESCAPE:
+               self._cancel_selection(menu)
+
 
 class ChooseEquipmentSlotPanel(EquipmentSlotPanel):
     def _finalise_selection(self, menu):
@@ -373,10 +452,12 @@ class InventoryPanel(Panel):
 
     def focus(self):
         super().focus()
+        settings.root_menu.panel('EntityStatsPanel')[1].set_entity(None)
         self._bindings_disabled = True
 
     def unfocus(self):
         super().unfocus()
+        settings.root_menu.panel('EntityStatsPanel')[1].set_entity(None)
         self._bindings_disabled = False
 
     def set_entity_ident(self, entity_ident):
@@ -450,49 +531,114 @@ class InventoryPanel(Panel):
                 return True
        
         if not self._has_focus:
-            menu.panel('EntityStatsPanel')[1].set_entity(None)
             return False
+       
         entity = self._mapp.entity(self._entity_ident)
         inventory = entity.component('Inventory')
         inventory_size = inventory.items().size()
-        if event_type == "TCOD" and inventory_size > 0:
+        if event_type == "TCOD" and event_data.type == "KEYDOWN" and inventory_size > 0:
             items = inventory.items().as_list()
             item_ent = items[self._selection_index] if self._selection_index < len(items) else None
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_8:
+            if event_data.sym == tcod.event.K_KP_8:
                 self._selection_index = max(self._selection_index - 1, 0)
+                item_ent = items[self._selection_index] if self._selection_index < len(items) else None
+                settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
                 return True
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_2:
+            elif event_data.sym == tcod.event.K_KP_2:
                 self._selection_index = min(self._selection_index + 1, inventory_size-1)
+                item_ent = items[self._selection_index] if self._selection_index < len(items) else None
+                settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
                 return True
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_d:
+            elif event_data.sym == tcod.event.K_d:
                 item_ent = inventory.items().as_list()[self._selection_index]
                 position = entity.component("Position").get()
                 self._remove_binding_for(self._selection_index)
                 inventory.drop(entity, item_ent, self._mapp, position)
                 self._selection_index = max(self._selection_index - 1, 0)
                 return True
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_f:
+            elif event_data.sym == tcod.event.K_f:
                 res = self._use_item(self._selection_index, menu)
                 if res:
                     self._selection_index -= 1
                 return True
-            if event_data.type == "KEYDOWN" and event_data.sym >= tcod.event.K_0 and event_data.sym <= tcod.event.K_9:
+            elif event_data.sym >= tcod.event.K_0 and event_data.sym <= tcod.event.K_9:
                 key = event_data.sym
                 self.set_key_bind(key, self._selection_index)
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_e:
-                if item_ent.component('Equipment') is None:
-                    return False
-                equipment_slots = entity.component('EquipmentSlots')
-                choose_slot_menu = Menu({
-                    'ChooseEquipmentSlotPanel': ((0,0), ChooseEquipmentSlotPanel(self._entity_ident, self._mapp))
-                }, ['ChooseEquipmentSlotPanel'])
-                chosen_slot = choose_slot_menu.run(self._console)
-                if chosen_slot is not None:
-                    equipment_slots.equip(entity, item_ent, chosen_slot, self._mapp)
-                    self._selection_index -= 1
-                return True
+            if event_data.sym == tcod.event.K_e:
+                if item_ent.component('Equipment') is not None:
+                    equipment_slots = entity.component('EquipmentSlots')
+                    choose_slot_menu = Menu({
+                        'ChooseEquipmentSlotPanel': ((0,0), ChooseEquipmentSlotPanel(self._entity_ident, self._mapp))
+                    }, ['ChooseEquipmentSlotPanel'])
+                    chosen_slot = choose_slot_menu.run(self._console)
+                    if chosen_slot is not None:
+                        equipment_slots.equip(entity, item_ent, chosen_slot, self._mapp)
+                        self._selection_index -= 1
+                    return True
+                elif item_ent.component('Mod') is not None:
+                    choose_item_menu = Menu({
+                        'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, ['Equipment']))
+                    }, ['ChooseItemPanel'])
+                    chosen_item = choose_item_menu.run(self._console)
+                    if chosen_item is None:
+                        return True
+                    choose_mod_slot_menu = Menu({
+                        'ChooseModSlotPanel': ((0,0), ChooseModSlotPanel(chosen_item))
+                    }, ['ChooseModSlotPanel'])
+                    chosen_slot_index = choose_mod_slot_menu.run(self._console)
+                    if chosen_slot_index is None:
+                        return True
+                    chosen_item.component('Equipment').attach_mod(chosen_item, item_ent, chosen_slot_index, self._mapp)
+                    self._remove_binding_for(self._selection_index)
+                    inventory.remove(item_ent)
+                    return True
+                return False
+            item_ent = items[self._selection_index] if self._selection_index < len(items) else None
             menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
         return False
+
+class ChooseItemPanel(Panel):
+    def __init__(self, entity, with_all_components=[]):
+        self._entity = entity
+        self._with_all_components = with_all_components
+        self._selection_index = 0
+
+    def handle_event(self, event, menu):
+        event_type, event_data = event
+        inventory = self._entity.component('Inventory')
+        inventory_size = inventory.items().size()
+        eligible_items = inventory.items().with_all_components(self._with_all_components).as_list()
+        if event_type == "TCOD" and event_data.type == "KEYDOWN" and inventory_size > 0:
+            selected_item = inventory.items().as_list()[self._selection_index]
+            if event_data.sym == tcod.event.K_KP_8:
+                self._selection_index = max(self._selection_index - 1, 0)
+                return True
+            elif event_data.sym == tcod.event.K_KP_2:
+                self._selection_index = min(self._selection_index + 1, inventory_size-1)
+                return True
+            elif event_data.sym == tcod.event.K_e and selected_item in eligible_items:
+                menu.resolve(selected_item)
+                return True
+            elif event_data.sym == tcod.event.K_ESCAPE:
+                menu.resolve()
+                return True
+        return False
+
+    def _render(self, console, origin):
+        old_fg = console.default_fg
+        inventory = self._entity.component('Inventory')
+        items = inventory.items().as_list()
+        x, y = origin
+        yy = 1
+        index = 0
+        console.print_(x=x, y=y, string="Choose an item")
+        for item in items:
+            console.default_fg = tcod.cyan if self._has_focus and self._selection_index == index else console.default_fg
+            item.component('Render').render(item, console, (x,yy+y))
+            console.print_(x=x+2, y=yy+y, string=item.component('Item').name())
+            console.default_fg = old_fg
+            yy += 1
+            index += 1
 
 class StatsPanel(Panel):
     def __init__(self, mapp, entity_ident):

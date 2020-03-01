@@ -172,6 +172,16 @@ class Usable(Component):
     def __init__(self, targeting_mode):
         self._targeting_mode = targeting_mode
 
+    def _apply_damage_decorators(self, entity, target, dam):
+        my_stats = entity.component('Stats')
+        lifedrain = my_stats.get_value('lifedrain')
+        deathblow = my_stats.get_value('deathblow')
+        if deathblow > 0:
+            dam = damage.Chance(deathblow / 100, damage.WithDeathblow(dam), dam)
+        if lifedrain > 0:
+            dam = damage.WithLifeDrain(dam, lifedrain / 100)
+        return dam
+
     def choose_targets(self, entity, user_entity, mapp, menu):
         return self._targeting_mode.choose_targets(user_entity, entity, mapp, menu)
 
@@ -245,7 +255,7 @@ class SkillSpell(Usable):
             message_panel.info("{}'s spell hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
             dam = damage.Damage(user_entity, amount)
             dam.inflict(target, mapp)
-        targets[0].transform(damage_target)
+        targets[0].where(lambda e: e != user_entity).transform(damage_target)
         return False
 
 class TeleportToPosition(Usable):
@@ -304,8 +314,9 @@ class SkillRanged(Usable):
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
             message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
             dam = damage.Damage(user_entity, amount)
+            dam = self._apply_damage_decorators(user_entity, target, dam)
             dam.inflict(target, mapp)
-        targets[0].transform(damage_target)
+        targets[0].where(lambda e: e != user_entity).transform(damage_target)
         obstructing_ents, mov_pos = self._targeting_mode.targets(group='P')
         if mov_pos is not None:
             new_pos = mov_pos[0]
@@ -329,6 +340,7 @@ class SkillMelee(Usable):
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
             message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
             dam = damage.Damage(user_entity, amount)
+            dam = self._apply_damage_decorators(user_entity, target, dam)
             dam.inflict(target, mapp)
         targets[0].transform(damage_target)
         obstructing_ents, mov_pos = self._targeting_mode.targets(group='P')
@@ -337,7 +349,11 @@ class SkillMelee(Usable):
             if mapp.is_passable_for(user_entity, new_pos):
                 user_entity.component('Position').set(new_pos[0], new_pos[1])
         return False
-   
+
+class Mod(Component):
+    def __init__(self):
+        super().__init__()
+
 class Item(Component):
     def __init__(self, name):
         self._name = name
@@ -346,14 +362,41 @@ class Item(Component):
         return self._name
 
 class Equipment(Component):
-    def __init__(self, mods=[]):
-        self._mods = mods
+    def __init__(self, mod_slots=[]):
+        self._mod_slots = mod_slots
 
     def handle_event(self, entity, event, resident_map):
-        for mod in self._mods:
+        for mod in self._mod_slots:
             if mod is None:
                 continue
             mod.handle_event(mod, event, resident_map)
+
+    def attach_mod(self, item_entity, mod_entity, index, resident_map):
+        if index < 0 or index >= len(self._mod_slots):
+            return
+        if self._mod_slots[index] is not None:
+            self.detach_mod(item_entity, mod_entity, index, resident_map)
+        mod_stats = mod_entity.component('Stats')
+        item_stats = item_entity.component('Stats')
+        for stat in Stats.all_stats:
+            stat_value = mod_stats.get_value(stat)
+            item_stats.add_additive_modifier(stat, stat_value)
+        self._mod_slots[index] = mod_entity
+        return
+
+    def mod_slots(self):
+        return self._mod_slots
+
+    def detach_mod(self, item_entity, index, resident_map):
+        if index < 0 or index >= len(self._mod_slots) or self._mod_slots[index] is None:
+            return
+        mod_entity = self._mod_slots[index]
+        mod_stats = mod_entity.component('Stats')
+        item_stats = item_entity.component('Stats')
+        for stat in Stats.all_stats:
+            stat_value = mod_stats.get_value(stat)
+            item_stats.sub_additive_bonus(stat_value)
+        return
 
     def equip_to(self, item_entity, to_entity, resident_map):
         item_stats = item_entity.component('Stats')
@@ -412,6 +455,8 @@ class Stats(Component):
         'cur_exp',
         'max_exp',
         'level',
+        'deathblow',
+        'lifedrain',
     ])
 
     """
@@ -688,6 +733,16 @@ class Combat(Component):
     def __init__(self):
         pass
 
+    def _apply_damage_decorators(self, entity, target, dam):
+        my_stats = entity.component('Stats')
+        lifedrain = my_stats.get_value('lifedrain')
+        deathblow = my_stats.get_value('deathblow')
+        if deathblow > 0:
+            dam = damage.Chance(deathblow / 100, damage.WithDeathblow(dam), dam)
+        if lifedrain > 0:
+            dam = damage.WithLifeDrain(dam, lifedrain / 100)
+        return dam
+
     def attack(self, entity, resident_map, position):
         def do_attack(ent):
             attacker_name = 'Player'
@@ -701,6 +756,7 @@ class Combat(Component):
             stats = ent.component('Stats')
             my_stats = entity.component('Stats')
             dam = damage.Damage(entity, 20 * my_stats.get_value('atk') / stats.get_value('dfn'))
+            dam = self._apply_damage_decorators(entity, ent, dam)
             amount = dam.inflict(ent, resident_map)
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
             settings.message_panel.info("{} lunges at {}! ({} HP)".format(attacker_name, defender_name, str(int(amount))), colour)

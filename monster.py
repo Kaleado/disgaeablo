@@ -88,7 +88,7 @@ class Golem:
         'cur_hp': 180,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 20,
+        'atk': 22,
         'dfn': 12,
         'itl': 18,
         'res': 10,
@@ -100,7 +100,7 @@ class Golem:
     colours = [tcod.orange, tcod.yellow, tcod.light_gray, tcod.crimson, tcod.cyan]
 
     def Stone():
-        return SkillSpell(formation=Formation(origin=(1,1), formation=[['x','x','x'],['x','x','x'],['x','x','x']]))
+        return SkillRanged(formation=Formation(origin=(1,1), formation=[['x','x','x'],['x','x','x'],['x','x','x']]), max_range=10)
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Golem.base_stats)
