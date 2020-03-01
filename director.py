@@ -54,7 +54,7 @@ class MapDirector:
         return mapp
 
     def difficulty(self):
-        return 3 + self._current_floor * 2
+        return 3 + self._current_floor * 5
 
     def move_to_floor(self, floor):
         self._current_floor = floor

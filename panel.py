@@ -331,6 +331,7 @@ class ChooseEquipmentSlotPanel(EquipmentSlotPanel):
                     menu.resolve((slot_type, slot_index))
                     return
                 index += 1
+                slot_index += 1
         menu.resolve()
 
     def _cancel_selection(self, menu):
