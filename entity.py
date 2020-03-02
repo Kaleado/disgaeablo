@@ -142,7 +142,7 @@ class TargetFormation(TargetMode):
                 formation_position = player_pos
         else:
             for rot in range(4):
-                if self._formation.in_formation(user_pos, formation_position, rot):
+                if self._formation.in_formation(formation_position, player_pos, rot):
                     formation_rotation = rot
                     break
         for group in self._formation.groups():
@@ -375,7 +375,7 @@ class Equipment(Component):
         if index < 0 or index >= len(self._mod_slots):
             return
         if self._mod_slots[index] is not None:
-            self.detach_mod(item_entity, index, resident_map)
+            self.detach_mod(item_entity, mod_entity, index, resident_map)
         mod_stats = mod_entity.component('Stats')
         item_stats = item_entity.component('Stats')
         for stat in Stats.all_stats:

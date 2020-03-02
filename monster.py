@@ -137,7 +137,8 @@ class Scorpion:
     colours = [tcod.orange, tcod.light_green, tcod.purple, tcod.dark_blue, tcod.crimson]
 
     def Sting():
-        return SkillMelee(formation=Formation(origin=(0,0), formation=[['.','.','x']]))
+        return SkillMelee(formation=Formation(origin=(1,1), formation=[['x','x','x'],
+                                                                       ['.','.','.']]))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Scorpion.base_stats)
@@ -152,7 +153,7 @@ class Scorpion:
                 'Render': Render(character='S', colour=Scorpion.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Scorpion.names[tier-1]),
-                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=5))
+                'AI': Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=1)
             })
         return gen
 
@@ -174,10 +175,10 @@ class Spider:
     colours = [tcod.green, tcod.red, tcod.purple, tcod.yellow, tcod.crimson]
 
     def Web():
-        return SkillStatusSpell(formation=Formation(origin=(0,0), formation=[['x','x','x'],
+        return SkillStatusSpell(status_effect='PARALYZE', status_duration=8,
+                                formation=Formation(origin=(1,1), formation=[['x','x','x'],
                                                                              ['x','x','x'],
-                                                                             ['x','x','x']],
-                                                    status_effect='PARALYZE', status_duration=8))
+                                                                             ['x','x','x']]))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Spider.base_stats)
@@ -192,6 +193,6 @@ class Spider:
                 'Render': Render(character='P', colour=Spider.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Spider.names[tier-1]),
-                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=5))
+                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=2))
             })
         return gen
