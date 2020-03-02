@@ -11,6 +11,8 @@ class MapDirector:
     def _area_for_floor(self, floor):
        if floor == 0:
            return 'TOWN'
+       if floor == 1:
+           return 'CORRIDORS'
        if floor % 5 == 0:
            return 'TWO_ROOMS'
        elif floor > 0 and floor < 10:
@@ -35,6 +37,9 @@ class MapDirector:
             w,h=30,30
         elif area == 'TWO_ROOMS':
             mapp = TwoRooms(30, 30, room_size=9)
+            w,h=30,30
+        elif area == 'CORRIDORS':
+            mapp = Corridors(30, 30, room_size=5)
             w,h=30,30
         n_items = random.randint(2, 7)
         for _ in range(n_items):

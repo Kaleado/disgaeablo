@@ -244,3 +244,35 @@ class TwoRooms(Map):
             self._terrain[y][x+xx] = '.'
         x, y = width // 2 + corridor_len // 2 + room_size // 2, height // 2 - 1
         self._terrain[y][x] = '>'
+
+class Corridors(Map):
+    def __init__(self, width, height, room_size=5, map_group=None):
+        super().__init__(map_group)
+        self._width = width
+        self._height = height
+        self._room_size = room_size
+        self._terrain = [['#' for x in range(width)] for y in range(height)]
+        # Room
+        # rx, ry = width // 2 - room_size // 2, height // 2 - room_size // 2
+        rx, ry = random.randint(1, width-2 - room_size), random.randint(1, height-2 - room_size)
+        for xx in range(room_size):
+            for yy in range(room_size):
+                self._terrain[ry+yy][rx+xx] = '.'
+        # Corridors
+        corr = [ry] + [random.randint(1, width-2) for _ in range(random.randint(3, 5))]
+        c = corr[0]
+        for x in range(width):
+            self._terrain[c][x] = '.'
+        c = corr[1]
+        for y in range(width):
+            self._terrain[y][c] = '.'
+        for c in corr[2:]:
+            if random.randint(0,1) == 0:
+                for x in range(width):
+                    self._terrain[c][x] = '.'
+            else:
+                for y in range(width):
+                    self._terrain[y][c] = '.'
+        # Stairs
+        x, y = width // 2, height // 2
+        self._terrain[y][x] = '>'
