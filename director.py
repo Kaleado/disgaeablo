@@ -168,6 +168,17 @@ class LootDirector:
         loot.Dash,
     ]
 
+    mods = [
+        loot.AtkMod,
+        loot.DfnMod,
+        loot.ItlMod,
+        loot.ResMod,
+        loot.SpdMod,
+        loot.HitMod,
+        loot.MeleeLifeDrainMod,
+        loot.MeleeDeathblowMod,
+    ]
+
     def __init__(self):
         pass
 
@@ -176,10 +187,12 @@ class LootDirector:
 
     def ground_loot(self, area, level):
         roll = random.randint(0,500)
-        if roll < 150:
+        if roll < 100:
             return loot.Healing.generator(tier=1)
-        elif roll < 300:
+        elif roll < 200:
             return loot.Refreshing.generator(tier=1)
+        elif roll < 300:
+            return random.choice(LootDirector.mods)
         elif roll < 400:
             return random.choice(LootDirector.weapons).generator(tier=1)
         elif roll < 450:

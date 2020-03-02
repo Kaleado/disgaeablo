@@ -336,7 +336,7 @@ class ModSlotPanel(Panel):
         yy = 1
         old_fg = console.default_fg
         console.print_(x=x, y=y, string='Mod slots')
-        if self._equipment_entity is None:
+        if self._equipment_entity is None or self._equipment_entity.component('Equipment') is None:
             return
         slots = self._equipment_entity.component('Equipment').mod_slots()
         index = 0
@@ -453,11 +453,13 @@ class InventoryPanel(Panel):
     def focus(self):
         super().focus()
         settings.root_menu.panel('EntityStatsPanel')[1].set_entity(None)
+        settings.root_menu.panel('ModSlotPanel')[1].set_entity(None)
         self._bindings_disabled = True
 
     def unfocus(self):
         super().unfocus()
         settings.root_menu.panel('EntityStatsPanel')[1].set_entity(None)
+        settings.root_menu.panel('ModSlotPanel')[1].set_entity(None)
         self._bindings_disabled = False
 
     def set_entity_ident(self, entity_ident):
@@ -543,11 +545,13 @@ class InventoryPanel(Panel):
                 self._selection_index = max(self._selection_index - 1, 0)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
+                settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
                 return True
             elif event_data.sym == tcod.event.K_KP_2:
                 self._selection_index = min(self._selection_index + 1, inventory_size-1)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
+                settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
                 return True
             elif event_data.sym == tcod.event.K_d:
                 item_ent = inventory.items().as_list()[self._selection_index]
@@ -559,7 +563,7 @@ class InventoryPanel(Panel):
             elif event_data.sym == tcod.event.K_f:
                 res = self._use_item(self._selection_index, menu)
                 if res:
-                    self._selection_index -= 1
+                    self._selection_index = max(self._selection_index - 1, 0)
                 return True
             elif event_data.sym >= tcod.event.K_0 and event_data.sym <= tcod.event.K_9:
                 key = event_data.sym
@@ -596,6 +600,7 @@ class InventoryPanel(Panel):
                 return False
             item_ent = items[self._selection_index] if self._selection_index < len(items) else None
             menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
+            menu.panel('ModSlotPanel')[1].set_entity(item_ent)
         return False
 
 class ChooseItemPanel(Panel):

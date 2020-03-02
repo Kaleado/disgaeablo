@@ -6,6 +6,7 @@ import entity
 import uuid
 import tcod
 import math
+import random
 
 ##################################################### CONSUMABLES
 
@@ -76,7 +77,7 @@ class Sword:
             return entity.Entity(str(uuid.uuid4()), components={
                 'Stats': entity.Stats(actual_stats),
                 'Position': entity.Position(x, y),
-                'Equipment': entity.Equipment(mod_slots=[None]),
+                'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='/', colour=Sword.colours[tier-1]),
                 'Item': entity.Item(Sword.names[tier-1]),
             })
@@ -99,7 +100,7 @@ class Staff:
             return entity.Entity(str(uuid.uuid4()), components={
                 'Stats': entity.Stats(actual_stats),
                 'Position': entity.Position(x, y),
-                'Equipment': entity.Equipment(),
+                'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='|', colour=Staff.colours[tier-1]),
                 'Item': entity.Item(Staff.names[tier-1]),
             })

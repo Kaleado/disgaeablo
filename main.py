@@ -38,11 +38,11 @@ settings.current_map._entities = {
     })
 }
 
-settings.current_map.add_entity(loot.AerialDrop((6,5)))
-settings.current_map.add_entity(loot.RollingStab((7,5)))
-settings.current_map.add_entity(loot.AtkMod((8,5)))
-settings.current_map.add_entity(loot.Sword.generator(tier=1)((9,5)))
-settings.current_map.add_entity(loot.MeleeLifeDrainMod((10,5)))
-settings.current_map.add_entity(loot.MeleeDeathblowMod((11,5)))
+# settings.current_map.add_entity(loot.AerialDrop((6,5)))
+# settings.current_map.add_entity(loot.RollingStab((7,5)))
+# settings.current_map.add_entity(loot.AtkMod((8,5)))
+# settings.current_map.add_entity(loot.Sword.generator(tier=1)((9,5)))
+# settings.current_map.add_entity(loot.MeleeLifeDrainMod((10,5)))
+# settings.current_map.add_entity(loot.MeleeDeathblowMod((11,5)))
 
 settings.root_menu.run(settings.root_console)
