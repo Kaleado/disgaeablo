@@ -362,7 +362,7 @@ def HitMod(position):
 def MeleeLifeDrainMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'lifedrain': 10}),
+        'Stats': entity.Stats({'lifedrain': 2}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.red),
         'Item': entity.Item('Melee LifeDrain Up'),

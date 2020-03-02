@@ -589,6 +589,7 @@ class InventoryPanel(Panel):
                     if chosen_slot_index is None:
                         return True
                     chosen_item.component('Equipment').attach_mod(chosen_item, item_ent, chosen_slot_index, self._mapp)
+                    self._selection_index = max(self._selection_index - 1, 0)
                     self._remove_binding_for(self._selection_index)
                     inventory.remove(item_ent)
                     return True
