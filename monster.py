@@ -118,3 +118,77 @@ class Golem:
                 'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Golem.Stone(), primary_skill_range=5))
             })
         return gen
+
+class Scorpion:
+    base_stats = {
+        'max_hp': 180,
+        'cur_hp': 180,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 30,
+        'dfn': 12,
+        'itl': 10,
+        'res': 8,
+        'spd': 8,
+        'hit': 12
+    }
+
+    names = ['Chittering scorpion', 'Hunter scorpion', 'Reaper scorpion', 'Predator scorpion', 'Death scorpion']
+    colours = [tcod.orange, tcod.light_green, tcod.purple, tcod.dark_blue, tcod.crimson]
+
+    def Sting():
+        return SkillMelee(formation=Formation(origin=(0,0), formation=[['.','.','x']]))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(Scorpion.base_stats)
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Scorpion.base_stats[stat] + Scorpion.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='S', colour=Scorpion.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Scorpion.names[tier-1]),
+                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=5))
+            })
+        return gen
+
+class Spider:
+    base_stats = {
+        'max_hp': 120,
+        'cur_hp': 120,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 10,
+        'dfn': 16,
+        'itl': 16,
+        'res': 8,
+        'spd': 8,
+        'hit': 12
+    }
+
+    names = ['Catchfoot spider', 'Webspitter spider', 'Shadelurk spider', 'Fearspinner spider', 'Deathtrap spider']
+    colours = [tcod.orange, tcod.light_green, tcod.purple, tcod.dark_blue, tcod.crimson]
+
+    def Sting():
+        return SkillMelee(formation=Formation(origin=(0,0), formation=[['.','.','x']]))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(Scorpion.base_stats)
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Scorpion.base_stats[stat] + Scorpion.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='P', colour=Scorpion.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Scorpion.names[tier-1]),
+                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=5))
+            })
+        return gen
