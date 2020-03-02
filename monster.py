@@ -171,24 +171,27 @@ class Spider:
     }
 
     names = ['Catchfoot spider', 'Webspitter spider', 'Shadelurk spider', 'Fearspinner spider', 'Deathtrap spider']
-    colours = [tcod.orange, tcod.light_green, tcod.purple, tcod.dark_blue, tcod.crimson]
+    colours = [tcod.green, tcod.red, tcod.purple, tcod.yellow, tcod.crimson]
 
-    def Sting():
-        return SkillMelee(formation=Formation(origin=(0,0), formation=[['.','.','x']]))
+    def Web():
+        return SkillStatusSpell(formation=Formation(origin=(0,0), formation=[['x','x','x'],
+                                                                             ['x','x','x'],
+                                                                             ['x','x','x']],
+                                                    status_effect='PARALYZE', status_duration=8))
 
     def generator(tier=1, level=1):
-        actual_stats = util.copy_dict(Scorpion.base_stats)
+        actual_stats = util.copy_dict(Spider.base_stats)
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Scorpion.base_stats[stat] + Scorpion.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Spider.base_stats[stat] + Spider.base_stats[stat] * (tier - 1) * 100)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='P', colour=Scorpion.colours[tier-1]),
+                'Render': Render(character='P', colour=Spider.colours[tier-1]),
                 'Combat': Combat(),
-                'NPC': NPC(Scorpion.names[tier-1]),
-                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=5))
+                'NPC': NPC(Spider.names[tier-1]),
+                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=5))
             })
         return gen
