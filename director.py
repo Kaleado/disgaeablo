@@ -83,6 +83,7 @@ class MonsterDirector:
         monster.Golem,
         monster.Scorpion,
         monster.Spider,
+        monster.Eye,
         # monster.Golem,
         # monster.Golem,
         # monster.Golem,
@@ -92,7 +93,11 @@ class MonsterDirector:
         pass
 
     def monster(self, area, level):
-        return random.choice(MonsterDirector.monsters).generator(tier=1, level=level)
+        tier = 1
+        if random.randint(0, 100) < 10:
+            tier += 1
+            level = math.floor(level * 0.1)
+        return random.choice(MonsterDirector.monsters).generator(tier=tier, level=level)
 
 monster_director = MonsterDirector()
 
@@ -128,6 +133,9 @@ class LootDirector:
         loot.Ice,
         loot.Lightning,
         loot.RollingStab,
+        loot.AerialDrop,
+        loot.WhipSlash,
+        loot.Bypass,
     ]
 
     support_skills = [

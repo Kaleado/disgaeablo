@@ -7,6 +7,7 @@ import uuid
 import loot
 
 LEVEL_PC_STAT_INC = 0.07
+TIER_PC_STAT_INC = 19
 
 class Slime:
     base_stats = {
@@ -30,8 +31,9 @@ class Slime:
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Slime.base_stats)
+        actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Slime.base_stats[stat] + Slime.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Slime.base_stats[stat] + Slime.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -67,8 +69,9 @@ class Mage:
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Mage.base_stats)
+        actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Mage.base_stats[stat] + Mage.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Mage.base_stats[stat] + Mage.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -104,8 +107,9 @@ class Golem:
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Golem.base_stats)
+        actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Golem.base_stats[stat] + Golem.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Golem.base_stats[stat] + Golem.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -142,8 +146,9 @@ class Scorpion:
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Scorpion.base_stats)
+        actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Scorpion.base_stats[stat] + Scorpion.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Scorpion.base_stats[stat] + Scorpion.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -182,8 +187,9 @@ class Spider:
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Spider.base_stats)
+        actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Spider.base_stats[stat] + Spider.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Spider.base_stats[stat] + Spider.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -194,5 +200,43 @@ class Spider:
                 'Combat': Combat(),
                 'NPC': NPC(Spider.names[tier-1]),
                 'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=2))
+            })
+        return gen
+
+class Eye:
+    base_stats = {
+        'max_hp': 80,
+        'cur_hp': 80,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 20,
+        'dfn': 14,
+        'itl': 16,
+        'res': 8,
+        'spd': 8,
+        'hit': 12
+    }
+
+    names = ['Gaze eye', 'All-seeing eye', 'Chaos eye', 'Pandemonium eye', 'Omniscient eye']
+    colours = [tcod.lighter_yellow, tcod.turquoise, tcod.purple, tcod.dark_crimson, tcod.yellow]
+
+    def Gaze():
+        return SkillMelee(formation=Formation(origin=(0,0), formation=[['.'] + ['x'] * 100]))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(Eye.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Eye.base_stats[stat] + Eye.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='e', colour=Eye.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Eye.names[tier-1]),
+                'AI': Hostile(aggro_range=1000, primary_skill=Eye.Gaze(), immobile=True)
             })
         return gen

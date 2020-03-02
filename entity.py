@@ -136,7 +136,7 @@ class TargetFormation(TargetMode):
         user_pos = user_entity.component('Position').get()
         player_pos = mapp.entity('PLAYER').component('Position').get()
         formation_position = user_pos
-        formation_rotation = 0
+        formation_rotation = random.randint(0,4)
         if not self._directional:
             if self._max_range is None or distance(user_pos, player_pos) <= self._max_range:
                 formation_position = player_pos
@@ -541,6 +541,9 @@ class Stats(Component):
         else:
             message_panel.info("{} no longer has ".format(ent_name, status), colour)
 
+    def status_effects(self):
+        return self._status_effects.keys()
+
     def has_status(self, status):
         return status in self._status_effects
 
@@ -648,6 +651,7 @@ class Render(Component):
     def __init__(self, character, colour=tcod.white):
         self._character = character
         self._colour = colour
+        self._status_render_idx = -1
 
     def character(self):
         return self._character
@@ -655,11 +659,25 @@ class Render(Component):
     def colour(self):
         return self._colour
 
+    def _status_chars(self, entity):
+        stats = entity.component('Stats')
+        if not stats:
+            return []
+        return [eff[0] for eff in stats.status_effects()]
+
+
     def render(self, entity, console, origin):
         x, y = origin
         old_fg = console.default_fg
         console.default_fg = self._colour
-        console.print_(x=x, y=y, string=self._character)
+        self._status_render_idx = -1 if self._status_render_idx >= len(self._status_chars(entity)) else self._status_render_idx
+        if self._status_render_idx == -1:
+            console.print_(x=x, y=y, string=self._character)
+        else:
+            console.print_(x=x, y=y, string=self._status_chars(entity)[self._status_render_idx])
+        self._status_render_idx += 1
+        if self._status_render_idx >= len(self._status_chars(entity)):
+            self._status_render_idx = -1
         console.default_fg = old_fg
 
 class Inventory(Component):

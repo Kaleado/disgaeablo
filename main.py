@@ -31,7 +31,7 @@ settings.current_map._entities = {
         }),
         'Combat': Combat(),
         'Position': Position(5, 5),
-        'Render': Render(character='@', colour=tcod.red),
+        'Render': Render(character="@", colour=tcod.red),
         'PlayerLogic': PlayerLogic(),
         'Inventory': Inventory(),
         'EquipmentSlots': EquipmentSlots(['Weapon', 'Armour', 'Armour', 'Armour']),
@@ -43,6 +43,6 @@ settings.current_map._entities = {
 # settings.current_map.add_entity(loot.AtkMod((8,5)))
 # settings.current_map.add_entity(loot.Sword.generator(tier=1)((9,5)))
 # settings.current_map.add_entity(loot.MeleeLifeDrainMod((10,5)))
-# settings.current_map.add_entity(loot.MeleeDeathblowMod((11,5)))
+settings.current_map.add_entity(loot.Weaken((11,5)))
 
 settings.root_menu.run(settings.root_console)

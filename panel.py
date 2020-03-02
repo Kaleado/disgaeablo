@@ -48,7 +48,7 @@ class Menu:
             for origin, panel in self._panels.values():
                 panel.render(console, origin)
             tcod.console_flush()  # Show the console.
-            for event in tcod.event.wait():
+            for event in tcod.event.wait(timeout=0.2):
                 if event.type == "KEYDOWN" and event.sym == tcod.event.K_TAB:
                     delta = -1 if event.mod & tcod.event.KMOD_LSHIFT else 1
                     key = self._focus_list[self._focus_index]
@@ -280,11 +280,23 @@ class EquipmentSlotPanel(Panel):
         slots = entity.component('EquipmentSlots').slots()
         index = 0
         for slot_type in slots:
-            slot_index = 0
             for slot in slots[slot_type]:
                 if index == self._selection_index:
                     return slot
                 index += 1
+
+    def _selected_slot(self):
+        entity = self._mapp.entity(self._entity_ident)
+        slots = entity.component('EquipmentSlots').slots()
+        index = 0
+        for slot_type in slots:
+            slot_index = 0
+            for slot in slots[slot_type]:
+                if index == self._selection_index:
+                    return (slot_type, slot_index)
+                slot_index += 1
+                index += 1
+        return None
 
     def set_map(self, mapp):
         self._mapp = mapp
@@ -318,6 +330,11 @@ class EquipmentSlotPanel(Panel):
                 self._selection_index = max(self._selection_index - 1, 0)
             if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_2:
                 self._selection_index = min(self._selection_index + 1, slots_size-1)
+            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_e:
+                item_ent = self._selected_entity()
+                if item_ent is None:
+                    return False
+                equipment_slots.unequip(entity, item_ent, self._selected_slot(), settings.current_map)
         item_ent = self._selected_entity()
         menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
         menu.panel('ModSlotPanel')[1].set_entity(item_ent)
@@ -471,6 +488,8 @@ class InventoryPanel(Panel):
         old_fg = console.default_fg
         console.print_(x=x, y=y, string='Inventory')
         entity = self._mapp.entity(self._entity_ident)
+        if entity is None:
+            return
         itms = entity.component('Inventory').items().as_list()
         index = 0
         for ent in itms:
@@ -665,6 +684,8 @@ class StatsPanel(Panel):
         stats = entity.component('Stats')
         x, y = origin
         keys = ['atk', 'dfn', 'itl', 'res', 'spd', 'hit']
+        console.print_(x=x, y=y, string="Level : " + abbrev(stats.get_value('level')))
+        y = y + 1
         old_fg = console.default_fg
         if stats.get_value('max_hp') > 0:
             ratio = stats.get_value('cur_hp') / stats.get_value('max_hp')
@@ -675,7 +696,14 @@ class StatsPanel(Panel):
         console.print_(x=x, y=y, string="HP : " + abbrev(stats.get_value('cur_hp')) + " / " + abbrev(stats.get_value('max_hp')))
         console.default_fg = old_fg
         y = y + 1
+        if stats.get_value('max_sp') > 0:
+            ratio = stats.get_value('cur_sp') / stats.get_value('max_sp')
+            if ratio < 0.25:
+                console.default_fg = tcod.red
+            elif ratio < 1.0:
+                console.default_fg = tcod.yellow
         console.print_(x=x, y=y, string="SP : " + abbrev(stats.get_value('cur_sp')) + " / " + abbrev(stats.get_value('max_sp')))
+        console.default_fg = old_fg
         y = y + 1
         for key in keys:
             label = key.upper()
