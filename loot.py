@@ -36,8 +36,8 @@ class Healing:
 
 class Refreshing:
     base_stats = {
-        'max_sp': 50,
-        'cur_sp': 50,
+        'max_sp': 25,
+        'cur_sp': 25,
     }
     names = ['Spring water', 'Apple juice', 'Nectar', 'Morning dew']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green]

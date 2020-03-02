@@ -19,8 +19,8 @@ settings.current_map._entities = {
         'Stats': Stats({
             'max_hp': 200,
             'cur_hp': 200,
-            'max_sp': 45,
-            'cur_sp': 45,
+            'max_sp': 25,
+            'cur_sp': 25,
             'atk': 15,
             'dfn': 15,
             'itl': 15,

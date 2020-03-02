@@ -42,7 +42,7 @@ class WithDeathblow:
         if stats is not None and inflicted > 0:
             cur_hp = stats.get_value('cur_hp')
             stats.deal_damage(destination_entity, mapp, cur_hp)
-            settings.message_panel.info("DEATHBLOW!", tcod.crimson)
+            settings.message_panel.info("DEATHBLOW!", tcod.magenta)
             return cur_hp
 
 class WithLifeDrain:

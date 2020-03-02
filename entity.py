@@ -255,7 +255,8 @@ class SkillSpell(Usable):
             message_panel.info("{}'s spell hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
             dam = damage.Damage(user_entity, amount)
             dam.inflict(target, mapp)
-        targets[0].where(lambda e: e != user_entity).transform(damage_target)
+        user_is_player = mapp.entity('PLAYER') == user_entity
+        targets[0].where(lambda e: e != user_entity).without_components(['NPC'] if not user_is_player else []).transform(damage_target)
         return False
 
 class TeleportToPosition(Usable):
@@ -316,7 +317,8 @@ class SkillRanged(Usable):
             dam = damage.Damage(user_entity, amount)
             dam = self._apply_damage_decorators(user_entity, target, dam)
             dam.inflict(target, mapp)
-        targets[0].where(lambda e: e != user_entity).transform(damage_target)
+        user_is_player = mapp.entity('PLAYER') == user_entity
+        targets[0].where(lambda e: e != user_entity).without_components(['NPC'] if not user_is_player else []).transform(damage_target)
         obstructing_ents, mov_pos = self._targeting_mode.targets(group='P')
         if mov_pos is not None:
             new_pos = mov_pos[0]
@@ -375,7 +377,7 @@ class Equipment(Component):
         if index < 0 or index >= len(self._mod_slots):
             return
         if self._mod_slots[index] is not None:
-            self.detach_mod(item_entity, mod_entity, index, resident_map)
+            self.detach_mod(item_entity, index, resident_map)
         mod_stats = mod_entity.component('Stats')
         item_stats = item_entity.component('Stats')
         for stat in Stats.all_stats:
@@ -507,7 +509,7 @@ class Stats(Component):
             if self.has_status('REGEN'):
                 self.apply_healing(entity, resident_map, 0.05 * self.get_value('max_hp'))
             if self.has_status('POISON'):
-                psn_dam_amt = math.floor(0.10 * self.get_value('max_hp'))
+                psn_dam_amt = math.floor(0.05 * self.get_value('max_hp'))
                 colour = tcod.red if ent_name == 'Player' else tcod.white
                 message_panel.info("{} takes damage from poison ({} HP)".format(ent_name, psn_dam_amt), colour)
                 self.deal_damage(entity, resident_map, psn_dam_amt)
@@ -812,6 +814,16 @@ class AI(Component):
         if len(path) > 1 and not player_pos == path[1]:
             entity.component('Position').set(path[1][0], path[1][1])
 
+    def _step_away_from_player(self, entity, resident_map):
+        passmap = resident_map.passability_map_for(entity)
+        player = resident_map.entity('PLAYER')
+        player_pos = player.component('Position').get()
+        ent_pos = entity.component('Position').get()
+        dx, dy = (player_pos[0] - ent_pos[0], player_pos[1] - ent_pos[1])
+        dx, dy = (-1 if dx < 0 else 1 if dx > 0 else 0, -1 if dy < 0 else 1 if dy > 0 else 0)
+        if resident_map.is_passable_for(entity, (x+dx, y+dy)):
+            entity.component('Position').add(x=dx, y=dy)
+
     def _step_randomly(self, entity, resident_map):
         x, y = entity.component('Position').get()
         possible_steps = [(dx, dy) for dx in range(-1, 2) for dy in range(-1, 2) \
@@ -852,22 +864,28 @@ class Slow(AI):
         return self._ai.handle_event(entity, event, resident_map)
 
 class Hostile(AI):
-    def __init__(self, aggro_range=5, primary_skill=None, primary_skill_range=None):
+    def __init__(self, aggro_range=5, primary_skill=None, primary_skill_range=None, immobile=False, keep_at_range=0):
         super().__init__()
         self._ai_status = "IDLE"
         self._aggro_range = aggro_range
         self._primary_skill = primary_skill
         self._primary_skill_range = primary_skill_range
+        self._immobile = immobile
+        self._keep_at_range = keep_at_range
 
     def _handle_aggro(self, entity, event, resident_map):
         player = resident_map.entity('PLAYER')
-        if self._primary_skill is None and self._distance_to_player(entity, resident_map) < 2:
+        attack_range = 2 if self._primary_skill_range is None else self._primary_skill_range
+        if self._primary_skill is None and self._distance_to_player(entity, resident_map) < attack_range:
             self._perform_attack_against(entity, player, resident_map)
         elif self._primary_skill is not None and \
              (self._primary_skill_range is None or self._distance_to_player(entity, resident_map) <= self._primary_skill_range):
             self._perform_delayed_attack_against(entity, player, resident_map, self._primary_skill, 1)
-        else:
-            self._step_towards_player(entity, resident_map)
+        elif not self._immobile:
+            if self._distance_to_player(entity, resident_map) < self._keep_at_range:
+                self._step_away_from_player(entity, resident_map)
+            else:
+                self._step_towards_player(entity, resident_map)
 
     def _handle_idle(self, entity, event, resident_map):
         player = resident_map.entity('PLAYER')
@@ -876,7 +894,7 @@ class Hostile(AI):
         if player is not None and distance(player_position, my_position) <= self._aggro_range:
             self._ai_status = 'AGGRO'
             self._handle_aggro(entity, event, resident_map)
-        else:
+        elif not self._immobile:
             self._step_randomly(entity, resident_map)
 
     def _handle_event(self, entity, event, resident_map):
