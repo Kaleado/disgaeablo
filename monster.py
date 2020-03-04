@@ -251,3 +251,91 @@ class Eye:
                 'AI': Hostile(aggro_range=1000, primary_skill=Eye.Gaze(), immobile=True)
             })
         return gen
+
+class Wyvern:
+    base_stats = {
+        'max_hp': 80,
+        'cur_hp': 80,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 20,
+        'dfn': 14,
+        'itl': 16,
+        'res': 8,
+        'spd': 8,
+        'hit': 12
+    }
+
+    names = ['Scorch wyvern', 'Blaze wyvern', 'Crash wyvern', 'Storm wyvern', 'Eclipse wyvern']
+    colours = [tcod.lighter_yellow, tcod.turquoise, tcod.purple, tcod.dark_crimson, tcod.yellow]
+
+    def Ray():
+        return SkillSpell(formation=Formation(origin=(2,2), formation=[
+            ['x','x','x','x','x'],
+            ['x','x','x','.','x'],
+            ['x','x','x','x','x'],
+            ['x','.','x','x','x'],
+            ['x','x','x','x','x'],
+        ]))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(Wyvern.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Wyvern.base_stats[stat] + Wyvern.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='W', colour=Wyvern.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Wyvern.names[tier-1]),
+                'AI': Hostile(aggro_range=12, primary_skill=Wyvern.Ray())
+            })
+        return gen
+
+class Beholder:
+    base_stats = {
+        'max_hp': 70,
+        'cur_hp': 70,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 20,
+        'dfn': 14,
+        'itl': 12,
+        'res': 8,
+        'spd': 8,
+        'hit': 12
+    }
+
+    names = ['Lesser beholder', 'Beholder', 'Greater beholder', 'Beholder lord', 'Omniscient beholder']
+    colours = [tcod.lighter_yellow, tcod.turquoise, tcod.purple, tcod.dark_crimson, tcod.yellow]
+
+    def Ray():
+        return SkillMelee(formation=Formation(origin=(0,2), formation=[
+            ['.','.','.','x','x','x','x'],
+            ['.','.','x','x','x','x','x'],
+            ['.','x','x','x','x','x','x'],
+            ['.','.','x','x','x','x','x'],
+            ['.','.','.','x','x','x','x'],
+        ]))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(Beholder.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Beholder.base_stats[stat] + Beholder.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='E', colour=Beholder.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Beholder.names[tier-1]),
+                'AI': Hostile(aggro_range=10, primary_skill=Beholder.Ray(), primary_skill_range=5)
+            })
+        return gen

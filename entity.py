@@ -533,7 +533,7 @@ class Stats(Component):
         return sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])])
 
     def increase_level(self, num):
-        self.add_base('max_exp', num * 20)
+        self.add_base('max_exp', num * 50)
         self.add_base('level', num)
         for stat in Stats.primary_stats:
             print(self.add_base(stat, self._base_stats[stat] * num * 0.2))

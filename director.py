@@ -45,7 +45,9 @@ class MapDirector:
 
         if self._current_floor == 0 and self._item_world is None:
             return mapp
-       
+
+        difficulty = self.difficulty()
+
         n_items = random.randint(2, 7)
         for _ in range(n_items):
             item = loot_director.ground_loot(level)
@@ -54,9 +56,14 @@ class MapDirector:
                 x, y = random.randint(0, w-1), random.randint(0,h-1)
             mapp.add_entity(item((x, y)))
 
-        n_monst = random.randint(2, 10)
+        if difficulty < 15:
+            n_monst = random.randint(2, 5)
+        else:
+            n_monst = random.randint(5, 10)
+        monster_set = monster_director.choose_random_monster_set(difficulty, random.randint(1, 3))
         for _ in range(n_monst):
-            monst = monster_director.monster(level)
+            # monst = monster_director.monster(level)
+            monst = monster_director.monster_from_set(level, monster_set)
             x, y = random.randint(0, w-1), random.randint(0,h-1)
             while not mapp.is_passable_for(monst((0,0)), (x, y)):
                 x, y = random.randint(0, w-1), random.randint(0,h-1)
@@ -116,27 +123,49 @@ class MapDirector:
 map_director = MapDirector()
 
 class MonsterDirector:
-    monsters = [
-        monster.Slime,
-        monster.Mage,
-        monster.Golem,
-        monster.Scorpion,
-        monster.Spider,
-        monster.Eye,
-        # monster.Golem,
-        # monster.Golem,
-        # monster.Golem,
-        # monster.Golem,
-    ]
+    monsters = {
+        0: [
+            monster.Slime
+        ],
+        10: [
+            monster.Mage,
+            monster.Golem,
+            monster.Scorpion,
+            monster.Spider,
+            monster.Eye
+        ],
+        35: [
+            monster.Wyvern,
+            monster.Beholder
+        ],
+    }
+
     def __init__(self):
         self._item_world = None
 
     def set_item_world(self, item):
         self._item_world = item
 
-    def monster(self, level):
+    def choose_random_monster_set(self, difficulty, n_mons):
+        monster_set = set()
+        ls = sum([v for (k, v) in MonsterDirector.monsters.items() if k <= difficulty], [])
+        available_set = list(set(ls))
+        n_mons = min(n_mons, len(available_set))
+        while len(monster_set) < n_mons:
+            monster_set = monster_set | set([random.choice(available_set)])
+        return list(monster_set)
+
+    def monster_from_set(self, level, monster_set):
         tier = 1
-        if random.randint(0, 100) < 3:
+        if random.randint(0, 100) == 0:
+            tier += 1
+            level = math.floor(level * 0.1)
+        return random.choice(monster_set).generator(tier=tier, level=level)
+
+    def monster(self, difficulty, level):
+        available_set = sum([v for (k, v) in MonsterDirector.monsters.items() if k <= difficulty], [])
+        tier = 1
+        if random.randint(0, 100) == 0:
             tier += 1
             level = math.floor(level * 0.1)
         return random.choice(MonsterDirector.monsters).generator(tier=tier, level=level)
@@ -231,11 +260,11 @@ class LootDirector:
             return loot.Healing.generator(tier=1)
         elif roll < 150:
             return loot.Refreshing.generator(tier=1)
-        elif roll < 200:
+        elif roll < 170:
             return loot.TownPortal
         elif roll < 300:
             return random.choice(LootDirector.mods)
-        elif roll < 400:
+        elif roll < 350:
             return random.choice(LootDirector.equipment).generator(tier=1)
         elif roll < 450:
             return random.choice(LootDirector.attack_skills)

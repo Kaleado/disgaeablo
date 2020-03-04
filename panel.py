@@ -256,23 +256,24 @@ class PlaceFormationOnMapPanel(MapPanel):
         w, h = self._map.dimensions()
         if event_type == "TCOD" and event_data.type == "KEYDOWN":
             lshift_held = (event_data.mod & tcod.event.KMOD_LSHIFT == 1)
+            step = 5 if lshift_held else 1
             new_cursor_position = self._cursor_position
             if event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
-                new_cursor_position = cx, max(cy - 1, 0)
+                new_cursor_position = cx, max(cy - step, 0)
             elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
-                new_cursor_position = cx, min(cy + 1, h - 1)
+                new_cursor_position = cx, min(cy + step, h - step)
             elif event_data.sym in [tcod.event.K_KP_6, tcod.event.K_l]:
-                new_cursor_position = min(cx + 1, w - 1), cy
+                new_cursor_position = min(cx + step, w - step), cy
             elif event_data.sym in [tcod.event.K_KP_4, tcod.event.K_j]:
-                new_cursor_position = max(cx - 1, 0), cy
+                new_cursor_position = max(cx - step, 0), cy
             elif event_data.sym == tcod.event.K_KP_7:
-                new_cursor_position = max(cx - 1, 0), max(cy - 1, 0)
+                new_cursor_position = max(cx - step, 0), max(cy - step, 0)
             elif event_data.sym == tcod.event.K_KP_9:
-                new_cursor_position = min(cx + 1, w - 1), max(cy - 1, 0)
+                new_cursor_position = min(cx + step, w - step), max(cy - step, 0)
             elif event_data.sym == tcod.event.K_KP_1:
-                new_cursor_position = max(cx - 1, 0), min(cy + 1, h - 1)
+                new_cursor_position = max(cx - step, 0), min(cy + step, h - step)
             elif event_data.sym == tcod.event.K_KP_3:
-                new_cursor_position = min(cx + 1, w - 1), min(cy + 1, h - 1)
+                new_cursor_position = min(cx + step, w - step), min(cy + step, h - step)
             elif event_data.sym == tcod.event.K_r:
                 PlaceFormationOnMapPanel._cursor_rotation = (PlaceFormationOnMapPanel._cursor_rotation - (1 if lshift_held else -1)) % 4
             elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_r:
