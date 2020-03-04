@@ -573,7 +573,7 @@ class Stats(Component):
                 poison_heal = self.get_value('poison_heal') > 0
                 if poison_heal:
                     colour = tcod.green if ent_name == 'Player' else tcod.white
-                    self.apply_healing(entity, resident_map, psn_dam_amt / 10)
+                    self.apply_healing(entity, resident_map, psn_dam_amt / 50)
                 else:
                     # Only damage the character if they wouldn't have less than the poison damage threshold
                     if self.get_value('cur_hp') / self.get_value('max_hp') - 0.05 >= psn_dam_threshold:
