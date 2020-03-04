@@ -661,7 +661,7 @@ class InventoryPanel(Panel):
                         'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, ['Equipment']))
                     }, ['ChooseItemPanel'])
                     chosen_item = choose_item_menu.run(self._console)
-                    if chosen_item is None:
+                    if chosen_item is None or len(chosen_item.component('Equipment').mod_slots()) == 0:
                         return True
                     choose_mod_slot_menu = Menu({
                         'ChooseModSlotPanel': ((0,0), ChooseModSlotPanel(chosen_item))

@@ -82,6 +82,13 @@ class MapDirector:
         player.component('Position').set(x, y)
 
     def return_to_town(self):
+        # Replenish HP and SP
+        player = settings.current_map.entity('PLAYER')
+        max_hp = player.component('Stats').get_value('max_hp')
+        max_sp = player.component('Stats').get_value('max_sp')
+        player.component('Stats').set_base('cur_hp', max_hp)
+        player.component('Stats').set_base('cur_sp', max_sp)
+        # Return to town
         settings.set_item_world(None)
         self.move_to_floor(0)
 

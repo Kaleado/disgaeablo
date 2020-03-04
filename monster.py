@@ -20,8 +20,6 @@ def ItemWorldClerkNPC(position):
         'AI': ItemWorldClerk()
     })
 
-
-
 class Slime:
     base_stats = {
         'max_hp': 120,

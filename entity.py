@@ -956,7 +956,6 @@ class Neutral(AI):
 class ItemWorldClerk(Neutral):
     def on_chat(self, entity, event, resident_map):
         import director
-        settings.message_panel.info("SCREAM", tcod.green)
         player = resident_map.entity('PLAYER')
         choose_item_menu = Menu({
             'ChooseItemPanel': ((0,0), ChooseItemPanel(player, []))
@@ -964,6 +963,9 @@ class ItemWorldClerk(Neutral):
         chosen_item = choose_item_menu.run(settings.root_console)
         if chosen_item is None:
             return True
+        item_name = chosen_item.component('Item').name()
+        settings.message_panel.info("The item world clerk opens a portal to the {} item world".format(item_name), tcod.green)
+        settings.message_panel.info('\"Have fun -- and try not to die!\"'.format(item_name), tcod.green)
         settings.set_item_world(chosen_item)
         director.map_director.descend()
    
