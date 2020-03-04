@@ -554,7 +554,7 @@ class Stats(Component):
     def _self_poison(self, entity, resident_map):
         ent_name = entity.component('NPC').name() if entity.component('NPC') else 'Player'
         self_poison = self.get_value('self_poison') > 0
-        if self_poison:
+        if self_poison and entity.component('Item') is None:
             if not self.has_status('POISON'):
                 message_panel.info('{} is poisoned!'.format(ent_name))
             self.inflict_status('POISON', strength=1, duration=5)
