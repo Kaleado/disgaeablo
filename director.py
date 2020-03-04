@@ -163,9 +163,13 @@ class LootDirector:
         loot.Blink,
     ]
 
-    weapons = [
+    equipment = [
         loot.Staff,
         loot.Sword,
+        loot.DfnArmour,
+        loot.ResArmour,
+        loot.DfnAtkArmour,
+        loot.ResItlArmour,
     ]
 
     attack_skills = [
@@ -232,7 +236,7 @@ class LootDirector:
         elif roll < 300:
             return random.choice(LootDirector.mods)
         elif roll < 400:
-            return random.choice(LootDirector.weapons).generator(tier=1)
+            return random.choice(LootDirector.equipment).generator(tier=1)
         elif roll < 450:
             return random.choice(LootDirector.attack_skills)
         else:

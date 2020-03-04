@@ -36,9 +36,9 @@ panels = {
     'StatsPanel': ((1,2), StatsPanel(current_map, 'PLAYER')),
     'InventoryPanel': ((46,2), InventoryPanel('PLAYER', current_map, root_console)),
     'EntityStatsPanel': ((66,2), EntityStatsPanel()),
-    'EquipmentSlotPanel': ((46,17), EquipmentSlotPanel('PLAYER', current_map)),
+    'EquipmentSlotPanel': ((46,28), EquipmentSlotPanel('PLAYER', current_map)),
     'MessagePanel': ((1,34), message_panel),
-    'ModSlotPanel': ((66,17), ModSlotPanel(None))
+    'ModSlotPanel': ((66,28), ModSlotPanel(None))
 }
 
 focus_list = ['MapPanel', 'StatsPanel', 'InventoryPanel', 'EquipmentSlotPanel', 'MessagePanel']

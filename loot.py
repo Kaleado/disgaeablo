@@ -8,7 +8,10 @@ import tcod
 import math
 import random
 
+LEVEL_PC_STAT_INC = 0.035
+
 ##################################################### CONSUMABLES
+
 def TownPortal(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
@@ -31,7 +34,7 @@ class Healing:
         actual_stats = util.copy_dict(Healing.base_stats)
         for stat in Healing.base_stats:
             actual_stats[stat] = (Healing.base_stats[stat] + Healing.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
@@ -55,7 +58,7 @@ class Refreshing:
         actual_stats = util.copy_dict(Refreshing.base_stats)
         for stat in Refreshing.base_stats:
             actual_stats[stat] = (Refreshing.base_stats[stat] + Refreshing.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
@@ -80,7 +83,7 @@ class DfnArmour:
         actual_stats = util.copy_dict(DfnArmour.base_stats)
         for stat in DfnArmour.base_stats:
             actual_stats[stat] = (DfnArmour.base_stats[stat] + DfnArmour.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
@@ -94,24 +97,72 @@ class DfnArmour:
 
 class ResArmour:
     base_stats = {
-        'Res': 10,
+        'res': 10,
     }
-    names = ['Loincloth', 'Leather armour', 'Splint mail', 'Chainmail', 'Platemail', 'Glorious armour', 'Nephilim guard']
+    names = ['Loincloth', 'Cloth sash', 'Linen robe', 'Silken gown', 'Sorceror\'s gown', 'Arcane robe', 'Flowing garb']
     colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
 
     def generator(tier=1, level=1):
-        actual_stats = util.copy_dict(DfnArmour.base_stats)
-        for stat in DfnArmour.base_stats:
-            actual_stats[stat] = (DfnArmour.base_stats[stat] + DfnArmour.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+        actual_stats = util.copy_dict(ResArmour.base_stats)
+        for stat in ResArmour.base_stats:
+            actual_stats[stat] = (ResArmour.base_stats[stat] + ResArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
                 'Stats': entity.Stats(actual_stats),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
-                'Render': entity.Render(character='[', colour=DfnArmour.colours[tier-1]),
-                'Item': entity.Item(DfnArmour.names[tier-1]),
+                'Render': entity.Render(character='{', colour=ResArmour.colours[tier-1]),
+                'Item': entity.Item(ResArmour.names[tier-1]),
+            })
+        return gen
+
+class ResItlArmour:
+    base_stats = {
+        'res': 6,
+        'itl': 4,
+    }
+    names = ['Bandana', 'Plain circlet', 'Cloth hat', 'Mitre', 'Wizard\'s hat', 'Feather cap', 'Majestic crown']
+    colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(ResItlArmour.base_stats)
+        for stat in ResItlArmour.base_stats:
+            actual_stats[stat] = (ResItlArmour.base_stats[stat] + ResItlArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return entity.Entity(str(uuid.uuid4()), components={
+                'Stats': entity.Stats(actual_stats),
+                'Position': entity.Position(x, y),
+                'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
+                'Render': entity.Render(character=']', colour=ResItlArmour.colours[tier-1]),
+                'Item': entity.Item(ResItlArmour.names[tier-1]),
+            })
+        return gen
+
+class DfnAtkArmour:
+    base_stats = {
+        'dfn': 6,
+        'atk': 4,
+    }
+    names = ['Leather shield', 'Targe', 'Kite shield', 'Square shield', 'Spiked shield', 'Berserker shield', 'Angel aegis']
+    colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(DfnAtkArmour.base_stats)
+        for stat in DfnAtkArmour.base_stats:
+            actual_stats[stat] = (DfnAtkArmour.base_stats[stat] + DfnAtkArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return entity.Entity(str(uuid.uuid4()), components={
+                'Stats': entity.Stats(actual_stats),
+                'Position': entity.Position(x, y),
+                'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
+                'Render': entity.Render(character=')', colour=DfnAtkArmour.colours[tier-1]),
+                'Item': entity.Item(DfnAtkArmour.names[tier-1]),
             })
         return gen
 
@@ -126,7 +177,7 @@ class Sword:
         actual_stats = util.copy_dict(Sword.base_stats)
         for stat in Sword.base_stats:
             actual_stats[stat] = (Sword.base_stats[stat] + Sword.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
@@ -149,7 +200,7 @@ class Staff:
         actual_stats = util.copy_dict(Staff.base_stats)
         for stat in Staff.base_stats:
             actual_stats[stat] = (Staff.base_stats[stat] + Staff.base_stats[stat] * (tier - 1) * 100)
-            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
@@ -206,7 +257,7 @@ def Bypass(position):
     })
 
 def WhipSlash(position):
-    formation = Formation(origin=(0,1), formation=[['x','x','x'],
+    formation = Formation(origin=(1,1), formation=[['x','x','x'],
                                                    ['x','.','P']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={

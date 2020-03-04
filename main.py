@@ -39,7 +39,7 @@ settings.current_map._entities = {
 }
 
 # settings.current_map.add_entity(loot.RollingStab((7,5)))
-settings.current_map.add_entity(loot.AtkMod((15,15)))
+settings.current_map.add_entity(loot.ToxicForceMod((15,15)))
 settings.current_map.add_entity(loot.TownPortal((15,15)))
 # settings.current_map.add_entity(loot.Sword.generator(tier=1)((9,5)))
 # settings.current_map.add_entity(loot.MeleeLifeDrainMod((10,5)))
