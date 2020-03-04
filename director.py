@@ -71,7 +71,7 @@ class MapDirector:
             stats = self._item_world.component('Stats')
             primaries = entity.Stats.primary_stats - set(['max_hp', 'max_sp'])
             tot = sum([stats.get_base(stat) for stat in primaries])
-            return 3 + self._current_floor * math.floor(tot / 5)
+            return 3 + self._current_floor + math.floor(tot / 5)
 
     def _change_floor(self):
         if self._item_world is None:
