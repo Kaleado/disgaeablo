@@ -171,7 +171,7 @@ class Scorpion:
                 'Render': Render(character='S', colour=Scorpion.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Scorpion.names[tier-1]),
-                'AI': Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=1.1)
+                'AI': Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=1.9)
             })
         return gen
 

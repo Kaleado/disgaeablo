@@ -17,7 +17,6 @@ settings.set_current_map(map_director.map(1))
 settings.current_map._entities = {
     'PLAYER': Entity('PLAYER', components={
         'Stats': Stats({
-            'souldrain': 50,
             'max_hp': 200,
             'cur_hp': 200,
             'max_sp': 25,

@@ -434,7 +434,7 @@ class Equipment(Component):
         item_stats = item_entity.component('Stats')
         for stat in Stats.all_stats:
             stat_value = mod_stats.get_value(stat)
-            item_stats.sub_additive_bonus(stat_value)
+            item_stats.sub_additive_modifier(stat_value)
         return
 
     def equip_to(self, item_entity, to_entity, resident_map):
