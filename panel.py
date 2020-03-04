@@ -90,6 +90,8 @@ class MapPanel(Panel):
     def __init__(self, mapp):
         super().__init__()
         self._map = mapp
+        self._look_mode = False
+        self._cursor_pos = (0, 0)
 
     def set_map(self, mapp):
         self._map = mapp
@@ -100,7 +102,10 @@ class MapPanel(Panel):
             console.default_fg = tcod.gray
         else:
             console.default_fg = tcod.white
-        self._render(console, origin)
+        if self._look_mode:
+            self._render_look_mode(console, origin)
+        else:
+            self._render(console, origin)
         console.default_fg = old_fg
 
     def _render(self, console, origin):
@@ -115,9 +120,60 @@ class MapPanel(Panel):
         self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
                             .transform(render_entity)
 
+    def _render_look_mode(self, console, origin):
+        x, y = origin
+        def render_entity(ent):
+            xx, yy = ent.component('Position').get()
+            ent_origin = (xx + x, yy + y)
+            ent.component('Render').render(ent, console, ent_origin)
+        self._map.render(console, origin)
+        self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
+                            .transform(render_entity)
+        self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
+                            .transform(render_entity)
+        xx, yy = self._cursor_pos
+        console.bg[x+xx][y+yy] = tcod.red
+
+    def _handle_event_look_mode(self, event, menu):
+        event_type, event_data = event
+        if event_type == 'TCOD' and event_data.type == 'KEYDOWN':
+            new_pos = None
+            lshift_held = event_data.mod & tcod.event.KMOD_LSHIFT == 1
+            step = 5 if lshift_held else 1
+            if event_data.sym == tcod.event.K_ESCAPE:
+                self._look_mode = False
+                return True
+            elif event_data.sym in [tcod.event.K_i]:
+                new_pos = (self._cursor_pos[0], self._cursor_pos[1]-step)
+            elif event_data.sym in [tcod.event.K_j]:
+                new_pos = (self._cursor_pos[0]-step, self._cursor_pos[1])
+            elif event_data.sym in [tcod.event.K_k]:
+                new_pos = (self._cursor_pos[0], self._cursor_pos[1]+step)
+            elif event_data.sym in [tcod.event.K_l]:
+                new_pos = (self._cursor_pos[0]+step, self._cursor_pos[1])
+
+            w, h = self._map.dimensions()
+            if new_pos is not None and new_pos[0] >= 0 and new_pos[1] >= 0 and new_pos[0] < w and new_pos[1] < h:
+                self._cursor_pos = new_pos
+                under_cursor = settings.current_map.entities().at_position(self._cursor_pos).as_list()
+                if len(under_cursor) > 0:
+                    menu.panel('EntityStatsPanel')[1].set_entity(under_cursor[0])
+                else:
+                    menu.panel('EntityStatsPanel')[1].set_entity(None)
+                return True
+
     def handle_event(self, event, menu):
         if not self._has_focus:
             return False
+        event_type, event_data = event
+        if not self._look_mode:
+            if event_type == 'TCOD' and event_data.type == 'KEYDOWN':
+                if event_data.sym == tcod.event.K_x:
+                    self._cursor_pos = self._map.entity('PLAYER').component('Position').get()
+                    self._look_mode = True
+                    return True
+        elif self._handle_event_look_mode(event, menu):
+            return True
         return self._map.entities().for_each_until(lambda ent: ent.handle_event(event, self._map))
 
 class PlaceFormationOnMapPanel(MapPanel):
@@ -151,22 +207,22 @@ class PlaceFormationOnMapPanel(MapPanel):
         cx, cy = self._cursor_position
         if event_type == "TCOD" and event_data.type == "KEYDOWN":
             lshift_held = (event_data.mod & tcod.event.KMOD_LSHIFT == 1)
-            if event_data.sym == tcod.event.K_KP_8:
+            if event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 PlaceFormationOnMapPanel._cursor_rotation = 0
                 if not lshift_held:
                     self._done(menu)
                 return True
-            if event_data.sym == tcod.event.K_KP_2:
+            if event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 PlaceFormationOnMapPanel._cursor_rotation = 2
                 if not lshift_held:
                     self._done(menu)
                 return True
-            if event_data.sym == tcod.event.K_KP_6:
+            if event_data.sym in [tcod.event.K_KP_6, tcod.event.K_l]:
                 PlaceFormationOnMapPanel._cursor_rotation = 1
                 if not lshift_held:
                     self._done(menu)
                 return True
-            if event_data.sym == tcod.event.K_KP_4:
+            if event_data.sym in [tcod.event.K_KP_4, tcod.event.K_j]:
                 PlaceFormationOnMapPanel._cursor_rotation = 3
                 if not lshift_held:
                     self._done(menu)
@@ -201,13 +257,13 @@ class PlaceFormationOnMapPanel(MapPanel):
         if event_type == "TCOD" and event_data.type == "KEYDOWN":
             lshift_held = (event_data.mod & tcod.event.KMOD_LSHIFT == 1)
             new_cursor_position = self._cursor_position
-            if event_data.sym == tcod.event.K_KP_8:
+            if event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 new_cursor_position = cx, max(cy - 1, 0)
-            elif event_data.sym == tcod.event.K_KP_2:
+            elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 new_cursor_position = cx, min(cy + 1, h - 1)
-            elif event_data.sym == tcod.event.K_KP_6:
+            elif event_data.sym in [tcod.event.K_KP_6, tcod.event.K_l]:
                 new_cursor_position = min(cx + 1, w - 1), cy
-            elif event_data.sym == tcod.event.K_KP_4:
+            elif event_data.sym in [tcod.event.K_KP_4, tcod.event.K_j]:
                 new_cursor_position = max(cx - 1, 0), cy
             elif event_data.sym == tcod.event.K_KP_7:
                 new_cursor_position = max(cx - 1, 0), max(cy - 1, 0)
@@ -326,9 +382,9 @@ class EquipmentSlotPanel(Panel):
         slots_size = sum(len(v) for v in equipment_slots.slots().values())
         event_type, event_data = event
         if event_type == "TCOD" and slots_size > 0:
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_8:
+            if event_data.type == "KEYDOWN" and event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 self._selection_index = max(self._selection_index - 1, 0)
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_2:
+            if event_data.type == "KEYDOWN" and event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 self._selection_index = min(self._selection_index + 1, slots_size-1)
             if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_e:
                 item_ent = self._selected_entity()
@@ -379,9 +435,9 @@ class ModSlotPanel(Panel):
         mod_slots = equipment.mod_slots()
         event_type, event_data = event
         if event_type == "TCOD" and len(mod_slots) > 0:
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_8:
+            if event_data.type == "KEYDOWN" and event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 self._selection_index = max(self._selection_index - 1, 0)
-            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_KP_2:
+            if event_data.type == "KEYDOWN" and event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 self._selection_index = min(self._selection_index + 1, len(mod_slots)-1)
         item_ent = self._selected_entity()
         if menu.panel('EntityStatsPanel') is not None:
@@ -562,13 +618,13 @@ class InventoryPanel(Panel):
         if event_type == "TCOD" and event_data.type == "KEYDOWN" and inventory_size > 0:
             items = inventory.items().as_list()
             item_ent = items[self._selection_index] if self._selection_index < len(items) else None
-            if event_data.sym == tcod.event.K_KP_8:
+            if event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 self._selection_index = max(self._selection_index - 1, 0)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
                 settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
                 return True
-            elif event_data.sym == tcod.event.K_KP_2:
+            elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 self._selection_index = min(self._selection_index + 1, inventory_size-1)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
@@ -637,10 +693,10 @@ class ChooseItemPanel(Panel):
         eligible_items = inventory.items().with_all_components(self._with_all_components).as_list()
         if event_type == "TCOD" and event_data.type == "KEYDOWN" and inventory_size > 0:
             selected_item = inventory.items().as_list()[self._selection_index]
-            if event_data.sym == tcod.event.K_KP_8:
+            if event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 self._selection_index = max(self._selection_index - 1, 0)
                 return True
-            elif event_data.sym == tcod.event.K_KP_2:
+            elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 self._selection_index = min(self._selection_index + 1, inventory_size-1)
                 return True
             elif event_data.sym == tcod.event.K_e and selected_item in eligible_items:
@@ -676,6 +732,18 @@ class StatsPanel(Panel):
     def set_map(self, mapp):
         self._mapp = mapp
 
+    def _name(self, entity):
+        item = entity.component('Item')
+        npc = entity.component('NPC')
+        player = entity.component('PlayerLogic')
+        if item is not None:
+            return item.name()
+        if npc is not None:
+            return npc.name()
+        if player is not None:
+            return 'Player'
+        return 'Unknown object'
+
     def _get_entity(self):
         return self._mapp.entity(self._entity_ident)
 
@@ -686,6 +754,8 @@ class StatsPanel(Panel):
         stats = entity.component('Stats')
         x, y = origin
         keys = ['atk', 'dfn', 'itl', 'res', 'spd', 'hit']
+        console.print_(x=x, y=y, string=self._name(entity))
+        y = y + 1
         console.print_(x=x, y=y, string="Level : " + abbrev(stats.get_value('level')))
         y = y + 1
         old_fg = console.default_fg

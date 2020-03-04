@@ -17,6 +17,7 @@ settings.set_current_map(map_director.map(1))
 settings.current_map._entities = {
     'PLAYER': Entity('PLAYER', components={
         'Stats': Stats({
+            'souldrain': 50,
             'max_hp': 200,
             'cur_hp': 200,
             'max_sp': 25,
@@ -43,6 +44,6 @@ settings.current_map.add_entity(loot.AtkMod((15,15)))
 settings.current_map.add_entity(loot.TownPortal((15,15)))
 # settings.current_map.add_entity(loot.Sword.generator(tier=1)((9,5)))
 # settings.current_map.add_entity(loot.MeleeLifeDrainMod((10,5)))
-settings.current_map.add_entity(loot.Weaken((11,5)))
+settings.current_map.add_entity(loot.Fire((15,15)))
 
 settings.root_menu.run(settings.root_console)

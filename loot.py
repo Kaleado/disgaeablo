@@ -125,7 +125,7 @@ def Cleave(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 35}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.green),
+        'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Cleave'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
@@ -140,7 +140,7 @@ def Pierce(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 35}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.green),
+        'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Pierce'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
@@ -154,7 +154,7 @@ def Bypass(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.green),
+        'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Bypass'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
@@ -166,7 +166,7 @@ def WhipSlash(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.green),
+        'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Whip slash'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
@@ -193,7 +193,7 @@ def RollingStab(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 20}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.green),
+        'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Rolling stab'),
         'Usable': entity.Cost(sp=7, usable=entity.SkillMelee(formation)),
     })
@@ -206,7 +206,7 @@ def AerialDrop(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 20}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.green),
+        'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Aerial drop'),
         'Usable': entity.Cost(sp=15, usable=entity.SkillRanged(formation, max_range=5)),
     })
@@ -217,9 +217,9 @@ def Fire(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 35}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character='&', colour=tcod.light_purple),
         'Item': entity.Item('Spell: Fire'),
-        'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation)),
+        'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation, element='fire')),
     })
 
 def Ice(position):
@@ -228,9 +228,9 @@ def Ice(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 27}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character='&', colour=tcod.light_purple),
         'Item': entity.Item('Spell: Ice'),
-        'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation)),
+        'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation, element='ice')),
     })
 
 def Lightning(position):
@@ -241,9 +241,9 @@ def Lightning(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 27}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character='&', colour=tcod.light_purple),
         'Item': entity.Item('Spell: Lightning'),
-        'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation)),
+        'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation, element='lght')),
     })
 
 def Paralyze(position):
@@ -401,7 +401,7 @@ def MeleeLifeDrainMod(position):
         'Stats': entity.Stats({'lifedrain': 2}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.red),
-        'Item': entity.Item('Melee LifeDrain Up'),
+        'Item': entity.Item('Melee Lifedrain'),
         'Mod': entity.Mod(),
     })
 
@@ -410,7 +410,117 @@ def MeleeDeathblowMod(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'deathblow': 2}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='*', colour=tcod.crimson),
-        'Item': entity.Item('Melee Deathblow Up'),
+        'Render': entity.Render(character='*', colour=tcod.dark_crimson),
+        'Item': entity.Item('Melee Deathblow'),
+        'Mod': entity.Mod(),
+    })
+
+def SPRegenMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'sp_regen': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.lighter_blue),
+        'Item': entity.Item('SP Regen'),
+        'Mod': entity.Mod(),
+    })
+
+def HPRegenMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'hp_regen': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.lighter_red),
+        'Item': entity.Item('HP Regen'),
+        'Mod': entity.Mod(),
+    })
+
+def SpellSoulDrainMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'souldrain': 2}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.blue),
+        'Item': entity.Item('Spell Souldrain'),
+        'Mod': entity.Mod(),
+    })
+
+def ToxicForceMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'self_poison': 1, 'double_atk': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.chartreuse),
+        'Item': entity.Item('Toxic Force'),
+        'Mod': entity.Mod(),
+    })
+
+def ToxicPowerMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'self_poison': 1, 'double_itl': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_green),
+        'Item': entity.Item('Toxic Power'),
+        'Mod': entity.Mod(),
+    })
+
+def PoisonHealMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'poison_heal': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.green),
+        'Item': entity.Item('Poison Heal'),
+        'Mod': entity.Mod(),
+    })
+
+def SoulConversionMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'sp_usage_heals': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.purple),
+        'Item': entity.Item('Soul Conversion'),
+        'Mod': entity.Mod(),
+    })
+
+def FireDamageMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'fire_dam': 10}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_red),
+        'Item': entity.Item('Fire Damage Up'),
+        'Mod': entity.Mod(),
+    })
+
+def IceDamageMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'ice_dam': 10}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_cyan),
+        'Item': entity.Item('Ice Damage Up'),
+        'Mod': entity.Mod(),
+    })
+
+def LightningDamageMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'lght_dam': 10}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_yellow),
+        'Item': entity.Item('Lightning Damage Up'),
+        'Mod': entity.Mod(),
+    })
+
+def PhysicalDamageMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'phys_dam': 10}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.silver),
+        'Item': entity.Item('Physical Damage Up'),
         'Mod': entity.Mod(),
     })

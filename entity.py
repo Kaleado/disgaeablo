@@ -172,7 +172,7 @@ class Usable(Component):
     def __init__(self, targeting_mode):
         self._targeting_mode = targeting_mode
 
-    def _apply_damage_decorators(self, entity, target, dam):
+    def _apply_melee_damage_decorators(self, entity, target, dam):
         my_stats = entity.component('Stats')
         lifedrain = my_stats.get_value('lifedrain')
         deathblow = my_stats.get_value('deathblow')
@@ -180,6 +180,13 @@ class Usable(Component):
             dam = damage.Chance(deathblow / 100, damage.WithDeathblow(dam), dam)
         if lifedrain > 0:
             dam = damage.WithLifeDrain(dam, lifedrain / 100)
+        return dam
+
+    def _apply_spell_damage_decorators(self, entity, target, dam):
+        my_stats = entity.component('Stats')
+        souldrain = my_stats.get_value('souldrain')
+        if souldrain > 0:
+            dam = damage.WithSoulDrain(dam, souldrain / 100)
         return dam
 
     def choose_targets(self, entity, user_entity, mapp, menu):
@@ -200,6 +207,10 @@ class Cost(Usable):
 
     def _pay_costs(self, entity, user_entity):
         user_stats = user_entity.component('Stats')
+        sp_usage_heals = user_stats.get_value('sp_usage_heals') > 0
+        sp_consumed = min(self._sp, user_stats.get_base('cur_sp'))
+        if sp_usage_heals:
+            user_stats.apply_healing(user_entity, settings.current_map, sp_consumed)
         user_stats.sub_base('cur_sp', self._sp)
 
     def can_pay_cost(self, entity, user_entity):
@@ -248,8 +259,12 @@ class Refresh(Usable):
         return False
 
 class SkillSpell(Usable):
-    def __init__(self, formation):
+    def __init__(self, formation, element='phys'):
+        self._element = element
         super().__init__(ExcludeItems(TargetFormation(formation, directional=False, max_range=10)))
+
+    def get_damage(self, entity, user_entity, mapp, target, raw_damage):
+        return damage.Damage(user_entity, raw_damage, self._element)
 
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
         global message_panel
@@ -259,11 +274,12 @@ class SkillSpell(Usable):
             attacker_name = user_entity.component('NPC').name() if user_entity.component('NPC') is not None else 'Player'
             defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             itl_over_res = user_stats.get_value('itl') / target.component('Stats').get_value('res')
-            amount = math.floor(itl_over_res * skill_stats.get_value('itl'))
+            raw_damage = math.floor(itl_over_res * skill_stats.get_value('itl'))
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
-            message_panel.info("{}'s spell hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
-            dam = damage.Damage(user_entity, amount)
-            dam.inflict(target, mapp)
+            dam = self.get_damage(entity, user_entity, mapp, target, raw_damage)
+            dam = self._apply_spell_damage_decorators(user_entity, target, dam)
+            actual_damage = dam.inflict(target, mapp)
+            message_panel.info("{}'s spell hits {}! ({} HP)".format(attacker_name, defender_name, str(actual_damage)), colour)
         user_is_player = mapp.entity('PLAYER') == user_entity
         targets[0].where(lambda e: e != user_entity).without_components(['NPC'] if not user_is_player else []).transform(damage_target)
         return False
@@ -284,6 +300,9 @@ class SkillStatusSpell(Usable):
         self._status_effect = status_effect
         self._status_duration = status_duration
 
+    def get_damage(self, entity, user_entity, mapp, target, raw_damage):
+        return damage.WithStatusEffect(self._status_effect, raw_damage, self._status_duration, damage.Damage(user_entity, 0))
+
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
         global message_panel
         skill_stats = entity.component('Stats')
@@ -293,7 +312,7 @@ class SkillStatusSpell(Usable):
             defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             itl_over_res = user_stats.get_value('itl') / max(1, target.component('Stats').get_value('res'))
             strength = math.floor(itl_over_res * skill_stats.get_value('itl'))
-            dam = damage.WithStatusEffect(self._status_effect, strength, self._status_duration, damage.Damage(user_entity, 0))
+            dam = self.get_damage(entity, user_entity, mapp, target, strength)
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
             message_panel.info("{} inflicts {} with {} for {} turns!".format(attacker_name, defender_name, self._status_effect, str(self._status_duration)), colour)
             dam.inflict(target, mapp)
@@ -312,6 +331,9 @@ class SkillRanged(Usable):
     def __init__(self, formation, max_range):
         super().__init__(ExcludeItems(TargetFormation(formation, directional=False, max_range=max_range)))
 
+    def get_damage(self, entity, user_entity, mapp, target, raw_damage):
+        return damage.Damage(user_entity, raw_damage)
+
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
         global message_panel
         skill_stats = entity.component('Stats')
@@ -320,12 +342,12 @@ class SkillRanged(Usable):
             attacker_name = user_entity.component('NPC').name() if user_entity.component('NPC') is not None else 'Player'
             defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             atk_over_dfn = user_stats.get_value('atk') / max(1, target.component('Stats').get_value('dfn'))
-            amount = math.floor(atk_over_dfn * skill_stats.get_value('atk'))
+            raw_damage = math.floor(atk_over_dfn * skill_stats.get_value('atk'))
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
-            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
-            dam = damage.Damage(user_entity, amount)
-            dam = self._apply_damage_decorators(user_entity, target, dam)
-            dam.inflict(target, mapp)
+            dam = self.get_damage(entity, user_entity, mapp, target, raw_damage)
+            dam = self._apply_melee_damage_decorators(user_entity, target, dam)
+            actual_damage = dam.inflict(target, mapp)
+            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(actual_damage)), colour)
         user_is_player = mapp.entity('PLAYER') == user_entity
         targets[0].where(lambda e: e != user_entity).without_components(['NPC'] if not user_is_player else []).transform(damage_target)
         obstructing_ents, mov_pos = self._targeting_mode.targets(group='P')
@@ -339,6 +361,9 @@ class SkillMelee(Usable):
     def __init__(self, formation):
         super().__init__(ExcludeItems(TargetFormation(formation, True)))
 
+    def get_damage(self, entity, user_entity, mapp, target, raw_damage):
+        return damage.Damage(user_entity, raw_damage)
+
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
         global message_panel
         skill_stats = entity.component('Stats')
@@ -347,12 +372,12 @@ class SkillMelee(Usable):
             attacker_name = user_entity.component('NPC').name() if user_entity.component('NPC') is not None else 'Player'
             defender_name = target.component('NPC').name() if target.component('NPC') is not None else 'Player'
             atk_over_dfn = user_stats.get_value('atk') / max(1, target.component('Stats').get_value('dfn'))
-            amount = math.floor(atk_over_dfn * skill_stats.get_value('atk'))
+            raw_damage = math.floor(atk_over_dfn * skill_stats.get_value('atk'))
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
-            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(amount)), colour)
-            dam = damage.Damage(user_entity, amount)
-            dam = self._apply_damage_decorators(user_entity, target, dam)
-            dam.inflict(target, mapp)
+            dam = self.get_damage(entity, user_entity, mapp, target, raw_damage)
+            dam = self._apply_melee_damage_decorators(user_entity, target, dam)
+            actual_damage = dam.inflict(target, mapp)
+            message_panel.info("{}'s attack hits {}! ({} HP)".format(attacker_name, defender_name, str(actual_damage)), colour)
         targets[0].transform(damage_target)
         obstructing_ents, mov_pos = self._targeting_mode.targets(group='P')
         if mov_pos is not None:
@@ -463,14 +488,27 @@ class Stats(Component):
         'res',
         'spd',
         'hit',
+        'phys_res',
         'fire_res',
         'ice_res',
         'lght_res',
+        'phys_dam',
+        'fire_dam',
+        'ice_dam',
+        'lght_dam',
         'cur_exp',
         'max_exp',
         'level',
         'deathblow',
         'lifedrain',
+        'hp_regen',
+        'sp_regen',
+        'souldrain',
+        'self_poison',
+        'double_int',
+        'double_atk',
+        'poison_heal',
+        'sp_usage_heals',
     ])
 
     """
@@ -513,18 +551,35 @@ class Stats(Component):
             message_panel.info("Level up!" + ("" if levels == 1 else " x{}".format(levels)), tcod.yellow)
             message_panel.info("You are now level {}".format(self.get_base('level') + 1), tcod.yellow)
 
+    def _self_poison(self, entity, resident_map):
+        ent_name = entity.component('NPC').name() if entity.component('NPC') else 'Player'
+        self_poison = self.get_value('self_poison') > 0
+        if self_poison:
+            if not self.has_status('POISON'):
+                message_panel.info('{} is poisoned!'.format(ent_name))
+            self.inflict_status('POISON', strength=1, duration=5)
+
     def handle_event(self, entity, event, resident_map):
         event_type, event_data = event
         ent_name = entity.component('NPC').name() if entity.component('NPC') else 'Player'
         removed = []
         if event_type == 'NPC_TURN':
+            self._self_poison(entity, resident_map)
             if self.has_status('REGEN'):
                 self.apply_healing(entity, resident_map, 0.05 * self.get_value('max_hp'))
             if self.has_status('POISON'):
                 psn_dam_amt = math.floor(0.05 * self.get_value('max_hp'))
-                colour = tcod.red if ent_name == 'Player' else tcod.white
-                message_panel.info("{} takes damage from poison ({} HP)".format(ent_name, psn_dam_amt), colour)
-                self.deal_damage(entity, resident_map, psn_dam_amt)
+                psn_dam_threshold = 0.3 # Poison can only deal damage until the affected reaches 30% HP
+                poison_heal = self.get_value('poison_heal') > 0
+                if poison_heal:
+                    colour = tcod.green if ent_name == 'Player' else tcod.white
+                    self.apply_healing(entity, resident_map, psn_dam_amt)
+                else:
+                    # Only damage the character if they wouldn't have less than the poison damage threshold
+                    if self.get_value('cur_hp') / self.get_value('max_hp') - 0.05 >= psn_dam_threshold:
+                        colour = tcod.red if ent_name == 'Player' else tcod.white
+                        message_panel.info("{} takes damage from poison ({} HP)".format(ent_name, psn_dam_amt), colour)
+                        self.deal_damage(entity, resident_map, psn_dam_amt)
             for status_effect in self._status_effects.keys():
                 self._status_effects[status_effect] -= 1
                 if self._status_effects[status_effect] == 0:
@@ -589,9 +644,11 @@ class Stats(Component):
             resident_map.remove_entity(entity.ident())
 
     def get_value(self, stat):
+        double_stat = self._stats.get('double_{}'.format(stat))
+        double_factor = double_stat if double_stat is not None else 0 * 2
         if stat == 'spd' and self.has_status('PARALYZE'):
             return 0
-        return int((self._stats[stat] + self._modifiers[stat]['additive']) * self._modifiers[stat]['multiplicative'])
+        return int((self.get_base(stat) * (1 + double_factor) + self._modifiers[stat]['additive']) * self._modifiers[stat]['multiplicative'])
 
     def get_additive_modifier(self, stat):
         return self._modifiers[stat]['additive']
@@ -765,7 +822,7 @@ class Combat(Component):
     def __init__(self):
         pass
 
-    def _apply_damage_decorators(self, entity, target, dam):
+    def _apply_melee_damage_decorators(self, entity, target, dam):
         my_stats = entity.component('Stats')
         lifedrain = my_stats.get_value('lifedrain')
         deathblow = my_stats.get_value('deathblow')
@@ -773,6 +830,13 @@ class Combat(Component):
             dam = damage.Chance(deathblow / 100, damage.WithDeathblow(dam), dam)
         if lifedrain > 0:
             dam = damage.WithLifeDrain(dam, lifedrain / 100)
+        return dam
+
+    def _apply_spell_damage_decorators(self, entity, target, dam):
+        my_stats = entity.component('Stats')
+        souldrain = my_stats.get_value('souldrain')
+        if souldrain > 0:
+            dam = damage.WithSoulDrain(dam, souldrain / 100)
         return dam
 
     def attack(self, entity, resident_map, position):
@@ -788,7 +852,7 @@ class Combat(Component):
             stats = ent.component('Stats')
             my_stats = entity.component('Stats')
             dam = damage.Damage(entity, 20 * my_stats.get_value('atk') / stats.get_value('dfn'))
-            dam = self._apply_damage_decorators(entity, ent, dam)
+            dam = self._apply_melee_damage_decorators(entity, ent, dam)
             amount = dam.inflict(ent, resident_map)
             colour = tcod.red if attacker_name == 'Player' or defender_name == 'Player' else tcod.white
             settings.message_panel.info("{} lunges at {}! ({} HP)".format(attacker_name, defender_name, str(int(amount))), colour)
@@ -980,12 +1044,13 @@ class PlayerLogic(Component):
             if event_data.sym == tcod.event.K_c:
                 self._chat_mode = not self._chat_mode
                 return True
-            elif event_data.sym == tcod.event.K_KP_8:
+            elif event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 if self._chat_mode:
                     resident_map.entities()\
                                 .at_position((x, y-1))\
                                 .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
                     self._chat_mode = False
+                    return True
                 elif lshift_held:
                     combat.attack(entity, resident_map, (x, y-1))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x, y-1)):
@@ -993,49 +1058,91 @@ class PlayerLogic(Component):
                 resident_map.end_turn()
                 return True
             elif event_data.sym == tcod.event.K_KP_7:
-                if lshift_held:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x-1, y-1))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                    return True
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x-1, y-1))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x-1, y-1)):
                     position.sub(x=1,y=1)
                 resident_map.end_turn()
                 return True
             elif event_data.sym == tcod.event.K_KP_9:
-                if lshift_held:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x+1, y-1))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                    return True
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x+1, y-1))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x+1, y-1)):
                     position.add(x=1,y=-1)
                 resident_map.end_turn()
                 return True
             elif event_data.sym == tcod.event.K_KP_1:
-                if lshift_held:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x-1, y+1))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                    return True
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x-1, y+1))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x-1, y+1)):
                     position.add(x=-1,y=1)
                 resident_map.end_turn()
                 return True
             elif event_data.sym == tcod.event.K_KP_3:
-                if lshift_held:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x+1, y+1))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                    return True
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x+1, y+1))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x+1, y+1)):
                     position.add(x=1,y=1)
                 resident_map.end_turn()
                 return True
-            elif event_data.sym == tcod.event.K_KP_4:
-                if lshift_held:
+            elif event_data.sym in [tcod.event.K_KP_4, tcod.event.K_j]:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x-1, y))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                    return True
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x-1, y))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x-1, y)):
                     position.sub(x=1)
                 resident_map.end_turn()
                 return True
-            elif event_data.sym == tcod.event.K_KP_2:
-                if lshift_held:
+            elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x, y+1))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                    return True
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x, y+1))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x, y+1)):
                     position.add(y=1)
                 resident_map.end_turn()
                 return True
-            elif event_data.sym == tcod.event.K_KP_6:
-                if lshift_held:
+            elif event_data.sym in [tcod.event.K_KP_6, tcod.event.K_l]:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x+1, y))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                    return True
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x+1, y))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x+1, y)):
                     position.add(x=1)

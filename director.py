@@ -193,6 +193,16 @@ class LootDirector:
         loot.HitMod,
         loot.MeleeLifeDrainMod,
         loot.MeleeDeathblowMod,
+        loot.SPRegenMod,
+        loot.HPRegenMod,
+        loot.SpellSoulDrainMod,
+        loot.ToxicForceMod,
+        loot.PoisonHealMod,
+        loot.SoulConversionMod,
+        loot.LightningDamageMod,
+        loot.FireDamageMod,
+        loot.IceDamageMod,
+        loot.PhysicalDamageMod,
     ]
 
     def __init__(self):
