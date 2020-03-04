@@ -9,6 +9,19 @@ import loot
 LEVEL_PC_STAT_INC = 0.07
 TIER_PC_STAT_INC = 19
 
+def ItemWorldClerkNPC(position):
+    x, y = position
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({'max_hp': 1000, 'cur_hp': 1000}),
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.magenta),
+        'Combat': Combat(),
+        'NPC': NPC('Item world clerk'),
+        'AI': ItemWorldClerk()
+    })
+
+
+
 class Slime:
     base_stats = {
         'max_hp': 120,

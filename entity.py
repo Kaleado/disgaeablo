@@ -81,10 +81,10 @@ class ExcludeItems(TargetMode):
 
 class TargetNobody(TargetMode):
     def targets(self, group='x'):
-        return [], []
+        return EntityListView([]), []
 
     def choose_targets(self, user_entity, used_entity, mapp, menu):
-        return [], []
+        return EntityListView([]), []
 
 class TargetEveryone(TargetMode):
     def __init__(self, group='x'):
@@ -219,6 +219,15 @@ class ConsumeAfter(Usable):
         # Override the return value to be True
         self._usable.use(entity, user_entity, mapp, menu)
         return True
+
+class ReturnToTown(Usable):
+    def __init__(self):
+        super().__init__(targeting_mode=TargetNobody())
+
+    def use_on_targets(self, entity, user_entity, mapp, targets, menu):
+        import director
+        director.map_director.return_to_town()
+        return False
 
 class Heal(Usable):
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
@@ -359,6 +368,9 @@ class Mod(Component):
 class Item(Component):
     def __init__(self, name):
         self._name = name
+
+    def item_world_floor(self, entity):
+        return entity.component('Stats').get_base('level') + 1
 
     def name(self):
         return self._name
@@ -866,6 +878,34 @@ class AI(Component):
         self._delayed_targets = usable.choose_targets(entity, entity, resident_map, None)
         resident_map.add_threatened_positions(self._delayed_targets[1])
 
+class Neutral(AI):
+    def __init__(self, on_chat=None):
+        super().__init__()
+        self._on_chat = on_chat
+
+    def _handle_event(self, entity, event, resident_map):
+        event_type, event_data = event
+        if event_type == 'PLAYER_CHAT_WITH' and event_data == entity.ident() and self._on_chat is not None:
+            self._on_chat(self, entity, event, resident_map)
+            return True
+
+class ItemWorldClerk(Neutral):
+    def on_chat(self, entity, event, resident_map):
+        import director
+        settings.message_panel.info("SCREAM", tcod.green)
+        player = resident_map.entity('PLAYER')
+        choose_item_menu = Menu({
+            'ChooseItemPanel': ((0,0), ChooseItemPanel(player, []))
+        }, ['ChooseItemPanel'])
+        chosen_item = choose_item_menu.run(settings.root_console)
+        if chosen_item is None:
+            return True
+        settings.set_item_world(chosen_item)
+        director.map_director.descend()
+   
+    def __init__(self):
+        super().__init__(ItemWorldClerk.on_chat)
+
 class Slow(AI):
     def __init__(self, ai, period=2):
         self._ai = ai
@@ -926,7 +966,7 @@ class Hostile(AI):
 
 class PlayerLogic(Component):
     def __init__(self):
-        pass
+        self._chat_mode = False
 
     def handle_event(self, entity, event, resident_map):
         import director
@@ -937,8 +977,16 @@ class PlayerLogic(Component):
             is_paralyzed = entity.component('Stats').has_status('PARALYZE')
             x, y = position.get()
             lshift_held = event_data.mod & tcod.event.KMOD_LSHIFT == 1
-            if event_data.sym == tcod.event.K_KP_8:
-                if lshift_held:
+            if event_data.sym == tcod.event.K_c:
+                self._chat_mode = not self._chat_mode
+                return True
+            elif event_data.sym == tcod.event.K_KP_8:
+                if self._chat_mode:
+                    resident_map.entities()\
+                                .at_position((x, y-1))\
+                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+                    self._chat_mode = False
+                elif lshift_held:
                     combat.attack(entity, resident_map, (x, y-1))
                 elif not is_paralyzed and resident_map.is_passable_for(entity, (x, y-1)):
                     position.sub(y=1)

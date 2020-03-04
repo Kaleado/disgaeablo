@@ -7,6 +7,9 @@ class EntityListView:
     def in_formation(self, formation, position, rotation, group='x'):
         return self.with_component('Position').where(lambda ent: formation.in_formation(position, ent.component('Position').get(), rotation, group))
 
+    def at_position(self, pos):
+        return self.with_component('Position').where(lambda ent: ent.component('Position').get() == pos)
+
     def with_all_components(self, identifiers):
         def pred(e):
             for identifier in identifiers:

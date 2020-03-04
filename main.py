@@ -12,7 +12,7 @@ from panel import *
 from entity import *
 from director import *
 
-settings.set_current_map(map_director.map('CAVE', 1))
+settings.set_current_map(map_director.map(1))
 
 settings.current_map._entities = {
     'PLAYER': Entity('PLAYER', components={
@@ -30,7 +30,7 @@ settings.current_map._entities = {
             'max_exp': 50
         }),
         'Combat': Combat(),
-        'Position': Position(5, 5),
+        'Position': Position(15, 15),
         'Render': Render(character="@", colour=tcod.red),
         'PlayerLogic': PlayerLogic(),
         'Inventory': Inventory(),
@@ -38,9 +38,9 @@ settings.current_map._entities = {
     })
 }
 
-# settings.current_map.add_entity(loot.AerialDrop((6,5)))
 # settings.current_map.add_entity(loot.RollingStab((7,5)))
-# settings.current_map.add_entity(loot.AtkMod((8,5)))
+settings.current_map.add_entity(loot.AtkMod((15,15)))
+settings.current_map.add_entity(loot.TownPortal((15,15)))
 # settings.current_map.add_entity(loot.Sword.generator(tier=1)((9,5)))
 # settings.current_map.add_entity(loot.MeleeLifeDrainMod((10,5)))
 settings.current_map.add_entity(loot.Weaken((11,5)))

@@ -7,43 +7,48 @@ from map import *
 class MapDirector:
     def __init__(self):
         self._current_floor = 0
+        self._item_world = None # item_world = none indicates we are in the main dungeon
 
-    def _area_for_floor(self, floor):
-       if floor == 0:
-           return 'TOWN'
-       if floor == 1:
-           return 'CORRIDORS'
-       if floor % 5 == 0:
-           return 'TWO_ROOMS'
-       elif floor > 0 and floor < 10:
-           return 'CAVE'
-       elif floor >= 10 and floor < 20:
-           return 'ROOMS'
-       else:
-           return 'GRID'
+    def set_item_world(self, item):
+        self._item_world = item
 
-    def map(self, area, level):
-        roll = random.randint(0,2)
-        mapp = Cave(10, 10)
-        w, h = 10, 10
-        if area == 'ROOMS':
-            mapp = Rooms(30,30)
+    def _item_world_map(self, level):
+        mapp = Grid(30,30)
+        w,h=30,30
+        return mapp, w, h
+
+    def _main_dungeon_map(self, level):
+        mapp = Grid(30,30)
+        w,h=30,30
+        if self._current_floor == 0:
+            mapp = Town(30, 30, [monster.ItemWorldClerkNPC])
             w,h=30,30
-        elif area == 'GRID':
-            mapp = Grid(30,30)
-            w,h=30,30
-        elif area == 'CAVE':
-            mapp = Cave(30, 30)
-            w,h=30,30
-        elif area == 'TWO_ROOMS':
+        elif self._current_floor % 5 == 0:
             mapp = TwoRooms(30, 30, room_size=9)
             w,h=30,30
-        elif area == 'CORRIDORS':
+        elif self._current_floor in range(0, 10):
+            mapp = Cave(30, 30)
+            w,h=30,30
+        elif self._current_floor % 10 == 1:
             mapp = Corridors(30, 30, room_size=5)
             w,h=30,30
+        elif self._current_floor in range(10, 20):
+            mapp = Rooms(30,30)
+            w,h=30,30
+        return mapp, w, h
+
+    def map(self, level):
+        if self._item_world is not None:
+            mapp, w, h = self._item_world_map(level)
+        else:
+            mapp, w, h = self._main_dungeon_map(level)
+
+        if self._current_floor == 0 and self._item_world is None:
+            return mapp
+       
         n_items = random.randint(2, 7)
         for _ in range(n_items):
-            item = loot_director.ground_loot(area, level)
+            item = loot_director.ground_loot(level)
             x, y = random.randint(0, w-1), random.randint(0,h-1)
             while not mapp.is_passable_for(item((0,0)), (x, y)):
                 x, y = random.randint(0, w-1), random.randint(0,h-1)
@@ -51,7 +56,7 @@ class MapDirector:
 
         n_monst = random.randint(2, 10)
         for _ in range(n_monst):
-            monst = monster_director.monster(area, level)
+            monst = monster_director.monster(level)
             x, y = random.randint(0, w-1), random.randint(0,h-1)
             while not mapp.is_passable_for(monst((0,0)), (x, y)):
                 x, y = random.randint(0, w-1), random.randint(0,h-1)
@@ -59,25 +64,47 @@ class MapDirector:
         return mapp
 
     def difficulty(self):
-        return 3 + self._current_floor * 5
+        if self._item_world == None:
+            return 3 + self._current_floor * 5
+        else:
+            import entity
+            stats = self._item_world.component('Stats')
+            primaries = entity.Stats.primary_stats - set(['max_hp', 'max_sp'])
+            tot = sum([stats.get_base(stat) for stat in primaries])
+            return 3 + self._current_floor * math.floor(tot / 5)
+
+    def _change_floor(self):
+        if self._item_world is None:
+            settings.main_dungeon_lowest_floor = max(settings.main_dungeon_lowest_floor, self._current_floor)
+        player = settings.current_map.entity('PLAYER')
+        settings.set_current_map(self.map(self.difficulty()))
+        x, y = settings.current_map.player_start_position(player)
+        player.component('Position').set(x, y)
+
+    def return_to_town(self):
+        settings.set_item_world(None)
+        self.move_to_floor(0)
 
     def move_to_floor(self, floor):
+        settings.message_panel.info("You move to floor {}".format(floor))
         self._current_floor = floor
-        settings.message_panel.info("You descend to floor " + str(self._current_floor))
-        player = settings.current_map.entity('PLAYER')
-        area = self._area_for_floor(self._current_floor)
-        settings.set_current_map(self.map(area, self.difficulty()))
-        x, y = settings.current_map.player_start_position(player)
-        player.component('Position').set(x, y)
+        self._change_floor()
 
     def descend(self):
+        # If entering the main dungeon, return to the lowest floor in the dungeon
+        if self._current_floor == 0:
+            if self._item_world is None:
+                self.move_to_floor(settings.main_dungeon_lowest_floor)
+            else:
+                item = self._item_world
+                self.move_to_floor(item.component('Item').item_world_floor(item))
+            return
+
+        settings.message_panel.info("You descend to floor {}".format(self._current_floor+1))
+        if self._item_world is not None:
+            self._item_world.component('Stats').increase_level(1)
         self._current_floor += 1
-        settings.message_panel.info("You descend to floor " + str(self._current_floor))
-        player = settings.current_map.entity('PLAYER')
-        area = self._area_for_floor(self._current_floor)
-        settings.set_current_map(self.map(area, self.difficulty()))
-        x, y = settings.current_map.player_start_position(player)
-        player.component('Position').set(x, y)
+        self._change_floor()
 
 map_director = MapDirector()
 
@@ -95,11 +122,14 @@ class MonsterDirector:
         # monster.Golem,
     ]
     def __init__(self):
-        pass
+        self._item_world = None
 
-    def monster(self, area, level):
+    def set_item_world(self, item):
+        self._item_world = item
+
+    def monster(self, level):
         tier = 1
-        if random.randint(0, 100) < 10:
+        if random.randint(0, 100) < 3:
             tier += 1
             level = math.floor(level * 0.1)
         return random.choice(MonsterDirector.monsters).generator(tier=tier, level=level)
@@ -166,17 +196,22 @@ class LootDirector:
     ]
 
     def __init__(self):
-        pass
+        self._item_world = None
 
-    def monster_loot(self, area, level):
+    def set_item_world(self, item):
+        self._item_world = item
+
+    def monster_loot(self, level):
         return random.choice(LootDirector.items)
 
-    def ground_loot(self, area, level):
+    def ground_loot(self, level):
         roll = random.randint(0,500)
         if roll < 100:
             return loot.Healing.generator(tier=1)
-        elif roll < 200:
+        elif roll < 150:
             return loot.Refreshing.generator(tier=1)
+        elif roll < 200:
+            return loot.TownPortal
         elif roll < 300:
             return random.choice(LootDirector.mods)
         elif roll < 400:

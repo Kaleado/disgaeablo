@@ -9,6 +9,15 @@ import math
 import random
 
 ##################################################### CONSUMABLES
+def TownPortal(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='+', colour=tcod.lighter_blue),
+        'Item': entity.Item("Town portal"),
+        'Usable': entity.ConsumeAfter(entity.ReturnToTown())
+    })
 
 class Healing:
     base_stats = {

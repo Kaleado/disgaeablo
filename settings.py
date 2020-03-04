@@ -8,9 +8,17 @@ from map import *
 from console import *
 import loot
 
+main_dungeon_lowest_floor = 1
+
 message_panel = MessagePanel(14)
 
 current_map = None
+
+def set_item_world(item):
+    import director
+    director.map_director.set_item_world(item)
+    director.monster_director.set_item_world(item)
+    director.loot_director.set_item_world(item)
 
 def set_current_map(mapp):
     global current_map, root_menu

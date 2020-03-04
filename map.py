@@ -274,5 +274,14 @@ class Corridors(Map):
                 for y in range(width):
                     self._terrain[y][c] = '.'
         # Stairs
+        self._terrain[ry + room_size//2][rx + room_size//2] = '>'
+
+class Town(Map):
+    def __init__(self, width, height, residents, map_group=None):
+        super().__init__(map_group)
+        self._terrain = [['.' for x in range(width)] for y in range(height)]
         x, y = width // 2, height // 2
         self._terrain[y][x] = '>'
+        for generator in residents:
+            ent = generator((random.randint(3, width-3),random.randint(3, height-3)))
+            self.add_entity(ent)

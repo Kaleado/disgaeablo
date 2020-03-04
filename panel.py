@@ -555,6 +555,8 @@ class InventoryPanel(Panel):
             return False
        
         entity = self._mapp.entity(self._entity_ident)
+        if not entity:
+            return False
         inventory = entity.component('Inventory')
         inventory_size = inventory.items().size()
         if event_type == "TCOD" and event_data.type == "KEYDOWN" and inventory_size > 0:
