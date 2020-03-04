@@ -505,8 +505,8 @@ class Stats(Component):
         'sp_regen',
         'souldrain',
         'self_poison',
-        'double_int',
-        'double_atk',
+        'boost_int',
+        'boost_atk',
         'poison_heal',
         'sp_usage_heals',
     ])
@@ -569,7 +569,7 @@ class Stats(Component):
                 self.apply_healing(entity, resident_map, 0.05 * self.get_value('max_hp'))
             if self.has_status('POISON'):
                 psn_dam_amt = math.floor(0.05 * self.get_value('max_hp'))
-                psn_dam_threshold = 0.05 # Poison can only deal damage until the affected reaches 30% HP
+                psn_dam_threshold = 0.05 # Poison can only deal damage until the affected reaches 5% HP
                 poison_heal = self.get_value('poison_heal') > 0
                 if poison_heal:
                     colour = tcod.green if ent_name == 'Player' else tcod.white
@@ -644,11 +644,11 @@ class Stats(Component):
             resident_map.remove_entity(entity.ident())
 
     def get_value(self, stat):
-        double_stat = self._stats.get('double_{}'.format(stat))
-        double_factor = double_stat if double_stat is not None else 0 * 2
+        boost_stat = self._stats.get('boost_{}'.format(stat))
+        boost_factor = boost_stat if boost_stat is not None else 0 * 1.333
         if stat == 'spd' and self.has_status('PARALYZE'):
             return 0
-        return int((self.get_base(stat) * (1 + double_factor) + self._modifiers[stat]['additive']) * self._modifiers[stat]['multiplicative'])
+        return int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive']) * self._modifiers[stat]['multiplicative'])
 
     def get_additive_modifier(self, stat):
         return self._modifiers[stat]['additive']

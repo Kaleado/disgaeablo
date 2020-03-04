@@ -96,7 +96,7 @@ class ResArmour:
     base_stats = {
         'Res': 10,
     }
-    names = ['Tunic', 'Leather armour', 'Splint mail', 'Chainmail', 'Platemail', 'Glorious armour', 'Nephilim guard']
+    names = ['Loincloth', 'Leather armour', 'Splint mail', 'Chainmail', 'Platemail', 'Glorious armour', 'Nephilim guard']
     colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
 
     def generator(tier=1, level=1):
@@ -494,7 +494,7 @@ def SpellSoulDrainMod(position):
 def ToxicForceMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'self_poison': 1, 'double_atk': 1}),
+        'Stats': entity.Stats({'self_poison': 1, 'boost_atk': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.chartreuse),
         'Item': entity.Item('Toxic Force'),
@@ -504,7 +504,7 @@ def ToxicForceMod(position):
 def ToxicPowerMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'self_poison': 1, 'double_itl': 1}),
+        'Stats': entity.Stats({'self_poison': 1, 'boost_itl': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_green),
         'Item': entity.Item('Toxic Power'),
