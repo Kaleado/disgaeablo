@@ -533,7 +533,7 @@ class Stats(Component):
         return sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])])
 
     def increase_level(self, num):
-        self.add_base('max_exp', num * 100)
+        self.add_base('max_exp', num * 20)
         self.add_base('level', num)
         for stat in Stats.primary_stats:
             print(self.add_base(stat, self._base_stats[stat] * num * 0.2))
@@ -573,7 +573,7 @@ class Stats(Component):
                 poison_heal = self.get_value('poison_heal') > 0
                 if poison_heal:
                     colour = tcod.green if ent_name == 'Player' else tcod.white
-                    self.apply_healing(entity, resident_map, psn_dam_amt)
+                    self.apply_healing(entity, resident_map, psn_dam_amt / 10)
                 else:
                     # Only damage the character if they wouldn't have less than the poison damage threshold
                     if self.get_value('cur_hp') / self.get_value('max_hp') - 0.05 >= psn_dam_threshold:
@@ -606,7 +606,7 @@ class Stats(Component):
             message_panel.info("{} no longer has stoneskin".format(ent_name), colour)
             self.sub_multiplicative_modifier('dfn', 0.5)
         else:
-            message_panel.info("{} no longer has ".format(ent_name, status), colour)
+            message_panel.info("{} no longer has {}".format(ent_name, status), colour)
 
     def status_effects(self):
         return self._status_effects.keys()
