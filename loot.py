@@ -69,17 +69,17 @@ class Refreshing:
 
 ##################################################### EQUIPMENT
 
-class DFNArmour:
+class DfnArmour:
     base_stats = {
         'dfn': 10,
     }
-    names = ['Rusted sword', 'Shortsword', 'Broadsword', 'Estoc', 'Claymore', 'Flamberge', 'Zanbato']
-    colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.red]
+    names = ['Tunic', 'Leather armour', 'Splint mail', 'Chainmail', 'Platemail', 'Glorious armour', 'Nephilim guard']
+    colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
 
     def generator(tier=1, level=1):
-        actual_stats = util.copy_dict(Sword.base_stats)
-        for stat in Sword.base_stats:
-            actual_stats[stat] = (Sword.base_stats[stat] + Sword.base_stats[stat] * (tier - 1) * 100)
+        actual_stats = util.copy_dict(DfnArmour.base_stats)
+        for stat in DfnArmour.base_stats:
+            actual_stats[stat] = (DfnArmour.base_stats[stat] + DfnArmour.base_stats[stat] * (tier - 1) * 100)
             actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -87,11 +87,33 @@ class DFNArmour:
                 'Stats': entity.Stats(actual_stats),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
-                'Render': entity.Render(character='/', colour=Sword.colours[tier-1]),
-                'Item': entity.Item(Sword.names[tier-1]),
+                'Render': entity.Render(character='[', colour=DfnArmour.colours[tier-1]),
+                'Item': entity.Item(DfnArmour.names[tier-1]),
             })
         return gen
 
+class ResArmour:
+    base_stats = {
+        'Res': 10,
+    }
+    names = ['Tunic', 'Leather armour', 'Splint mail', 'Chainmail', 'Platemail', 'Glorious armour', 'Nephilim guard']
+    colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(DfnArmour.base_stats)
+        for stat in DfnArmour.base_stats:
+            actual_stats[stat] = (DfnArmour.base_stats[stat] + DfnArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] += math.floor(0.07 * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return entity.Entity(str(uuid.uuid4()), components={
+                'Stats': entity.Stats(actual_stats),
+                'Position': entity.Position(x, y),
+                'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
+                'Render': entity.Render(character='[', colour=DfnArmour.colours[tier-1]),
+                'Item': entity.Item(DfnArmour.names[tier-1]),
+            })
+        return gen
 
 class Sword:
     base_stats = {

@@ -569,7 +569,7 @@ class Stats(Component):
                 self.apply_healing(entity, resident_map, 0.05 * self.get_value('max_hp'))
             if self.has_status('POISON'):
                 psn_dam_amt = math.floor(0.05 * self.get_value('max_hp'))
-                psn_dam_threshold = 0.3 # Poison can only deal damage until the affected reaches 30% HP
+                psn_dam_threshold = 0.05 # Poison can only deal damage until the affected reaches 30% HP
                 poison_heal = self.get_value('poison_heal') > 0
                 if poison_heal:
                     colour = tcod.green if ent_name == 'Player' else tcod.white
