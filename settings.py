@@ -35,13 +35,14 @@ panels = {
     'MapPanel': ((15,2), MapPanel(current_map)),
     'StatsPanel': ((1,2), StatsPanel(current_map, 'PLAYER')),
     'InventoryPanel': ((46,2), InventoryPanel('PLAYER', current_map, root_console)),
-    'EntityStatsPanel': ((66,2), EntityStatsPanel()),
+    'EntityStatsPanel': ((46,34), EntityStatsPanel()),
     'EquipmentSlotPanel': ((46,28), EquipmentSlotPanel('PLAYER', current_map)),
     'MessagePanel': ((1,34), message_panel),
-    'ModSlotPanel': ((66,28), ModSlotPanel(None))
+    'ModSlotPanel': ((66,28), ModSlotPanel(None)),
+    'HelpPanel': ((1,50), TextPanel("Help"))
 }
 
-focus_list = ['MapPanel', 'StatsPanel', 'InventoryPanel', 'EquipmentSlotPanel', 'MessagePanel']
+focus_list = ['MapPanel', 'InventoryPanel', 'EquipmentSlotPanel', 'MessagePanel', 'StatsPanel', 'ModSlotPanel', 'HelpPanel', 'EntityStatsPanel']
 focus_index = 0
 panels['MapPanel'][1].focus()
 

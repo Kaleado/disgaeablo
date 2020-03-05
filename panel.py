@@ -13,6 +13,7 @@ class Menu:
         self._focus_index = 0
         self._has_resolved = False
         self._resolution_value = None
+        self._repositioning_panels = False
 
         self._panels[self._focus_list[self._focus_index]][1].focus()
 
@@ -49,6 +50,8 @@ class Menu:
                 panel.render(console, origin)
             tcod.console_flush()  # Show the console.
             for event in tcod.event.wait(timeout=0.2):
+                if event.type == "KEYDOWN" and event.sym == tcod.event.K_BACKQUOTE:
+                    self._repositioning_panels = not self._repositioning_panels
                 if event.type == "KEYDOWN" and event.sym == tcod.event.K_TAB:
                     delta = -1 if event.mod & tcod.event.KMOD_LSHIFT else 1
                     key = self._focus_list[self._focus_index]
@@ -58,9 +61,21 @@ class Menu:
                     self._panels[key][1].focus()
                 if event.type == "QUIT":
                     raise SystemExit()
-                else:
+                if not self._repositioning_panels:
                     for _, panel in self._panels.values():
                         panel.handle_event(("TCOD", event), self)
+                else:
+                    pos, pan = self._panels[self._focus_list[self._focus_index]]
+                    if event.type == "KEYDOWN":
+                        if event.sym == tcod.event.K_i:
+                            pos = (pos[0], pos[1]-1)
+                        if event.sym == tcod.event.K_j:
+                            pos = (pos[0]-1, pos[1])
+                        if event.sym == tcod.event.K_k:
+                            pos = (pos[0], pos[1]+1)
+                        if event.sym == tcod.event.K_l:
+                            pos = (pos[0]+1, pos[1])
+                    self._panels[self._focus_list[self._focus_index]] = (pos, pan)
             settings.current_map.commit()
         return self._resolution_value
 
@@ -143,13 +158,13 @@ class MapPanel(Panel):
             if event_data.sym == tcod.event.K_ESCAPE:
                 self._look_mode = False
                 return True
-            elif event_data.sym in [tcod.event.K_i]:
+            elif event_data.sym in [tcod.event.K_i, tcod.event.K_KP_8]:
                 new_pos = (self._cursor_pos[0], self._cursor_pos[1]-step)
-            elif event_data.sym in [tcod.event.K_j]:
+            elif event_data.sym in [tcod.event.K_j, tcod.event.K_KP_4]:
                 new_pos = (self._cursor_pos[0]-step, self._cursor_pos[1])
-            elif event_data.sym in [tcod.event.K_k]:
+            elif event_data.sym in [tcod.event.K_k, tcod.event.K_KP_2]:
                 new_pos = (self._cursor_pos[0], self._cursor_pos[1]+step)
-            elif event_data.sym in [tcod.event.K_l]:
+            elif event_data.sym in [tcod.event.K_l, tcod.event.K_KP_6]:
                 new_pos = (self._cursor_pos[0]+step, self._cursor_pos[1])
 
             w, h = self._map.dimensions()
@@ -176,6 +191,26 @@ class MapPanel(Panel):
             return True
         return self._map.entities().for_each_until(lambda ent: ent.handle_event(event, self._map))
 
+class TextPanel(Panel):
+    def __init__(self, heading, text="", colour=tcod.white):
+        super().__init__()
+        self._heading = heading
+        self._text = text
+        self._colour = colour
+
+    def set_text(self, text, colour=tcod.white):
+        self._text = text
+        self._colour = colour
+
+    def _render(self, console, origin):
+        x, y = origin
+        console.print(x=x, y=y, string=self._heading)
+        old_fg = console.default_fg
+        console.default_fg = self._colour
+        x, y = origin
+        console.print(x=x, y=y+1, string=self._text)
+        console.default_fg = old_fg
+
 class PlaceFormationOnMapPanel(MapPanel):
     _cursor_rotation = 0
    
@@ -192,10 +227,10 @@ class PlaceFormationOnMapPanel(MapPanel):
         x, y = origin
         in_formation = self._formation.positions_in_formation(self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation, group='x')
         for (xx, yy) in in_formation:
-            console.fg[x+xx][y+yy] = tcod.red
+            console.bg[x+xx][y+yy] = tcod.darkest_red
         in_user_movement = self._formation.positions_in_formation(self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation, group='P')
         for (xx, yy) in in_user_movement:
-            console.fg[x+xx][y+yy] = tcod.green
+            console.bg[x+xx][y+yy] = tcod.darkest_green
 
     def _done(self, menu):
         menu.resolve((self._cursor_position, PlaceFormationOnMapPanel._cursor_rotation))
@@ -241,8 +276,6 @@ class PlaceFormationOnMapPanel(MapPanel):
         return False
 
     def handle_event(self, event, menu):
-        under_cursor = settings.current_map.entities().where(lambda e: e.component('Position').get() == self._cursor_position).as_list()
-        menu.panel('EntityStatsPanel')[1].set_entity(None if len(under_cursor) == 0 else under_cursor[0])
         if self._directional:
             return self._handle_event_directional(event, menu)
         else:
@@ -624,12 +657,14 @@ class InventoryPanel(Panel):
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
                 settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
+                menu.panel('HelpPanel')[1].set_text(item_ent.component('Item').description())
                 return True
             elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 self._selection_index = min(self._selection_index + 1, inventory_size-1)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
                 settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
+                menu.panel('HelpPanel')[1].set_text(item_ent.component('Item').description())
                 return True
             elif event_data.sym == tcod.event.K_d:
                 item_ent = inventory.items().as_list()[self._selection_index]
@@ -679,6 +714,7 @@ class InventoryPanel(Panel):
             item_ent = items[self._selection_index] if self._selection_index < len(items) else None
             menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
             menu.panel('ModSlotPanel')[1].set_entity(item_ent)
+            menu.panel('HelpPanel')[1].set_text(item_ent.component('Item').description())
         return False
 
 class ChooseItemPanel(Panel):

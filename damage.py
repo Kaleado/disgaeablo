@@ -4,6 +4,9 @@ import random
 import math
 import tcod
 
+def SpellDamage(amount, element='phys'):
+    return lambda e: Damage(e, amount, element)
+
 class Damage:
     def __init__(self, source_entity, amount, element='phys'):
         self._source_entity = source_entity
@@ -17,6 +20,7 @@ class Damage:
         return actual_amount
 
     def inflict(self, destination_entity, mapp):
+        settings.current_map.entities().transform(lambda e: e.handle_event(('ENTITY_DAMAGED_BY', (destination_entity.ident(), self._source_entity.ident())), mapp))
         stats = destination_entity.component('Stats')
         if stats is not None:
             actual_amount = self.amount(destination_entity)
@@ -25,7 +29,7 @@ class Damage:
             return self._amount
         return None
 
-class DamageWrapper(Damage):
+class DamageDecorator(Damage):
     def __init__(self, damage):
         self._damage = damage
 
@@ -35,7 +39,7 @@ class DamageWrapper(Damage):
     def inflict(self, destination_entity, mapp):
         return self._damage.inflict(destination_entity, mapp)
 
-class WithStatusEffect(DamageWrapper):
+class WithStatusEffect(DamageDecorator):
     def __init__(self, status_effect, strength, duration, damage):
         super().__init__(damage)
         self._status_effect = status_effect
@@ -49,7 +53,7 @@ class WithStatusEffect(DamageWrapper):
             stats.inflict_status(self._status_effect, self._strength, self._duration)
         return self._damage.inflict(destination_entity, mapp)
 
-class WithDeathblow(DamageWrapper):
+class WithDeathblow(DamageDecorator):
     def __init__(self, damage):
         super().__init__(damage)
         self._source_entity = damage._source_entity
@@ -63,7 +67,7 @@ class WithDeathblow(DamageWrapper):
             settings.message_panel.info("DEATHBLOW!", tcod.magenta)
             return cur_hp
 
-class WithLifeDrain(DamageWrapper):
+class WithLifeDrain(DamageDecorator):
     def __init__(self, damage, heal_proportion=1.0):
         super().__init__(damage)
         self._heal_proportion = heal_proportion
@@ -82,7 +86,7 @@ class WithLifeDrain(DamageWrapper):
         settings.message_panel.info("{} drained {} HP from {}".format(attacker_name, healed_amount, defender_name), colour)
         return inflicted
 
-class WithSoulDrain(DamageWrapper):
+class WithSoulDrain(DamageDecorator):
     def __init__(self, damage, refresh_proportion=1.0):
         super().__init__(damage)
         self._refresh_proportion = refresh_proportion

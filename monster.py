@@ -12,7 +12,18 @@ TIER_PC_STAT_INC = 10
 def ItemWorldClerkNPC(position):
     x, y = position
     return Entity(str(uuid.uuid4()), components={
-        'Stats': Stats({'max_hp': 1000, 'cur_hp': 1000}),
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.magenta),
         'Combat': Combat(),
@@ -210,7 +221,7 @@ class Spider:
                 'Render': Render(character='P', colour=Spider.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Spider.names[tier-1]),
-                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=2))
+                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=5, keep_at_range=3))
             })
         return gen
 
@@ -292,7 +303,7 @@ class Wyvern:
                 'Render': Render(character='W', colour=Wyvern.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Wyvern.names[tier-1]),
-                'AI': Hostile(aggro_range=12, primary_skill=Wyvern.Ray())
+                'AI': Hostile(aggro_range=12, primary_skill=Wyvern.Ray(), keep_at_range=3)
             })
         return gen
 
@@ -336,6 +347,49 @@ class Beholder:
                 'Render': Render(character='E', colour=Beholder.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Beholder.names[tier-1]),
-                'AI': Hostile(aggro_range=10, primary_skill=Beholder.Ray(), primary_skill_range=5)
+                'AI': Hostile(aggro_range=10, primary_skill=Beholder.Ray(), primary_skill_range=5, keep_at_range=3)
+            })
+        return gen
+
+class Giant:
+    base_stats = {
+        'max_hp': 70,
+        'cur_hp': 70,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 20,
+        'dfn': 14,
+        'itl': 12,
+        'res': 8,
+        'spd': 8,
+        'hit': 12
+    }
+
+    names = ['Hill giant', 'Moss giant', 'Stone giant', 'Iron giant', 'Fire giant']
+    colours = [tcod.lighter_orange, tcod.dark_green, tcod.lighter_gray, tcod.silver, tcod.red]
+
+    def Smash():
+        return SkillMelee(formation=Formation(origin=(1,3), formation=[
+            ['x','x','x'],
+            ['x','x','x'],
+            ['x','x','x'],
+            ['.','.','.']
+        ]))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(Giant.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Giant.base_stats[stat] + Giant.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='G', colour=Giant.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Giant.names[tier-1]),
+                'AI': Hostile(aggro_range=10, primary_skill=Giant.Smash(), primary_skill_range=2)
             })
         return gen

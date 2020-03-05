@@ -7,6 +7,8 @@ import uuid
 import tcod
 import math
 import random
+import skill
+import damage
 
 LEVEL_PC_STAT_INC = 0.035
 
@@ -18,7 +20,7 @@ def TownPortal(position):
         'Stats': entity.Stats({}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='+', colour=tcod.lighter_blue),
-        'Item': entity.Item("Town portal"),
+        'Item': entity.Item("Town portal", 'Takes you back to town, fully healing your HP and SP'),
         'Usable': entity.ConsumeAfter(entity.ReturnToTown())
     })
 
@@ -41,7 +43,7 @@ class Healing:
                 'Stats': entity.Stats(actual_stats),
                 'Position': entity.Position(x, y),
                 'Render': entity.Render(character='"', colour=Healing.colours[tier-1]),
-                'Item': entity.Item(Healing.names[tier-1]),
+                'Item': entity.Item(Healing.names[tier-1], 'Heals some HP'),
                 'Usable': entity.ConsumeAfter(entity.Heal(entity.TargetUser()))
             })
         return gen
@@ -65,7 +67,7 @@ class Refreshing:
                 'Stats': entity.Stats(actual_stats),
                 'Position': entity.Position(x, y),
                 'Render': entity.Render(character='!', colour=Refreshing.colours[tier-1]),
-                'Item': entity.Item(Refreshing.names[tier-1]),
+                'Item': entity.Item(Refreshing.names[tier-1], 'Heals some SP'),
                 'Usable': entity.ConsumeAfter(entity.Refresh(entity.TargetUser()))
             })
         return gen
@@ -91,7 +93,7 @@ class DfnArmour:
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='[', colour=DfnArmour.colours[tier-1]),
-                'Item': entity.Item(DfnArmour.names[tier-1]),
+                'Item': entity.Item(DfnArmour.names[tier-1], 'Raises DFN'),
             })
         return gen
 
@@ -114,7 +116,7 @@ class ResArmour:
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='{', colour=ResArmour.colours[tier-1]),
-                'Item': entity.Item(ResArmour.names[tier-1]),
+                'Item': entity.Item(ResArmour.names[tier-1], 'Raises RES'),
             })
         return gen
 
@@ -138,7 +140,7 @@ class ResItlArmour:
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character=']', colour=ResItlArmour.colours[tier-1]),
-                'Item': entity.Item(ResItlArmour.names[tier-1]),
+                'Item': entity.Item(ResItlArmour.names[tier-1], 'Raises RES and ITL'),
             })
         return gen
 
@@ -162,7 +164,7 @@ class DfnAtkArmour:
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character=')', colour=DfnAtkArmour.colours[tier-1]),
-                'Item': entity.Item(DfnAtkArmour.names[tier-1]),
+                'Item': entity.Item(DfnAtkArmour.names[tier-1], 'Raises DFN and ATK'),
             })
         return gen
 
@@ -185,7 +187,7 @@ class Sword:
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='/', colour=Sword.colours[tier-1]),
-                'Item': entity.Item(Sword.names[tier-1]),
+                'Item': entity.Item(Sword.names[tier-1], 'Boost physical attacks'),
             })
         return gen
 
@@ -208,7 +210,7 @@ class Staff:
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='|', colour=Staff.colours[tier-1]),
-                'Item': entity.Item(Staff.names[tier-1]),
+                'Item': entity.Item(Staff.names[tier-1], 'Boost magical attacks'),
             })
         return gen
 
@@ -223,7 +225,7 @@ def Cleave(position):
         'Stats': entity.Stats({'atk': 35}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
-        'Item': entity.Item('Skill: Cleave'),
+        'Item': entity.Item('Skill: Cleave', 'Deals high physical damage in an area in front'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
 
@@ -238,7 +240,7 @@ def Pierce(position):
         'Stats': entity.Stats({'atk': 35}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
-        'Item': entity.Item('Skill: Pierce'),
+        'Item': entity.Item('Skill: Pierce', 'Deals high physical damage in a line'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
 
@@ -252,7 +254,7 @@ def Bypass(position):
         'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
-        'Item': entity.Item('Skill: Bypass'),
+        'Item': entity.Item('Skill: Bypass', 'Attack in a line whilst moving diagonally forwards'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
 
@@ -264,7 +266,7 @@ def WhipSlash(position):
         'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
-        'Item': entity.Item('Skill: Whip slash'),
+        'Item': entity.Item('Skill: Whip slash', 'Deal damage in an arc whilst sidestepping danger'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillMelee(formation)),
     })
 
@@ -277,7 +279,7 @@ def Dash(position):
         'Stats': entity.Stats({}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
-        'Item': entity.Item('Skill: Dash'),
+        'Item': entity.Item('Skill: Dash', 'Cheap mobility skill, good for evading attacks'),
         'Usable': entity.Cost(sp=2, usable=entity.SkillMelee(formation)),
     })
 
@@ -291,7 +293,7 @@ def RollingStab(position):
         'Stats': entity.Stats({'atk': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
-        'Item': entity.Item('Skill: Rolling stab'),
+        'Item': entity.Item('Skill: Rolling stab', 'Good for rolling out of the way of incoming attacks'),
         'Usable': entity.Cost(sp=7, usable=entity.SkillMelee(formation)),
     })
 
@@ -304,19 +306,23 @@ def AerialDrop(position):
         'Stats': entity.Stats({'atk': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
-        'Item': entity.Item('Skill: Aerial drop'),
+        'Item': entity.Item('Skill: Aerial drop', 'Pierce your foes from the sky!'),
         'Usable': entity.Cost(sp=15, usable=entity.SkillRanged(formation, max_range=5)),
     })
 
 def Fire(position):
+    from skill import DamageTargets, WithDamage, Skill, WithTargetMode, ConsumeSP
     formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 35}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_purple),
-        'Item': entity.Item('Spell: Fire'),
-        'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation, element='fire')),
+        'Item': entity.Item('Spell: Fire', 'Deals fire damage in a single tile'),
+        # 'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation, element='fire')),
+        'Usable': ConsumeSP(2, DamageTargets(\
+                  WithDamage(damage.SpellDamage(35, 'fire'), \
+                  WithTargetMode(entity.TargetFormation(formation, max_range=10), Skill()))))
     })
 
 def Ice(position):
@@ -326,7 +332,7 @@ def Ice(position):
         'Stats': entity.Stats({'itl': 27}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_purple),
-        'Item': entity.Item('Spell: Ice'),
+        'Item': entity.Item('Spell: Ice', 'Deals ice damage in a 5-tile line'),
         'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation, element='ice')),
     })
 
@@ -339,7 +345,7 @@ def Lightning(position):
         'Stats': entity.Stats({'itl': 27}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_purple),
-        'Item': entity.Item('Spell: Lightning'),
+        'Item': entity.Item('Spell: Lightning', 'Deals lightning damage in a 3x3 area'),
         'Usable': entity.Cost(sp=2, usable=entity.SkillSpell(formation, element='lght')),
     })
 
@@ -351,7 +357,7 @@ def Paralyze(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Paralyze'),
+        'Item': entity.Item('Spell: Paralyze', 'Prevents actions for 6 turns'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'PARALYZE', 6)),
     })
 
@@ -365,7 +371,7 @@ def Poison(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Poison'),
+        'Item': entity.Item('Spell: Poison', 'Deals 5% of max HP as damage per turn, for 8 turns. Can\'t reduce HP below 5%'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'POISON', 8)),
     })
 
@@ -379,7 +385,7 @@ def GuardBreak(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Guard Break'),
+        'Item': entity.Item('Spell: Guard Break', 'Lowers DFN by 50% for 12 turns'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'GUARD_BREAK', 12)),
     })
 
@@ -393,7 +399,7 @@ def MindBreak(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Mind Break'),
+        'Item': entity.Item('Spell: Mind Break', 'Lowers RES by 50% for 12 turns'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'MIND_BREAK', 12)),
     })
 
@@ -407,7 +413,7 @@ def Weaken(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Weaken'),
+        'Item': entity.Item('Spell: Weaken', 'Lowers ATK by 50% for 12 turns'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'WEAKEN', 12)),
     })
 
@@ -418,7 +424,7 @@ def Stoneskin(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Stoneskin'),
+        'Item': entity.Item('Spell: Stoneskin', 'Boosts DFN by 50% for 10 turns'),
         'Usable': entity.Cost(sp=3, usable=entity.SkillStatusSpell(formation, 'STONESKIN', 10)),
     })
 
@@ -428,7 +434,7 @@ def Blink(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Blink'),
+        'Item': entity.Item('Spell: Blink', 'Performs a short-range, targeted teleport'),
         'Usable': entity.Cost(sp=15, usable=entity.TeleportToPosition(4)),
     })
 
@@ -438,7 +444,7 @@ def AtkMod(position):
         'Stats': entity.Stats({'atk': 7}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
-        'Item': entity.Item('ATK Up'),
+        'Item': entity.Item('ATK Up', 'Provides a boost in ITL to the attached item'),
         'Mod': entity.Mod(),
     })
 
@@ -448,7 +454,7 @@ def DfnMod(position):
         'Stats': entity.Stats({'dfn': 7}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
-        'Item': entity.Item('DFN Up'),
+        'Item': entity.Item('DFN Up', 'Provides a boost in ITL to the attached item'),
         'Mod': entity.Mod(),
     })
 
@@ -458,7 +464,7 @@ def ItlMod(position):
         'Stats': entity.Stats({'itl': 7}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
-        'Item': entity.Item('ITL Up'),
+        'Item': entity.Item('ITL Up', 'Provides a boost in ITL to the attached item'),
         'Mod': entity.Mod(),
     })
 
@@ -468,7 +474,7 @@ def ResMod(position):
         'Stats': entity.Stats({'res': 7}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
-        'Item': entity.Item('RES Up'),
+        'Item': entity.Item('RES Up', 'Provides a boost in ITL to the attached item'),
         'Mod': entity.Mod(),
     })
 
@@ -478,7 +484,7 @@ def SpdMod(position):
         'Stats': entity.Stats({'spd': 7}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
-        'Item': entity.Item('SPD Up'),
+        'Item': entity.Item('SPD Up', 'Provides a boost in ITL to the attached item'),
         'Mod': entity.Mod(),
     })
 
@@ -488,7 +494,7 @@ def HitMod(position):
         'Stats': entity.Stats({'hit': 7}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
-        'Item': entity.Item('HIT Up'),
+        'Item': entity.Item('HIT Up', 'Provides a boost in ITL to the attached item'),
         'Mod': entity.Mod(),
     })
 
@@ -498,7 +504,7 @@ def MeleeLifeDrainMod(position):
         'Stats': entity.Stats({'lifedrain': 2}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.red),
-        'Item': entity.Item('Melee Lifedrain'),
+        'Item': entity.Item('Melee Lifedrain', '2% of melee attack damage is returned as HP'),
         'Mod': entity.Mod(),
     })
 
@@ -508,7 +514,7 @@ def MeleeDeathblowMod(position):
         'Stats': entity.Stats({'deathblow': 2}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_crimson),
-        'Item': entity.Item('Melee Deathblow'),
+        'Item': entity.Item('Melee Deathblow', '2% chance of instantly killing an enemy when dealing melee damage'),
         'Mod': entity.Mod(),
     })
 
@@ -518,7 +524,7 @@ def SPRegenMod(position):
         'Stats': entity.Stats({'sp_regen': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_blue),
-        'Item': entity.Item('SP Regen'),
+        'Item': entity.Item('SP Regen', 'Restores 1 SP every 4 turns'),
         'Mod': entity.Mod(),
     })
 
@@ -528,7 +534,7 @@ def HPRegenMod(position):
         'Stats': entity.Stats({'hp_regen': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_red),
-        'Item': entity.Item('HP Regen'),
+        'Item': entity.Item('HP Regen', 'Restores 1 HP every 4 turns'),
         'Mod': entity.Mod(),
     })
 
@@ -538,7 +544,7 @@ def SpellSoulDrainMod(position):
         'Stats': entity.Stats({'souldrain': 2}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.blue),
-        'Item': entity.Item('Spell Souldrain'),
+        'Item': entity.Item('Spell Souldrain', '2% of spell damage ir returned as SP'),
         'Mod': entity.Mod(),
     })
 
@@ -548,7 +554,7 @@ def ToxicForceMod(position):
         'Stats': entity.Stats({'self_poison': 1, 'boost_atk': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.chartreuse),
-        'Item': entity.Item('Toxic Force'),
+        'Item': entity.Item('Toxic Force', 'Boosts ATK, but self-poisons'),
         'Mod': entity.Mod(),
     })
 
@@ -558,7 +564,7 @@ def ToxicPowerMod(position):
         'Stats': entity.Stats({'self_poison': 1, 'boost_itl': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_green),
-        'Item': entity.Item('Toxic Power'),
+        'Item': entity.Item('Toxic Power', 'Boost ITL, but self-poisons'),
         'Mod': entity.Mod(),
     })
 
@@ -568,7 +574,7 @@ def PoisonHealMod(position):
         'Stats': entity.Stats({'poison_heal': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.green),
-        'Item': entity.Item('Poison Heal'),
+        'Item': entity.Item('Poison Heal', 'Poison heals you'),
         'Mod': entity.Mod(),
     })
 
@@ -578,7 +584,7 @@ def SoulConversionMod(position):
         'Stats': entity.Stats({'sp_usage_heals': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.purple),
-        'Item': entity.Item('Soul Conversion'),
+        'Item': entity.Item('Soul Conversion', 'Spending SP restores HP'),
         'Mod': entity.Mod(),
     })
 
@@ -588,7 +594,7 @@ def FireDamageMod(position):
         'Stats': entity.Stats({'fire_dam': 10}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
-        'Item': entity.Item('Fire Damage Up'),
+        'Item': entity.Item('Fire Damage Up', 'Increases fire damage dealt by 10%'),
         'Mod': entity.Mod(),
     })
 
@@ -598,7 +604,7 @@ def IceDamageMod(position):
         'Stats': entity.Stats({'ice_dam': 10}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
-        'Item': entity.Item('Ice Damage Up'),
+        'Item': entity.Item('Ice Damage Up', 'Increases ice damage dealt by 10%'),
         'Mod': entity.Mod(),
     })
 
@@ -608,7 +614,7 @@ def LightningDamageMod(position):
         'Stats': entity.Stats({'lght_dam': 10}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
-        'Item': entity.Item('Lightning Damage Up'),
+        'Item': entity.Item('Lightning Damage Up', 'Increases lightning damage dealt by 10%'),
         'Mod': entity.Mod(),
     })
 
@@ -618,6 +624,6 @@ def PhysicalDamageMod(position):
         'Stats': entity.Stats({'phys_dam': 10}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
-        'Item': entity.Item('Physical Damage Up'),
+        'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 10%'),
         'Mod': entity.Mod(),
     })

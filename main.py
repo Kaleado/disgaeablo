@@ -38,6 +38,6 @@ settings.current_map._entities = {
     })
 }
 
-settings.current_map.add_entity(loot.TownPortal((17,15)))
+settings.current_map.add_entity(loot.Fire((17,15)))
 
 settings.root_menu.run(settings.root_console)
