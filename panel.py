@@ -204,11 +204,11 @@ class TextPanel(Panel):
 
     def _render(self, console, origin):
         x, y = origin
-        console.print(x=x, y=y, string=self._heading)
+        console.print_(x=x, y=y, string=self._heading)
         old_fg = console.default_fg
         console.default_fg = self._colour
         x, y = origin
-        console.print(x=x, y=y+1, string=self._text)
+        console.print_(x=x, y=y+1, string=self._text)
         console.default_fg = old_fg
 
 class PlaceFormationOnMapPanel(MapPanel):
@@ -460,6 +460,8 @@ class ModSlotPanel(Panel):
     def _selected_entity(self):
         equipment = self._equipment_entity.component('Equipment')
         mod_slots = equipment.mod_slots()
+        if self._selection_index >= len(mod_slots):
+            return None
         return mod_slots[self._selection_index]
 
     def handle_event(self, event, menu):

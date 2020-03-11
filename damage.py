@@ -28,6 +28,7 @@ class Damage:
         target_resist = 1.0 - destination_entity.component('Stats').get_value('{}_res'.format(self._element)) / 100
         user_damage = 1.0 + self._source_entity.component('Stats').get_value('{}_dam'.format(self._element)) / 100
         actual_amount = math.floor(self._amount * target_resist * user_damage)
+        print("dmg", actual_amount, user_damage, target_resist)
         return actual_amount
 
     def inflict(self, destination_entity, mapp):
@@ -35,9 +36,9 @@ class Damage:
         stats = destination_entity.component('Stats')
         if stats is not None:
             actual_amount = self.amount(destination_entity)
-            if self._amount > 0:
-                stats.deal_damage(destination_entity, mapp, self._amount)
-            return self._amount
+            if actual_amount > 0:
+                stats.deal_damage(destination_entity, mapp, actual_amount)
+            return actual_amount
         return None
 
 class DamageDecorator(Damage):

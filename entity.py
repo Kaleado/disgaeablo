@@ -46,7 +46,6 @@ class Entity:
     def handle_event(self, event, resident_map):
         if self._disabled:
             return False
-        print(event)
         for c in self._components.values():
             if c.handle_event(self, event, resident_map):
                 return True
@@ -568,7 +567,7 @@ class Stats(Component):
         self.add_base('max_exp', num * 50)
         self.add_base('level', num)
         for stat in self._stats_gained_on_level:
-            print(self.add_base(stat, self._base_stats[stat] * num * 0.2))
+            self.add_base(stat, self._base_stats[stat] * num * 0.2)
 
     def grant_exp(self, exp):
         message_panel.info("Gained {} EXP".format(exp), tcod.yellow)
@@ -728,7 +727,6 @@ class Stats(Component):
         return self._stats[stat]
 
     def add_base(self, stat, value):
-        print(self._stats)
         return self.set_base(stat, self._stats[stat] + value)
 
     def sub_base(self, stat, value):
