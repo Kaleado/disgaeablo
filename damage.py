@@ -5,7 +5,18 @@ import math
 import tcod
 
 def SpellDamage(amount, element='phys'):
-    return lambda e: Damage(e, amount, element)
+    def f(s, t, i):
+        itl_over_res = s.component('Stats').get('itl') / t.component('Stats').get('res')
+        final_amount = math.floor(itl_over_res * amount * i.component('Stats').get('itl'))
+        return Damage(s, final_amount, element)
+    return f
+
+def AttackDamage(amount, element='phys'):
+    def f(s, t, i):
+        atk_over_dfn = s.component('Stats').get('atk') / t.component('Stats').get('dfn')
+        final_amount = math.floor(atk_over_dfn * amount * i.component('Stats').get('atk'))
+        return Damage(s, final_amount, element)
+    return f
 
 class Damage:
     def __init__(self, source_entity, amount, element='phys'):
@@ -45,12 +56,14 @@ class WithStatusEffect(DamageDecorator):
         self._status_effect = status_effect
         self._strength = strength
         self._duration = duration
-        self._source_entity = damage._source_entity
+        self._source_entity = damage._source_entity if damage is not None else None
 
     def inflict(self, destination_entity, mapp):
         stats = destination_entity.component('Stats')
         if stats is not None:
             stats.inflict_status(self._status_effect, self._strength, self._duration)
+        if self._damage is None:
+            return 0
         return self._damage.inflict(destination_entity, mapp)
 
 class WithDeathblow(DamageDecorator):

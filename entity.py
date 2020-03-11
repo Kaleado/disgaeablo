@@ -531,8 +531,11 @@ class Stats(Component):
     There is no need to initialise all the base_stats -- any ones left out will
     be zero by default
     """
-    def __init__(self, base_stats):
+    def __init__(self, base_stats, stats_gained_on_level=None):
         self._stats = {}
+        if stats_gained_on_level is None:
+            stats_gained_on_level = Stats.primary_stats
+        self._stats_gained_on_level = stats_gained_on_level
         self._modifiers = {}
         for stat in Stats.all_stats:
             self._stats[stat] = 0
@@ -566,7 +569,7 @@ class Stats(Component):
     def increase_level(self, num):
         self.add_base('max_exp', num * 50)
         self.add_base('level', num)
-        for stat in Stats.primary_stats:
+        for stat in self._stats_gained_on_level:
             print(self.add_base(stat, self._base_stats[stat] * num * 0.2))
 
     def grant_exp(self, exp):
@@ -678,7 +681,7 @@ class Stats(Component):
     Just for convenience
     """
     def get(self, stat):
-        return get_value(stat)
+        return self.get_value(stat)
 
     def get_value(self, stat):
         boost_stat = self._stats.get('boost_{}'.format(stat))
