@@ -785,11 +785,13 @@ class StatsPanel(Panel):
         return self._mapp.entity(self._entity_ident)
 
     def _render(self, console, origin):
+        x, y = origin
+        console.print_(x=x, y=y, string="Statistics")
+        y = y + 1
         entity = self._get_entity()
         if entity is None:
             return
         stats = entity.component('Stats')
-        x, y = origin
         keys = ['atk', 'dfn', 'itl', 'res', 'spd', 'hit']
         console.print_(x=x, y=y, string=self._name(entity))
         y = y + 1

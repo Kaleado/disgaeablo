@@ -221,11 +221,7 @@ class Cost(Usable):
 
     def _pay_costs(self, entity, user_entity):
         user_stats = user_entity.component('Stats')
-        sp_usage_heals = user_stats.get_value('sp_usage_heals') > 0
-        sp_consumed = min(self._sp, user_stats.get_base('cur_sp'))
-        if sp_usage_heals:
-            user_stats.apply_healing(user_entity, settings.current_map, sp_consumed)
-        user_stats.sub_base('cur_sp', self._sp)
+        user_stats.consume_sp(self._sp)
 
     def can_pay_cost(self, entity, user_entity):
         return user_entity.component('Stats').get_value('cur_sp') >= self._sp
@@ -424,7 +420,7 @@ class Equipment(Component):
         for mod in self._mod_slots:
             if mod is None:
                 continue
-            mod.handle_event(mod, event, resident_map)
+            mod.handle_event(event, resident_map)
 
     def attach_mod(self, item_entity, mod_entity, index, resident_map):
         if index < 0 or index >= len(self._mod_slots):
@@ -525,6 +521,7 @@ class Stats(Component):
         'boost_atk',
         'poison_heal',
         'sp_usage_heals',
+        'blood_magic',
     ])
 
     """
@@ -669,6 +666,13 @@ class Stats(Component):
     def apply_refreshing(self, entity, resident_map, amount):
         amount = min(amount, self.get_value('max_sp') - self.get_value('cur_sp'))
         self.add_base('cur_sp', amount)
+
+    def consume_sp(self, entity, resident_map, amount):
+        if self.sub_base('cur_sp', amount) <= 0:
+            sp_usage_heals = self.get_value('sp_usage_heals') > 0
+            sp_consumed = min(self._sp, self.get_base('cur_sp'))
+            if sp_usage_heals:
+                self.apply_healing(user_entity, settings.current_map, sp_consumed)
 
     def deal_damage(self, entity, resident_map, damage):
         if self.sub_base('cur_hp', damage) <= 0:

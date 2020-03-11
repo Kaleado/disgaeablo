@@ -109,7 +109,7 @@ class Map:
 class Cave(Map):
     def __init__(self, width, height, map_group=None):
         super().__init__(map_group)
-        self._terrain = [['.' if random.randint(0, 4) == 0 else '#' for x in range(width)] for y in range(height)]
+        self._terrain = [['.' if random.randint(0, 3) == 0 else '#' for x in range(width)] for y in range(height)]
         s_x, s_y = random.randint(0, width-1), random.randint(0, height-1)
         while self._terrain[s_y][s_x] == '#':
             s_x, s_y = random.randint(0, width-1), random.randint(0, height-1)

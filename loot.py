@@ -338,7 +338,6 @@ def AerialDrop(position):
     })
 
 def Fire(position):
-    from skill import DamageTargets, WithDamage, Skill, WithTargetMode, ConsumeSP
     formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
@@ -695,5 +694,15 @@ def PhysicalDamageMod(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
         'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 10%'),
+        'Mod': entity.Mod(),
+    })
+
+def BloodMagicMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'blood_magic': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_purple),
+        'Item': entity.Item('Blood Magic', 'Use HP instead of SP for costs'),
         'Mod': entity.Mod(),
     })

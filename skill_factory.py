@@ -30,11 +30,19 @@ class Skill(Usable):
     def with_sp_cost(self, sp):
         use = self._use
         def f(self, entity, user_entity, mapp, menu):
-            if user_entity.component('Stats').get('cur_sp') < sp:
-                return False
+            has_blood_magic = user_entity.component('Stats').get('blood_magic') > 0
+            if has_blood_magic:
+                if user_entity.component('Stats').get('cur_hp') < sp:
+                    return False
+                else:
+                    user_entity.component('Stats').deal_damage(user_entity, mapp, sp)
+                    return use(self, entity, user_entity, mapp, menu)
             else:
-                user_entity.component('Stats').sub_base('cur_sp', sp)
-                return use(self, entity, user_entity, mapp, menu)
+                if user_entity.component('Stats').get('cur_sp') < sp:
+                    return False
+                else:
+                    user_entity.component('Stats').sub_base('cur_sp', sp)
+                    return use(self, entity, user_entity, mapp, menu)
         self._use = f
         return self
 
