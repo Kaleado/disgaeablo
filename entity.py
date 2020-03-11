@@ -522,6 +522,7 @@ class Stats(Component):
         'poison_heal',
         'sp_usage_heals',
         'blood_magic',
+        'assault',
     ])
 
     """
@@ -636,6 +637,16 @@ class Stats(Component):
         elif status == 'STONESKIN':
             message_panel.info("{} no longer has stoneskin".format(ent_name), colour)
             self.sub_multiplicative_modifier('dfn', 0.5)
+        elif status == 'ASSAULT':
+            message_panel.info("{} no longer has assault".format(ent_name), colour)
+            self.sub_additive_modifier('phys_dam', 20)
+            self.sub_additive_modifier('fire_dam', 20)
+            self.sub_additive_modifier('ice_dam', 20)
+            self.sub_additive_modifier('lght_dam', 20)
+            self.add_additive_modifier('phys_res', 20)
+            self.add_additive_modifier('fire_res', 20)
+            self.add_additive_modifier('ice_res', 20)
+            self.add_additive_modifier('lght_res', 20)
         else:
             message_panel.info("{} no longer has {}".format(ent_name, status), colour)
 
@@ -658,6 +669,15 @@ class Stats(Component):
             self.sub_multiplicative_modifier('res', 0.3)
         if status == 'STONESKIN':
             self.add_multiplicative_modifier('dfn', 0.5)
+        if status == 'ASSAULT':
+            self.add_additive_modifier('phys_dam', 20)
+            self.add_additive_modifier('fire_dam', 20)
+            self.add_additive_modifier('ice_dam', 20)
+            self.add_additive_modifier('lght_dam', 20)
+            self.sub_additive_modifier('phys_res', 20)
+            self.sub_additive_modifier('fire_res', 20)
+            self.sub_additive_modifier('ice_res', 20)
+            self.sub_additive_modifier('lght_res', 20)
 
     def apply_healing(self, entity, resident_map, amount):
         amount = min(amount, self.get_value('max_hp') - self.get_value('cur_hp'))

@@ -227,6 +227,7 @@ def Cleave(position):
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Cleave', 'Deals high physical damage in an area in front'),
         'Usable': skill_factory.Skill()\
+        .melee_skill()\
         .with_target_mode(entity.TargetFormation(formation, directional=True))\
         .damage_targets("{}'s cleave hits {}! ({} HP)")\
         .with_sp_cost(3)\
@@ -246,6 +247,7 @@ def Pierce(position):
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Pierce', 'Deals high physical damage in a line'),
         'Usable': skill_factory.Skill()\
+        .melee_skill()\
         .with_target_mode(entity.TargetFormation(formation, directional=True))\
         .damage_targets("{}'s pierce hits {}! ({} HP)")\
         .with_sp_cost(3)\
@@ -264,6 +266,7 @@ def Bypass(position):
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Bypass', 'Attack in a line whilst moving diagonally forwards'),
         'Usable': skill_factory.Skill()\
+        .melee_skill()\
         .with_target_mode(entity.TargetFormation(formation, directional=True))\
         .damage_targets("{}'s bypass hits {}! ({} HP)")\
         .with_sp_cost(3)\
@@ -280,6 +283,7 @@ def WhipSlash(position):
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Whip slash', 'Deal damage in an arc whilst sidestepping danger'),
         'Usable': skill_factory.Skill()\
+        .melee_skill()\
         .with_target_mode(entity.TargetFormation(formation, directional=True))\
         .damage_targets("{}'s whip slash hits {}! ({} HP)")\
         .with_sp_cost(3)\
@@ -314,6 +318,7 @@ def RollingStab(position):
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Rolling stab', 'Good for rolling out of the way of incoming attacks'),
         'Usable': skill_factory.Skill()\
+        .melee_skill()\
         .with_target_mode(entity.TargetFormation(formation, directional=True))\
         .damage_targets("{} deftly rolls whilst piercing {}! ({} HP)")\
         .with_sp_cost(7)\
@@ -331,6 +336,7 @@ def AerialDrop(position):
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Aerial drop', 'Pierce your foes from the sky!'),
         'Usable': skill_factory.Skill()\
+        .melee_skill()\
         .with_target_mode(entity.TargetFormation(formation, max_range=5))\
         .damage_targets("{} plunges down on to {}! ({} HP)")\
         .with_sp_cost(15)\
@@ -704,5 +710,15 @@ def BloodMagicMod(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_purple),
         'Item': entity.Item('Blood Magic', 'Use HP instead of SP for costs'),
+        'Mod': entity.Mod(),
+    })
+
+def AssaultMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'assault': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.gray),
+        'Item': entity.Item('Assault', 'Using melee skills grants Assault for 2 turns (deal and take 20% more damage)'),
         'Mod': entity.Mod(),
     })

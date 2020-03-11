@@ -94,3 +94,15 @@ class Skill(Usable):
             return use_on_targets(self, entity, user_entity, mapp, targets, menu)
         self._use_on_targets = f
         return self
+
+    def melee_skill(self):
+        use_on_targets = self._use_on_targets
+        def f(self, entity, user_entity, mapp, targets, menu):
+            entities_hit, _ = self._target_mode.targets(group='x')
+            if entities_hit is not None and entities_hit.size() > 0:
+                has_assault = user_entity.component('Stats').get('assault') > 0
+                if has_assault:
+                    user_entity.component('Stats').inflict_status('ASSAULT', strength=1, duration=2)
+            return use_on_targets(self, entity, user_entity, mapp, targets, menu)
+        self._use_on_targets = f
+        return self

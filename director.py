@@ -228,9 +228,8 @@ class LootDirector:
         loot.AtkMod,
         loot.DfnMod,
         loot.ItlMod,
-        loot.ResMod,
-        loot.SpdMod,
-        loot.HitMod,
+        # loot.SpdMod,
+        # loot.HitMod,
         loot.MeleeLifeDrainMod,
         loot.MeleeDeathblowMod,
         loot.SPRegenMod,
@@ -243,6 +242,8 @@ class LootDirector:
         loot.FireDamageMod,
         loot.IceDamageMod,
         loot.PhysicalDamageMod,
+        loot.BloodMagicMod,
+        loot.AssaultMod,
     ]
 
     def __init__(self):
