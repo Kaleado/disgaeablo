@@ -65,7 +65,6 @@ class MapDirector:
             n_monst = random.randint(5, 10)
         monster_set = monster_director.choose_random_monster_set(difficulty, random.randint(1, 3))
         for _ in range(n_monst):
-            # monst = monster_director.monster(level)
             monst = monster_director.monster_from_set(level, monster_set)
             x, y = random.randint(0, w-1), random.randint(0,h-1)
             while not mapp.is_passable_for(monst((0,0)), (x, y)):
@@ -75,13 +74,13 @@ class MapDirector:
 
     def difficulty(self):
         if self._item_world == None:
-            return 3 + self._current_floor * 5
+            return math.floor(3 + (self._current_floor - 1) * 7)
         else:
             import entity
             stats = self._item_world.component('Stats')
             primaries = entity.Stats.primary_stats - set(['max_hp', 'max_sp'])
             tot = sum([stats.get_base(stat) for stat in primaries])
-            return 3 + self._current_floor + math.floor(tot / 5)
+            return 3 + (self._current_floor - 1) * 9 + math.floor(tot / 3)
 
     def _change_floor(self):
         if self._item_world is None:
@@ -139,7 +138,8 @@ class MonsterDirector:
         ],
         35: [
             monster.Wyvern,
-            monster.Beholder
+            monster.Beholder,
+            monster.Giant
         ],
     }
 

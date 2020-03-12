@@ -6,7 +6,7 @@ import util
 import uuid
 import loot
 
-LEVEL_PC_STAT_INC = 0.15
+LEVEL_PC_STAT_INC = 0.2
 TIER_PC_STAT_INC = 10
 
 def ItemWorldClerkNPC(position):
