@@ -6,7 +6,7 @@ import util
 import uuid
 import loot
 
-LEVEL_PC_STAT_INC = 0.07
+LEVEL_PC_STAT_INC = 0.15
 TIER_PC_STAT_INC = 10
 
 def ItemWorldClerkNPC(position):
@@ -202,7 +202,7 @@ class Spider:
     colours = [tcod.green, tcod.red, tcod.purple, tcod.yellow, tcod.crimson]
 
     def Web():
-        return SkillStatusSpell(status_effect='PARALYZE', status_duration=8,
+        return SkillStatusSpell(status_effect='PARALYZE', status_duration=2,
                                 formation=Formation(origin=(1,1), formation=[['x','x','x'],
                                                                              ['x','x','x'],
                                                                              ['x','x','x']]))
@@ -221,7 +221,7 @@ class Spider:
                 'Render': Render(character='P', colour=Spider.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Spider.names[tier-1]),
-                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=5, keep_at_range=3))
+                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=5, keep_at_range=3, primary_skill_delay=2))
             })
         return gen
 

@@ -5,6 +5,9 @@ import settings
 from map import *
 
 class MapDirector:
+    ITEM_WORLD_TURN_LIMIT = 300
+    MAIN_DUNGEON_TURN_LIMIT = 300
+
     def __init__(self):
         self._current_floor = 0
         self._item_world = None # item_world = none indicates we are in the main dungeon
@@ -13,7 +16,7 @@ class MapDirector:
         self._item_world = item
 
     def _item_world_map(self, level):
-        mapp = Grid(30,30)
+        mapp = Grid(30,30,turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
         w,h=30,30
         return mapp, w, h
 
@@ -24,16 +27,16 @@ class MapDirector:
             mapp = Town(30, 30, [monster.ItemWorldClerkNPC])
             w,h=30,30
         elif self._current_floor % 5 == 0:
-            mapp = TwoRooms(30, 30, room_size=9)
+            mapp = TwoRooms(30, 30, room_size=9, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         elif self._current_floor in range(0, 10):
-            mapp = Cave(30, 30)
+            mapp = Cave(30, 30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         elif self._current_floor % 10 == 1:
-            mapp = Corridors(30, 30, room_size=5)
+            mapp = Corridors(30, 30, room_size=5, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         elif self._current_floor in range(10, 20):
-            mapp = Rooms(30,30)
+            mapp = Rooms(30,30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         return mapp, w, h
 
@@ -168,7 +171,7 @@ class MonsterDirector:
         if random.randint(0, 100) == 0:
             tier += 1
             level = math.floor(level * 0.1)
-        return random.choice(MonsterDirector.monsters).generator(tier=tier, level=level)
+        return random.choice(available_set).generator(tier=tier, level=level)
 
 monster_director = MonsterDirector()
 
@@ -244,6 +247,8 @@ class LootDirector:
         loot.PhysicalDamageMod,
         loot.BloodMagicMod,
         loot.AssaultMod,
+        loot.BlazeMod,
+        loot.EnergisingColdMod,
     ]
 
     def __init__(self):

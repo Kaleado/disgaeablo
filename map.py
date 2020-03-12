@@ -7,7 +7,8 @@ import math
 from entitylistview import EntityListView
 
 class Map:
-    def __init__(self, map_group=None):
+    def __init__(self, map_group=None, turn_limit=None):
+        self._turn_limit = turn_limit
         self._map_group = map_group
         self._entities = {}
         self._terrain = []
@@ -15,7 +16,8 @@ class Map:
             'adds': [],
             'removes': []
         }
-        self._threatened_positions = set()
+        # dict<position -> ident -> delay[]>
+        self._threatened_positions = {}
 
     def random_passable_position_for(self, entity):
         w, h = self.dimensions()
@@ -27,14 +29,32 @@ class Map:
     def player_start_position(self, player):
         return self.random_passable_position_for(player)
 
-    def add_threatened_positions(self, positions):
-        self._threatened_positions = self._threatened_positions | set(positions)
+    def add_threatened_positions(self, positions, delay, threatened_by_ident):
+        for p in positions:
+            if p not in self._threatened_positions:
+                self._threatened_positions[p] = {}
+            if threatened_by_ident not in self._threatened_positions[p]:
+                self._threatened_positions[p][threatened_by_ident] = []
+            self._threatened_positions[p][threatened_by_ident].append(delay)
 
-    def remove_threatened_positions(self, positions):
-        self._threatened_positions = self._threatened_positions - set(positions)
+    def remove_threatened_positions(self, threatened_by_ident):
+        for d in self._threatened_positions.values():
+            if threatened_by_ident in d:
+                d[threatened_by_ident] = []
+
+    def _countdown_threatened_positions(self):
+        for d in self._threatened_positions.values():
+            for ident in d:
+                new_list = []
+                for delay in d[ident]:
+                    if delay - 1 <= 0:
+                        continue
+                    else:
+                        new_list.append(delay - 1)
+                d[ident] = new_list
 
     def _position_threatened(self, position):
-        return position in self._threatened_positions
+        return position in self._threatened_positions and len([y for x in self._threatened_positions[position].values() for y in x]) > 0
 
     def is_descendable(self, pos):
         x, y = pos
@@ -51,6 +71,8 @@ class Map:
                     fg_changed = True
                 console.print_(x=x, y=y, string=tile)
                 if self._position_threatened((x - origin[0], y - origin[1])):
+                    min_delay = min([y for x in self._threatened_positions[(x-origin[0], y-origin[1])].values() for y in x])
+                    console.print_(x=x, y=y, string=str(min_delay))
                     console.bg[x][y] = tcod.darkest_yellow
                 if fg_changed:
                     console.default_fg = old_fg
@@ -101,15 +123,38 @@ class Map:
     def entities(self):
         return EntityListView(self._entities.values()).where(lambda ent: ent.ident() not in self._entities_updates['removes'])
 
+    def trigger_pandemonium(self):
+        import settings, director
+        difficulty = director.map_director.difficulty() * 30
+        for _ in range(random.randint(30, 50)):
+            monster = director.monster_director.monster(difficulty, difficulty)((0,0))
+            pos = self.random_passable_position_for(monster)
+            monster.component('Position').set(pos[0], pos[1])
+            settings.current_map.add_entity(monster)
+
+    def _decrement_turn_limit(self):
+        import settings
+        if self._turn_limit is None or self._turn_limit <= 0:
+            return
+        self._turn_limit -= 1
+        if self._turn_limit % 25 == 0 and self._turn_limit <= 100 or self._turn_limit < 10:
+            settings.message_panel.info("There are {} turns remaining".format(self._turn_limit), tcod.darker_crimson)
+        if self._turn_limit == 0:
+            settings.message_panel.info("A sense of dread overcomes you...", tcod.darker_crimson)
+            settings.message_panel.info("It's pandemonium!", tcod.darker_crimson)
+            self.trigger_pandemonium()
+
     def end_turn(self):
+        self._countdown_threatened_positions()
+        self._decrement_turn_limit()
         for e in self._entities.values():
             if e.handle_event(("NPC_TURN", None), self):
                 return
 
 class Cave(Map):
-    def __init__(self, width, height, map_group=None):
-        super().__init__(map_group)
-        self._terrain = [['.' if random.randint(0, 3) == 0 else '#' for x in range(width)] for y in range(height)]
+    def __init__(self, width, height, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
+        self._terrain = [['.' if random.randint(0, 2) == 0 else '#' for x in range(width)] for y in range(height)]
         s_x, s_y = random.randint(0, width-1), random.randint(0, height-1)
         while self._terrain[s_y][s_x] == '#':
             s_x, s_y = random.randint(0, width-1), random.randint(0, height-1)
@@ -139,8 +184,8 @@ class Cave(Map):
                                           '.' if self._terrain[y][x] == '#_' else self._terrain[y][x]
 
 class Rooms(Map):
-    def __init__(self, width, height, map_group=None):
-        super().__init__(map_group)
+    def __init__(self, width, height, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
         self._terrain = [['#' for x in range(width)] for y in range(height)]
         max_w = 8
         max_h = 8
@@ -175,8 +220,8 @@ class Rooms(Map):
 
 
 class Grid(Map):
-    def __init__(self, width, height, map_group=None):
-        super().__init__(map_group)
+    def __init__(self, width, height, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
         floor = math.floor
         room_size = 6
         rooms_w = width // room_size
@@ -221,8 +266,8 @@ class TwoRooms(Map):
         x, y = self._width // 2 - self._room_size // 2 - self._corridor_len // 2, self._height // 2 - self._room_size // 2 - 1
         return (x, y)
 
-    def __init__(self, width, height, room_size=5, corridor_len=9, map_group=None):
-        super().__init__(map_group)
+    def __init__(self, width, height, room_size=5, corridor_len=9, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
         self._width = width
         self._height = height
         self._room_size = room_size
@@ -245,8 +290,8 @@ class TwoRooms(Map):
         self._terrain[y][x] = '>'
 
 class Corridors(Map):
-    def __init__(self, width, height, room_size=5, map_group=None):
-        super().__init__(map_group)
+    def __init__(self, width, height, room_size=5, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
         self._width = width
         self._height = height
         self._room_size = room_size
@@ -276,8 +321,8 @@ class Corridors(Map):
         self._terrain[ry + room_size//2][rx + room_size//2] = '>'
 
 class Town(Map):
-    def __init__(self, width, height, residents, map_group=None):
-        super().__init__(map_group)
+    def __init__(self, width, height, residents, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
         self._terrain = [['.' for x in range(width)] for y in range(height)]
         x, y = width // 2, height // 2
         self._terrain[y][x] = '>'

@@ -533,9 +533,9 @@ class ChooseEquipmentSlotPanel(EquipmentSlotPanel):
         slots_size = sum(len(v) for v in equipment_slots.slots().values())
         event_type, event_data = event
         if event_type == "TCOD" and slots_size > 0:
-           if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_w:
+           if event_data.type == "KEYDOWN" and event_data.sym in [tcod.event.K_i, tcod.event.K_KP_8]:
                self._selection_index = max(self._selection_index - 1, 0)
-           if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_s:
+           if event_data.type == "KEYDOWN" and event_data.sym in [tcod.event.K_k, tcod.event.K_KP_2]:
                self._selection_index = min(self._selection_index + 1, slots_size-1)
            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_e:
                self._finalise_selection(menu)

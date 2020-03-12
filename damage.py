@@ -119,6 +119,17 @@ class WithSoulDrain(DamageDecorator):
         settings.message_panel.info("{} drained {} SP from {}".format(attacker_name, refreshed_amount, defender_name), colour)
         return inflicted
 
+class AndDamage(DamageDecorator):
+    def __init__(self, other_damage, damage):
+        super().__init__(damage)
+        self._other_damage = other_damage
+        self._source_entity = damage._source_entity
+
+    def inflict(self, destination_entity, mapp):
+        inflicted = self._damage.inflict(destination_entity, mapp)
+        inflicted += self._other_damage.inflict(destination_entity, mapp)
+        return inflicted
+
 class Chance:
     def __init__(self, chance_success, damage_success, damage_failure):
         self._chance_success = chance_success

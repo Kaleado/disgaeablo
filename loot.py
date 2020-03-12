@@ -219,14 +219,14 @@ class Staff:
 def Cleave(position):
     formation = Formation(origin=(1,2), formation=[['x','x','x'],
                                                    ['x','x','x'],
-                                                   ['.','.',',']])
+                                                   ['.','.','.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 35}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Cleave', 'Deals high physical damage in an area in front'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['skill_cleave', 'attack', 'offensive'])\
         .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s cleave hits {}! ({} HP)")\
@@ -246,7 +246,7 @@ def Pierce(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Pierce', 'Deals high physical damage in a line'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['skill_pierce', 'attack', 'offensive'])\
         .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s pierce hits {}! ({} HP)")\
@@ -265,7 +265,7 @@ def Bypass(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Bypass', 'Attack in a line whilst moving diagonally forwards'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['skill_bypass', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s bypass hits {}! ({} HP)")\
@@ -282,7 +282,7 @@ def WhipSlash(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Whip slash', 'Deal damage in an arc whilst sidestepping danger'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['skill_whip_slash', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s whip slash hits {}! ({} HP)")\
@@ -300,7 +300,7 @@ def Dash(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Skill: Dash', 'Cheap mobility skill, good for evading attacks'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['skill_dash', 'movement'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .move_to_targeted_position()\
         .with_sp_cost(2)
@@ -317,7 +317,7 @@ def RollingStab(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Rolling stab', 'Good for rolling out of the way of incoming attacks'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['skill_rolling_stab', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{} deftly rolls whilst piercing {}! ({} HP)")\
@@ -335,7 +335,7 @@ def AerialDrop(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_green),
         'Item': entity.Item('Skill: Aerial drop', 'Pierce your foes from the sky!'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['skill_aerial_drop', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=5)))\
         .damage_targets("{} plunges down on to {}! ({} HP)")\
@@ -343,18 +343,41 @@ def AerialDrop(position):
         .with_damage(damage.AttackDamage(1, 'phys'))\
     })
 
+def Combustion(position):
+    formation = Formation(origin=(0,2), formation=[['x'],
+                                                   ['x'],
+                                                   ['.']])
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'itl': 45}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Item': entity.Item('Spell: Combustion', 'Deals high fire damage in front'),
+        'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
+        .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
+        .damage_targets("{} emits a blast of fire at {}! ({} HP)")\
+        .with_sp_cost(5)\
+        .with_damage(damage.SpellDamage(1, 'fire'))
+    })
+
 def Fire(position):
     formation = Formation(origin=(0,0), formation=[['x']])
+    improved_formation = Formation(origin=(1,1), formation=[['x','x','x'],
+                                                            ['x','x','x'],
+                                                            ['x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 35}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_purple),
         'Item': entity.Item('Spell: Fire', 'Deals fire damage in a single tile'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} shoots a fireball at {}! ({} HP)")\
         .with_sp_cost(5)\
+        .override_target_mode(entity.ExcludeItems(entity.TargetFormation(improved_formation)),
+                              lambda s, e, u, m, mn : u.component('Stats').get('improve_fire_aoe') > 0
+        )\
         .with_damage(damage.SpellDamage(1, 'fire'))
     })
 
@@ -366,11 +389,12 @@ def Ice(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_purple),
         'Item': entity.Item('Spell: Ice', 'Deals ice damage in a 5-tile line'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_ice', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} rains icicles on {}! ({} HP)")\
         .with_sp_cost(2)\
-        .with_damage(damage.SpellDamage(1, 'ice'))
+        .with_damage(damage.SpellDamage(1, 'ice'))\
+        .change_damage(lambda d, s, t, i : damage.WithSoulDrain(d))
     })
 
 def Lightning(position):
@@ -383,7 +407,7 @@ def Lightning(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.light_purple),
         'Item': entity.Item('Spell: Lightning', 'Deals lightning damage in a 3x3 area'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} drops a bolt of lightning on {}! ({} HP)")\
         .with_sp_cost(2)\
@@ -399,7 +423,7 @@ def Paralyze(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Paralyze', 'Prevents actions for 6 turns'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_paralyze', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to paralyze {}!")\
         .with_sp_cost(2)\
@@ -418,7 +442,7 @@ def Poison(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Poison', 'Deals 5% of max HP as damage per turn, for 8 turns. Can\'t reduce HP below 5%'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_poison', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to poison {}!")\
         .with_sp_cost(3)\
@@ -437,7 +461,7 @@ def GuardBreak(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Guard Break', 'Lowers DFN by 50% for 12 turns'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_guard_break', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to guard break {}!")\
         .with_sp_cost(3)\
@@ -456,7 +480,7 @@ def MindBreak(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Mind Break', 'Lowers RES by 50% for 12 turns'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_mind_break', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to mind break {}!")\
         .with_sp_cost(3)\
@@ -475,7 +499,7 @@ def Weaken(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Weaken', 'Lowers ATK by 50% for 12 turns'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_weaken', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to weaken {}!")\
         .with_sp_cost(3)\
@@ -491,7 +515,7 @@ def Stoneskin(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Stoneskin', 'Boosts DFN by 50% for 10 turns'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_stoneskin', 'spell', 'buff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} gives stoneskin to {}!")\
         .with_sp_cost(3)\
@@ -507,7 +531,7 @@ def Blink(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Blink', 'Performs a short-range, targeted teleport'),
-        'Usable': skill_factory.Skill()\
+        'Usable': skill_factory.Skill(tags=['spell_blink', 'spell', 'movement'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=8)))\
         .move_to_targeted_position()\
         .with_sp_cost(15)
@@ -720,5 +744,25 @@ def AssaultMod(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.gray),
         'Item': entity.Item('Assault', 'Using melee skills grants Assault for 2 turns (deal and take 20% more damage)'),
+        'Mod': entity.Mod(),
+    })
+
+def BlazeMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'improve_fire_aoe': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_red),
+        'Item': entity.Item('Blaze', 'Fire\'s area of effect is improved'),
+        'Mod': entity.Mod(),
+    })
+
+def EnergisingColdMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'ice_souldrain': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_cyan),
+        'Item': entity.Item('Energising Cold', 'Ice has souldrain'),
         'Mod': entity.Mod(),
     })

@@ -40,8 +40,9 @@ settings.current_map._entities = {
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.Cleave((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.Fire((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.Sword.generator()((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.AssaultMod((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.BlazeMod((0,0)))
+settings.current_map.add_entity(monster.Spider.generator()((3,3)))
 
 settings.root_menu.run(settings.root_console)

@@ -16,10 +16,17 @@ class Component:
         return False
 
 class Entity:
-    def __init__(self, ident, components):
+    def __init__(self, ident, components, tags=[]):
        self._ident = ident
        self._components = components
        self._disabled = False
+       self._tags = tags
+
+    def tags(self):
+        return self._tags
+
+    def has_tag(self, tag):
+        return tag in self._tags
 
     def name(self):
         return self.component('NPC').name() if self.component('NPC') is not None else \
@@ -522,13 +529,20 @@ class Stats(Component):
         'sp_usage_heals',
         'blood_magic',
         'assault',
+        'improve_fire_aoe',
+        'ice_souldrain',
     ])
+
+    REGEN_FREQUENCY = 6
+
+    EXP_YIELD_SCALE = 2
 
     """
     There is no need to initialise all the base_stats -- any ones left out will
     be zero by default
     """
     def __init__(self, base_stats, stats_gained_on_level=None):
+        self._regen_counter = 0
         self._stats = {}
         if stats_gained_on_level is None:
             stats_gained_on_level = Stats.primary_stats
@@ -561,7 +575,7 @@ class Stats(Component):
         return dam
 
     def exp_yield(self):
-        return sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])])
+        return math.floor(Stats.EXP_YIELD_SCALE * sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])]))
 
     def increase_level(self, num):
         self.add_base('max_exp', num * 50)
@@ -596,6 +610,15 @@ class Stats(Component):
         removed = []
         if event_type == 'NPC_TURN':
             self._self_poison(entity, resident_map)
+            sp_regen = self.get('sp_regen')
+            hp_regen = self.get('hp_regen')
+            if sp_regen > 0 or hp_regen > 0:
+                self._regen_counter = (self._regen_counter + 1) % Stats.REGEN_FREQUENCY
+                if self._regen_counter == 0:
+                    if sp_regen > 0:
+                        self.apply_refreshing(entity, resident_map, sp_regen)
+                    if hp_regen > 0:
+                        self.apply_healing(entity, resident_map, hp_regen)
             if self.has_status('REGEN'):
                 self.apply_healing(entity, resident_map, 0.05 * self.get_value('max_hp'))
             if self.has_status('POISON'):
@@ -917,28 +940,33 @@ class AI(Component):
         self._delayed_targets = None
         self._delay = None
 
+    def _handle_delayed_attack(self, entity, resident_map):
+        print("delay is", self._delay)
+        self._delay -= 1
+        if self._delay > 0:
+            return False
+        targeted_positions = self._delayed_targets[1]
+        targets = resident_map.entities().without_components(['Item']).with_component('Position')\
+                                            .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
+        print("using on targets")
+        self._delayed_attack.use_on_targets(entity, entity, resident_map, targets, None)
+        self._delay = None
+        self._delayed_attack = None
+        return False
+
     def handle_event(self, entity, event, resident_map):
         event_type, event_data = event
         is_paralyzed = entity.component('Stats').has_status('PARALYZE')
         if event_type == 'ENTITY_KILLED' and event_data == entity and self._delayed_targets is not None:
             targeted_positions = self._delayed_targets[1]
-            resident_map.remove_threatened_positions(targeted_positions)
+            resident_map.remove_threatened_positions(entity.ident())
             return False
         if event_type == 'NPC_TURN':
             if is_paralyzed:
                 return False
             elif self._delayed_attack is not None:
-                self._delay -= 1
-                if self._delay > 0:
+                if self._handle_delayed_attack(entity, resident_map) is False:
                     return False
-                targeted_positions = self._delayed_targets[1]
-                targets = resident_map.entities().without_components(['Item']).with_component('Position')\
-                                                 .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
-                self._delayed_attack.use_on_targets(entity, entity, resident_map, targets, None)
-                resident_map.remove_threatened_positions(targeted_positions)
-                self._delay = None
-                self._delayed_attack = None
-                return False
         return self._handle_event(entity, event, resident_map)
 
     def _handle_event(self, entity, event, resident_map):
@@ -983,10 +1011,11 @@ class AI(Component):
         my_combat.attack(entity, resident_map, target.component('Position').get())
 
     def _perform_delayed_attack_against(self, entity, target, resident_map, usable, delay):
+        message_panel.info("performing delayed attack")
         self._delayed_attack = usable
         self._delay = delay
         self._delayed_targets = usable.choose_targets(entity, entity, resident_map, None)
-        resident_map.add_threatened_positions(self._delayed_targets[1])
+        resident_map.add_threatened_positions(self._delayed_targets[1], delay, entity.ident())
 
 class Neutral(AI):
     def __init__(self, on_chat=None, on_attacked=None):
@@ -1013,7 +1042,6 @@ class ItemWorldClerk(Neutral):
             ['x' for _ in range(20)] for __ in range(20)
         ]))
 
-
     def on_attacked(self, entity, event, resident_map):
         self._times_attacked += 1
         if self._times_attacked >= 3:
@@ -1039,26 +1067,32 @@ class ItemWorldClerk(Neutral):
 
 class Slow(AI):
     def __init__(self, ai, period=2):
+        super().__init__()
         self._ai = ai
         self._turn_count = 0
         self._period = period
 
-    def handle_event(self, entity, event, resident_map):
+    def _handle_event(self, entity, event, resident_map):
         event_type, _ = event
         if event_type == 'NPC_TURN':
+            if self._ai._delayed_attack is not None:
+                res = self._ai._handle_delayed_attack(entity, resident_map)
+                if res is not None:
+                    return res
             self._turn_count = (self._turn_count + 1) % self._period
             if self._turn_count == 0:
-                return self._ai.handle_event(entity, event, resident_map)
+                return self._ai._handle_event(entity, event, resident_map)
             return False
-        return self._ai.handle_event(entity, event, resident_map)
+        return self._ai._handle_event(entity, event, resident_map)
 
 class Hostile(AI):
-    def __init__(self, aggro_range=5, primary_skill=None, primary_skill_range=None, immobile=False, keep_at_range=0):
+    def __init__(self, aggro_range=5, primary_skill=None, primary_skill_range=None, immobile=False, keep_at_range=0, primary_skill_delay=1):
         super().__init__()
         self._ai_status = "IDLE"
         self._aggro_range = aggro_range
         self._primary_skill = primary_skill
         self._primary_skill_range = primary_skill_range
+        self._primary_skill_delay = primary_skill_delay
         self._immobile = immobile
         self._keep_at_range = keep_at_range
 
@@ -1071,7 +1105,7 @@ class Hostile(AI):
                 self._step_away_from_player(entity, resident_map)
         elif self._primary_skill is not None and \
              (self._primary_skill_range is None or self._distance_to_player(entity, resident_map) <= self._primary_skill_range):
-            self._perform_delayed_attack_against(entity, player, resident_map, self._primary_skill, 1)
+            self._perform_delayed_attack_against(entity, player, resident_map, self._primary_skill, self._primary_skill_delay)
         elif not self._immobile:
             self._step_towards_player(entity, resident_map)
 
