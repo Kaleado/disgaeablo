@@ -5,6 +5,8 @@ from entity import *
 import util
 import uuid
 import loot
+import ai
+import skill_factory
 
 LEVEL_PC_STAT_INC = 0.2
 TIER_PC_STAT_INC = 10
@@ -65,7 +67,14 @@ class Slime:
                 'Render': Render(character='s', colour=Slime.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Slime.names[tier-1]),
-                'AI': Hostile(primary_skill=Slime.MonWave(), primary_skill_range=1.5)
+                'AI': ai.AI()\
+                .add_skill('MonWave', Slime.MonWave(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(5, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .when_player_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'MonWave'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -391,5 +400,68 @@ class Giant:
                 'Combat': Combat(),
                 'NPC': NPC(Giant.names[tier-1]),
                 'AI': Hostile(aggro_range=10, primary_skill=Giant.Smash(), primary_skill_range=2)
+            })
+        return gen
+
+# Bosses
+
+class BossTheSneak:
+    base_stats = {
+        'max_hp': 700,
+        'cur_hp': 700,
+        'max_sp': 10,
+        'cur_sp': 10,
+        'atk': 20,
+        'dfn': 12,
+        'itl': 50,
+        'res': 27,
+        'spd': 12,
+        'hit': 12
+    }
+
+    names = ['Jerome, the sneak'] * 5
+    colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green]
+
+    def BigFire():
+        formation = Formation(origin=(2,2), formation=[['x','x','x','x','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','x','x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation))))\
+                            .damage_targets("{} emits a blast of fire at {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(1, 'fire'))
+
+    def Escape():
+        return skill_factory.Skill()\
+                            .with_target_mode(TargetUser())\
+                            .teleport_targets_randomly()\
+                            .print_message("Jerome laughs as he disappears into thin air!")
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(BossTheSneak.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (BossTheSneak.base_stats[stat] + BossTheSneak.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='s', colour=BossTheSneak.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(BossTheSneak.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Escape', BossTheSneak.Escape())\
+                .add_skill('BigFire', BossTheSneak.BigFire(), 2)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(5, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .when_player_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.use_skill(e, 'BigFire'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen

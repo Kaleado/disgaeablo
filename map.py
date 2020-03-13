@@ -45,6 +45,8 @@ class Map:
     def _countdown_threatened_positions(self):
         for d in self._threatened_positions.values():
             for ident in d:
+                if self.entity(ident).component('Stats').has_status('PARALYZE'):
+                    continue
                 new_list = []
                 for delay in d[ident]:
                     if delay - 1 <= 0:

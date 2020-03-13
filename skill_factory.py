@@ -115,6 +115,27 @@ class Skill(Usable):
         self._use_on_targets = f
         return self
 
+    def print_message(self, message, colour=tcod.white, predicate=None):
+        use_on_targets = self._use_on_targets
+        def f(self, entity, user_entity, mapp, targets, menu):
+            if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
+                message_panel.info(message, colour)
+            return use_on_targets(self, entity, user_entity, mapp, targets, menu)
+        self._use_on_targets = f
+        return self
+
+    def teleport_targets_randomly(self, predicate=None):
+        use_on_targets = self._use_on_targets
+        def f(self, entity, user_entity, mapp, targets, menu):
+            if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
+                target_entities, _ = self._target_mode.targets(group='x')
+                for target in target_entities.as_list():
+                    mov_pos = mapp.random_passable_position_for(target)
+                    target.component('Position').set(mov_pos[0], mov_pos[1])
+            return use_on_targets(self, entity, user_entity, mapp, targets, menu)
+        self._use_on_targets = f
+        return self
+
     def melee_skill(self, predicate=None):
         use_on_targets = self._use_on_targets
         def f(self, entity, user_entity, mapp, targets, menu):

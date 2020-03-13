@@ -73,25 +73,29 @@ class PositionsOnly(TargetMode):
 
     def targets(self, group='x'):
         ents, pos = self._targeting_mode.targets(group)
-        return [], pos
+        return EntityListView([]), pos
 
     def choose_targets(self, user_entity, used_entity, mapp, menu):
         ents, pos = self._targeting_mode.choose_targets(user_entity, used_entity, mapp, menu)
-        return [], pos
+        return EntityListView([]), pos
 
 class NoFriendlyFire(TargetMode):
     def __init__(self, targeting_mode):
         self._targeting_mode = targeting_mode
+        self._targets = {}
 
     def targets(self, group='x'):
-        return self._targeting_mode.targets(group)
+        if group not in self._targets:
+            return None, None
+        return self._targets[group]
 
     def choose_targets(self, user_entity, used_entity, mapp, menu):
         ents, pos = self._targeting_mode.choose_targets(user_entity, used_entity, mapp, menu)
         if ents is None:
             return ents, pos
         is_player = user_entity.component('PlayerLogic') is not None
-        return ents.without_components(['PlayerLogic'] if is_player else ['NPC']), pos
+        self._targets['x'] = ents.without_components(['PlayerLogic'] if is_player else ['NPC']), pos
+        return self._targets['x']
 
 class ExcludeItems(TargetMode):
     def __init__(self, targeting_mode):
@@ -717,6 +721,7 @@ class Stats(Component):
                 self.apply_healing(user_entity, settings.current_map, sp_consumed)
 
     def deal_damage(self, entity, resident_map, damage):
+        resident_map.entities().transform(lambda ent: ent.handle_event(("DEALT_DAMAGE", (entity, damage)), resident_map))
         if self.sub_base('cur_hp', damage) <= 0:
             player = resident_map.entity('PLAYER')
             player.component('Stats').grant_exp(self.exp_yield())
@@ -941,14 +946,12 @@ class AI(Component):
         self._delay = None
 
     def _handle_delayed_attack(self, entity, resident_map):
-        print("delay is", self._delay)
         self._delay -= 1
         if self._delay > 0:
             return False
         targeted_positions = self._delayed_targets[1]
         targets = resident_map.entities().without_components(['Item']).with_component('Position')\
                                             .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
-        print("using on targets")
         self._delayed_attack.use_on_targets(entity, entity, resident_map, targets, None)
         self._delay = None
         self._delayed_attack = None

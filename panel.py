@@ -166,6 +166,14 @@ class MapPanel(Panel):
                 new_pos = (self._cursor_pos[0], self._cursor_pos[1]+step)
             elif event_data.sym in [tcod.event.K_l, tcod.event.K_KP_6]:
                 new_pos = (self._cursor_pos[0]+step, self._cursor_pos[1])
+            elif event_data.sym in [tcod.event.K_KP_7]:
+                new_pos = (self._cursor_pos[0]-step, self._cursor_pos[1]-step)
+            elif event_data.sym in [tcod.event.K_KP_9]:
+                new_pos = (self._cursor_pos[0]+step, self._cursor_pos[1]-step)
+            elif event_data.sym in [tcod.event.K_KP_1]:
+                new_pos = (self._cursor_pos[0]-step, self._cursor_pos[1]+step)
+            elif event_data.sym in [tcod.event.K_KP_3]:
+                new_pos = (self._cursor_pos[0]+step, self._cursor_pos[1]+step)
 
             w, h = self._map.dimensions()
             if new_pos is not None and new_pos[0] >= 0 and new_pos[1] >= 0 and new_pos[0] < w and new_pos[1] < h:
@@ -654,15 +662,17 @@ class InventoryPanel(Panel):
         if event_type == "TCOD" and event_data.type == "KEYDOWN" and inventory_size > 0:
             items = inventory.items().as_list()
             item_ent = items[self._selection_index] if self._selection_index < len(items) else None
+            lshift_held = event_data.mod & tcod.event.KMOD_LSHIFT == 1
+            step = 5 if lshift_held else 1
             if event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
-                self._selection_index = max(self._selection_index - 1, 0)
+                self._selection_index = max(self._selection_index - step, 0)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
                 settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
                 menu.panel('HelpPanel')[1].set_text(item_ent.component('Item').description())
                 return True
             elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
-                self._selection_index = min(self._selection_index + 1, inventory_size-1)
+                self._selection_index = min(self._selection_index + step, inventory_size-1)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
                 settings.root_menu.panel('EntityStatsPanel')[1].set_entity(item_ent)
                 settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
