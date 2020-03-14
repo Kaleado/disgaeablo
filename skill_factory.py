@@ -24,6 +24,8 @@ class Skill(Usable):
         return self._choose_targets(self, entity, user_entity, mapp, menu)
 
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
+        event = ('ENTITY_USING_SKILL', (entity, targets[0], targets[1]))
+        mapp.entities().send_event(event, mapp)
         return self._use_on_targets(self, entity, user_entity, mapp, targets, menu)
 
     # Factory methods
@@ -70,7 +72,6 @@ class Skill(Usable):
             self._target_mode = old_target_mode
             return old_target_mode.choose_targets(user_entity, user_entity, mapp, menu)
         self._choose_targets = f
-        # self._target_mode = target_mode
         return self
 
     """
@@ -79,9 +80,9 @@ class Skill(Usable):
     def change_damage(self, damage_applicator, predicate=None):
         damage = self._damage
         def f(self, source_entity, target_entity, item_entity):
-            if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
+            if predicate is None or predicate(self, source_entity, target_entity, item_entity):
                 return damage_applicator(damage(self, source_entity, target_entity, item_entity), source_entity, target_entity, item_entity)
-            return damage
+            return damage(source_entity, target_entity, item_entity)
         self._damage = f
         return self
 
@@ -145,6 +146,17 @@ class Skill(Usable):
                     has_assault = user_entity.component('Stats').get('assault') > 0
                     if has_assault:
                         user_entity.component('Stats').inflict_status('ASSAULT', strength=1, duration=3)
+            return use_on_targets(self, entity, user_entity, mapp, targets, menu)
+        self._use_on_targets = f
+        return self
+
+    def apply_status_to_user(self, status, duration, predicate=None):
+        use_on_targets = self._use_on_targets
+        def f(self, entity, user_entity, mapp, targets, menu):
+            if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
+                entities_hit, _ = self._target_mode.targets(group='x')
+                if entities_hit is not None and entities_hit.size() > 0:
+                    user_entity.component('Stats').inflict_status(status, strength=1, duration=duration)
             return use_on_targets(self, entity, user_entity, mapp, targets, menu)
         self._use_on_targets = f
         return self

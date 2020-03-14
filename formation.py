@@ -25,10 +25,10 @@ class Formation:
         return (w, h) if rotations % 2 == 0 else (h, w)
 
     def _log_formation(self, formation):
-        global message_panel
+        import settings
         for row in formation:
-            message_panel.info(str(row))
-        message_panel.info("----------------------")
+            settings.message_panel.info(str(row))
+        settings.message_panel.info("----------------------")
 
     def groups(self):
         return self._groups

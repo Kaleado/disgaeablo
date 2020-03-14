@@ -23,6 +23,17 @@ class AIState:
 
     # Factory methods
 
+    def when_under_proportion_hp(self, proportion, handler, should_stop=True):
+        def f(self, entity, ai, event_data):
+            stats = entity.component('Stats')
+            hp_prop = stats.get('cur_hp') / stats.get('max_hp')
+            if hp_prop < proportion:
+                handler(entity, ai, event_data)
+                return should_stop
+            return False
+        self._add_handler('NPC_TURN', f)
+        return self
+
     def when_player_within_distance(self, distance, handler, should_stop=True):
         def f(self, entity, ai, event_data):
             if ai.distance_to_player(entity) <= distance:
@@ -50,6 +61,26 @@ class AIState:
             return False
         self._add_handler('DAMAGE_DEALT', f)
         return self
+
+    def when_killed(self, handler, should_stop=True):
+        def f(self, entity, ai, event_data):
+            if event_data.ident() == entity.ident():
+                handler(entity, ai, event_data)
+                return should_stop
+            return False
+        self._add_handler('ENTITY_KILLED', f)
+        return self
+
+    def on_turn_randomly(self, proportion, handler, should_stop=True):
+        def f(self, entity, ai, event_data):
+            roll = random.randint(0, 1000)
+            if roll / 1000 <= proportion:
+                handler(entity, ai, event_data)
+                return should_stop
+            return False
+        self._add_handler('NPC_TURN', f)
+        return self
+
 
     def on_turn_otherwise(self, handler, should_stop=True):
         def f(self, entity, ai, event_data):

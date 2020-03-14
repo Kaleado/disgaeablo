@@ -20,11 +20,37 @@ class MapDirector:
         w,h=30,30
         return mapp, w, h
 
+    def _spawn_ultimate_beholder(self, level, mapp):
+        import entity
+        beholder_boss = monster.BossUltimateBeholder.generator(level=level)((15,15))
+        x, y = mapp.random_passable_position_for(beholder_boss)
+        beholder_boss.component('Position').set(x, y)
+        mapp.add_entity(beholder_boss)
+        for _ in range(6):
+            bhld = monster.Eye.generator(level=level)((3,3))
+            x, y = mapp.random_passable_position_for(bhld)
+            bhld.component('Position').set(x, y)
+            bhld.set_component('UltimateBeholderAdd', entity.Combat())
+            mapp.add_entity(bhld)
+
+    def _spawn_the_sneak(self, level, mapp):
+        import entity
+        the_sneak_boss = monster.BossTheSneak.generator(level=level)((15,15))
+        x, y = mapp.random_passable_position_for(the_sneak_boss)
+        the_sneak_boss.component('Position').set(x, y)
+        mapp.add_entity(the_sneak_boss)
+
     def _main_dungeon_map(self, level):
         mapp = Grid(30,30)
         w,h=30,30
         if self._current_floor == 0:
             mapp = Town(30, 30, [monster.ItemWorldClerkNPC])
+            w,h=30,30
+        elif self._current_floor == 10:
+            mapp = TheSneakArena(30, 30)
+            w,h=30,30
+        elif self._current_floor == 20:
+            mapp = BeholderArena(30, 30)
             w,h=30,30
         elif self._current_floor % 5 == 0:
             mapp = TwoRooms(30, 30, room_size=9, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
@@ -59,6 +85,14 @@ class MapDirector:
                 x, y = random.randint(0, w-1), random.randint(0,h-1)
             mapp.add_entity(item((x, y)))
 
+        if self._item_world is None:
+            if self._current_floor == 10:
+                self._spawn_ultimate_beholder(level, mapp)
+                return mapp
+            elif self._current_floor == 20:
+                self._spawn_the_sneak(level, mapp)
+                return mapp
+
         if difficulty < 15:
             n_monst = random.randint(2, 5)
         else:
@@ -80,7 +114,7 @@ class MapDirector:
             stats = self._item_world.component('Stats')
             primaries = entity.Stats.primary_stats - set(['max_hp', 'max_sp'])
             tot = sum([stats.get_base(stat) for stat in primaries])
-            return 3 + (self._current_floor - 1) * 9 + math.floor(tot / 3)
+            return 3 + (self._current_floor - 1) * 5 + math.floor(tot / 3)
 
     def _change_floor(self):
         if self._item_world is None:
@@ -127,19 +161,28 @@ map_director = MapDirector()
 class MonsterDirector:
     monsters = {
         0: [
-            monster.Slime
+            monster.Slime,
         ],
         10: [
             monster.Mage,
             monster.Golem,
             monster.Scorpion,
             monster.Spider,
-            monster.Eye
+            monster.Eye,
         ],
         35: [
             monster.Wyvern,
             monster.Beholder,
-            monster.Giant
+            monster.Giant,
+        ],
+    }
+
+    bosses = {
+        0: [
+            monster.BossTheSneak,
+        ],
+        10: [
+            monster.BossUltimateBeholder,
         ],
     }
 
@@ -214,6 +257,9 @@ class LootDirector:
         loot.AerialDrop,
         loot.WhipSlash,
         loot.Bypass,
+        loot.PoisonDetonation,
+        loot.LightningBreath,
+        loot.StaticShock,
     ]
 
     support_skills = [
@@ -249,6 +295,10 @@ class LootDirector:
         loot.AssaultMod,
         loot.BlazeMod,
         loot.EnergisingColdMod,
+        loot.InvigoratingPowerMod,
+        loot.EmpoweringFlameMod,
+        loot.RampageMod,
+        loot.EnvenomedBladeMod,
     ]
 
     def __init__(self):

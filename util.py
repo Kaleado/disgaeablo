@@ -8,7 +8,6 @@ def find_path(passability_map, source, dest):
     q = [source]
     w = len(passability_map[0])
     h = len(passability_map)
-    print(w)
     path_map = [[None for x in range(w)] for y in range(h)]
     seen = set()
     while len(q) > 0:

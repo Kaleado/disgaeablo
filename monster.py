@@ -35,14 +35,14 @@ def ItemWorldClerkNPC(position):
 
 class Slime:
     base_stats = {
-        'max_hp': 120,
-        'cur_hp': 120,
+        'max_hp': 100,
+        'cur_hp': 100,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
-        'dfn': 12,
+        'dfn': 10,
         'itl': 12,
-        'res': 12,
+        'res': 10,
         'spd': 12,
         'hit': 12
     }
@@ -407,12 +407,12 @@ class Giant:
 
 class BossTheSneak:
     base_stats = {
-        'max_hp': 700,
-        'cur_hp': 700,
+        'max_hp': 300,
+        'cur_hp': 300,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
-        'dfn': 12,
+        'dfn': 17,
         'itl': 50,
         'res': 27,
         'spd': 12,
@@ -421,6 +421,15 @@ class BossTheSneak:
 
     names = ['Jerome, the sneak'] * 5
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green]
+
+    def Lightning():
+        formation = Formation(origin=(1,1), formation=[['.','x','.'],
+                                                       ['x','x','x'],
+                                                       ['.','x','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation))))\
+                            .damage_targets("{} drops a bolt of lightning on {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(1, 'lght'))
 
     def BigFire():
         formation = Formation(origin=(2,2), formation=[['x','x','x','x','x'],
@@ -450,18 +459,93 @@ class BossTheSneak:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='s', colour=BossTheSneak.colours[tier-1]),
+                'Render': Render(character='h', colour=BossTheSneak.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(BossTheSneak.names[tier-1]),
                 'AI': ai.AI()\
-                .add_skill('Escape', BossTheSneak.Escape())\
+                .add_skill('Escape', BossTheSneak.Escape(), 2)\
                 .add_skill('BigFire', BossTheSneak.BigFire(), 2)\
+                .add_skill('Lightning', BossTheSneak.Lightning(), 1)\
                 .with_state('IDLE', ai.AIState()\
-                            .when_player_within_distance(5, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.change_state('RANGED_PHASE'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
-                .with_state('AGGRO', ai.AIState()\
+                .with_state('RANGED_PHASE', ai.AIState()\
+                            .when_under_proportion_hp(0.5, lambda e, ai, ev_d : ai.change_state('MELEE_PHASE'))\
                             .when_player_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
                             .when_player_within_distance(7, lambda e, ai, ev_d : ai.use_skill(e, 'BigFire'))\
+                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.use_skill(e, 'Lightning'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+                .with_state('MELEE_PHASE', ai.AIState()\
+                            .when_player_beyond_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'BigFire'))\
+                            .on_turn_randomly(0.1, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_away_from_player(e)))\
+            })
+        return gen
+
+class BossUltimateBeholder:
+    base_stats = {
+        'max_hp': 300,
+        'cur_hp': 300,
+        'max_sp': 10,
+        'cur_sp': 10,
+        'atk': 20,
+        'dfn': 12,
+        'itl': 50,
+        'res': 27,
+        'spd': 12,
+        'hit': 12
+    }
+
+    names = ['Azxtryzxtaz, King of beholders'] * 5
+    colours = [tcod.red, tcod.orange, tcod.green, tcod.chartreuse, tcod.peach]
+
+    def Laser():
+        formation = Formation(origin=(2,0), formation=[['.','.','.','.','.'],
+                                                       ['.','.','x','.','.'],
+                                                       ['.','x','x','x','.'],
+                                                       ['x','x','x','x','x']] + [['x','x','x','x','x']] * 30)
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{}'s blazing eye ray scorches {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def TeleportAdds():
+        return skill_factory.Skill()\
+                            .with_target_mode(WithComponents(['UltimateBeholderAdd'], TargetEveryone()))\
+                            .teleport_targets_randomly()\
+                            .print_message("Azxtryzxtaz emits a sharp screeching noise!")
+
+    def Escape():
+        return skill_factory.Skill()\
+                            .with_target_mode(TargetUser())\
+                            .teleport_targets_randomly()\
+                            .print_message("Azxtryzxtaz laughs as he disappears into thin air!")
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(BossUltimateBeholder.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (BossUltimateBeholder.base_stats[stat] + BossUltimateBeholder.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='E', colour=BossUltimateBeholder.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(BossUltimateBeholder.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Laser', BossUltimateBeholder.Laser(), 2)\
+                .add_skill('Escape', BossUltimateBeholder.Escape(), 3)\
+                .add_skill('TeleportAdds', BossUltimateBeholder.TeleportAdds(), 0)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.change_state('RANGED_PHASE'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('RANGED_PHASE', ai.AIState()\
+                            .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
+                            .on_turn_randomly(0.2, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportAdds'))\
+                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.use_skill(e, 'Laser'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen

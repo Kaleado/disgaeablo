@@ -113,6 +113,40 @@ class ExcludeItems(TargetMode):
             return ents, pos
         return ents.without_components(['Item']), pos
 
+class WithoutComponents(TargetMode):
+    def __init__(self, components, targeting_mode):
+        self._targeting_mode = targeting_mode
+        self._components = components
+
+    def targets(self, group='x'):
+        if group not in self._targeting_mode._targets:
+            return None, None
+        ents, pos = self._targeting_mode.targets(group)
+        return ents.without_components(self._components), pos
+
+    def choose_targets(self, user_entity, used_entity, mapp, menu):
+        ents, pos = self._targeting_mode.choose_targets(user_entity, used_entity, mapp, menu)
+        if ents is None:
+            return ents, pos
+        return ents.without_components(self._components), pos
+
+class WithComponents(TargetMode):
+    def __init__(self, components, targeting_mode):
+        self._targeting_mode = targeting_mode
+        self._components = components
+
+    def targets(self, group='x'):
+        if group not in self._targeting_mode._targets:
+            return None, None
+        ents, pos = self._targeting_mode.targets(group)
+        return ents.with_all_components(self._components), pos
+
+    def choose_targets(self, user_entity, used_entity, mapp, menu):
+        ents, pos = self._targeting_mode.choose_targets(user_entity, used_entity, mapp, menu)
+        if ents is None:
+            return ents, pos
+        return ents.with_all_components(self._components), pos
+
 class TargetNobody(TargetMode):
     def targets(self, group='x'):
         return EntityListView([]), []
@@ -493,10 +527,18 @@ class Stats(Component):
         'cur_exp',
     ])
 
+    damage_stats = set([
+        'fire_dam',
+        'ice_dam',
+        'lght_dam',
+        'phys_dam',
+    ])
+
     resistance_stats = set([
         'fire_res',
         'ice_res',
         'lght_res',
+        'phys_res',
     ])
 
     all_stats = set([
@@ -535,6 +577,10 @@ class Stats(Component):
         'assault',
         'improve_fire_aoe',
         'ice_souldrain',
+        'lightning_lifedrain',
+        'fire_assault',
+        'assault_regen_hp',
+        'cleave_poison',
     ])
 
     REGEN_FREQUENCY = 6
@@ -549,7 +595,7 @@ class Stats(Component):
         self._regen_counter = 0
         self._stats = {}
         if stats_gained_on_level is None:
-            stats_gained_on_level = Stats.primary_stats
+            stats_gained_on_level = Stats.primary_stats | Stats.resistance_stats | Stats.damage_stats
         self._stats_gained_on_level = stats_gained_on_level
         self._modifiers = {}
         for stat in Stats.all_stats:
@@ -623,6 +669,9 @@ class Stats(Component):
                         self.apply_refreshing(entity, resident_map, sp_regen)
                     if hp_regen > 0:
                         self.apply_healing(entity, resident_map, hp_regen)
+            assault_regen_hp = self.get('assault_regen_hp')
+            if assault_regen_hp > 0 and self.has_status('ASSAULT'):
+                self.apply_healing(entity, resident_map, 0.01 * assault_regen_hp * self.get_value('max_hp'))
             if self.has_status('REGEN'):
                 self.apply_healing(entity, resident_map, 0.05 * self.get_value('max_hp'))
             if self.has_status('POISON'):
@@ -1014,7 +1063,6 @@ class AI(Component):
         my_combat.attack(entity, resident_map, target.component('Position').get())
 
     def _perform_delayed_attack_against(self, entity, target, resident_map, usable, delay):
-        message_panel.info("performing delayed attack")
         self._delayed_attack = usable
         self._delay = delay
         self._delayed_targets = usable.choose_targets(entity, entity, resident_map, None)

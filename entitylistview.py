@@ -49,6 +49,10 @@ class EntityListView:
     def transform(self, func):
         return EntityListView(list(map(func, self.entity_list)))
 
+    def send_event(self, event, mapp):
+        map(lambda ent : ent.handle_event(event, mapp), self.entity_list)
+        return self
+
     def for_each_until(self, func):
         for ent in self.entity_list:
             if func(ent):

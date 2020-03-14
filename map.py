@@ -45,7 +45,8 @@ class Map:
     def _countdown_threatened_positions(self):
         for d in self._threatened_positions.values():
             for ident in d:
-                if self.entity(ident).component('Stats').has_status('PARALYZE'):
+                e = self.entity(ident)
+                if e is None or e.component('Stats').has_status('PARALYZE'):
                     continue
                 new_list = []
                 for delay in d[ident]:
@@ -323,11 +324,101 @@ class Corridors(Map):
         self._terrain[ry + room_size//2][rx + room_size//2] = '>'
 
 class Town(Map):
+    def _building(self, x, y, w, h):
+        for xx in range(x, x+w):
+            for yy in range(y, y+h):
+                self._terrain[yy][xx] = '#'
+
     def __init__(self, width, height, residents, map_group=None, turn_limit=None):
         super().__init__(map_group, turn_limit)
         self._terrain = [['.' for x in range(width)] for y in range(height)]
         x, y = width // 2, height // 2
         self._terrain[y][x] = '>'
+
+        buildings = [
+            (1, 1, 10, 4),
+            (width-12, 1, 8, 4),
+            (1, 6, 4, 10),
+            (width-5, 1, 4, 8),
+            (width-10, 6, 4, 8),
+            (1, height-7, 7, 6),
+        ]
+        for x, y, w, h in buildings:
+            self._building(x, y, w, h)
+
         for generator in residents:
             ent = generator((random.randint(3, width-3),random.randint(3, height-3)))
             self.add_entity(ent)
+
+class BeholderArena(Map):
+    def __init__(self, width, height, room_size=5, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
+        self._width = width
+        self._height = height
+        self._room_size = room_size
+        self._terrain = [['#' for x in range(width)] for y in range(height)]
+        # Room
+        # rx, ry = width // 2 - room_size // 2, height // 2 - room_size // 2
+        rx, ry = random.randint(1, width-2 - room_size), random.randint(1, height-2 - room_size)
+        for xx in range(room_size):
+            for yy in range(room_size):
+                self._terrain[ry+yy][rx+xx] = '.'
+        # Corridors
+        corr = [ry] + [random.randint(1, width-2) for _ in range(random.randint(3, 5))]
+        c = corr[0]
+        for x in range(width):
+            self._terrain[c][x] = '.'
+        c = corr[1]
+        for y in range(width):
+            self._terrain[y][c] = '.'
+        for c in corr[2:]:
+            if random.randint(0,1) == 0:
+                for x in range(width):
+                    self._terrain[c][x] = '.'
+            else:
+                for y in range(width):
+                    self._terrain[y][c] = '.'
+        # Stairs
+        self._terrain[ry + room_size//2][rx + room_size//2] = '>'
+
+class TheSneakArena(Map):
+    def __init__(self, width, height, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
+        floor = math.floor
+        room_size = 6
+        rooms_w = width // room_size
+        rooms_h = height // room_size
+        rooms_grid = [[random.choice(['N', 'E', 'S', 'W']) for x in range(rooms_w)] for y in range(rooms_h)]
+        self._terrain = [['#' if (x % room_size) * (y % room_size) == 0 else '.' for x in range(width)] for y in range(height)]
+        start_room = (random.randint(0, rooms_w - 1), random.randint(0, rooms_h - 1))
+        seen = set([start_room])
+        q = [start_room]
+        while len(q) > 0:
+            x, y = q.pop()
+            for dx in range(-1,2):
+                for dy in range(-1,2):
+                    if dy * dx != 0 or (dx == 0 and dy == 0):
+                        continue
+                    if x + dx >= 0 and y + dy >= 0 and x + dx < rooms_w and y + dy < rooms_h and (x+dx, y+dy) not in seen:
+                        seen = seen | set([(x+dx, y+dy)])
+                        rooms_grid[y+dy][x+dx] = 'W' if dx == 1 else 'E' if dx == -1 else 'N' if dy == 1 else 'S'
+                        if random.randint(0,1) == 1:
+                            q.append((x+dx, y+dy))
+                        else:
+                            q = [(x+dx, y+dy)] + q
+        for xx in range(rooms_w):
+            for yy in range(rooms_h):
+                if rooms_grid[yy][xx] == 'N':
+                    door_x, door_y = floor((xx + 0.5) * room_size), yy * room_size
+                elif rooms_grid[yy][xx] == 'E':
+                    door_x, door_y = (xx + 1) * room_size, floor((yy + 0.5) * room_size)
+                elif rooms_grid[yy][xx] == 'S':
+                    door_x, door_y = floor((xx + 0.5) * room_size), (yy + 1) * room_size
+                elif rooms_grid[yy][xx] == 'W':
+                    door_x, door_y = xx * room_size, floor((yy + 0.5) * room_size)
+                if door_x < width and door_y < height:
+                    self._terrain[door_y][door_x] = '.'
+        stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        while self._terrain[stairs_y][stairs_x] == '#':
+            stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        self._terrain[stairs_y][stairs_x] = '>'
