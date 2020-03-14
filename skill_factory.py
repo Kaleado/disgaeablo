@@ -82,7 +82,7 @@ class Skill(Usable):
         def f(self, source_entity, target_entity, item_entity):
             if predicate is None or predicate(self, source_entity, target_entity, item_entity):
                 return damage_applicator(damage(self, source_entity, target_entity, item_entity), source_entity, target_entity, item_entity)
-            return damage(source_entity, target_entity, item_entity)
+            return damage(self, source_entity, target_entity, item_entity)
         self._damage = f
         return self
 
