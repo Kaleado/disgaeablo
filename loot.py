@@ -77,7 +77,7 @@ class Refreshing:
 
 class DfnArmour:
     base_stats = {
-        'dfn': 10,
+        'dfn': 30,
     }
     names = ['Tunic', 'Leather armour', 'Splint mail', 'Chainmail', 'Platemail', 'Glorious armour', 'Nephilim guard']
     colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
@@ -100,7 +100,7 @@ class DfnArmour:
 
 class ResArmour:
     base_stats = {
-        'res': 10,
+        'res': 30,
     }
     names = ['Loincloth', 'Cloth sash', 'Linen robe', 'Silken gown', 'Sorceror\'s gown', 'Arcane robe', 'Flowing garb']
     colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
@@ -123,8 +123,8 @@ class ResArmour:
 
 class ResItlArmour:
     base_stats = {
-        'res': 6,
-        'itl': 4,
+        'res': 18,
+        'itl': 12,
     }
     names = ['Bandana', 'Plain circlet', 'Cloth hat', 'Mitre', 'Wizard\'s hat', 'Feather cap', 'Majestic crown']
     colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
@@ -147,8 +147,8 @@ class ResItlArmour:
 
 class DfnAtkArmour:
     base_stats = {
-        'dfn': 6,
-        'atk': 4,
+        'dfn': 18,
+        'atk': 12,
     }
     names = ['Leather shield', 'Targe', 'Kite shield', 'Square shield', 'Spiked shield', 'Berserker shield', 'Angel aegis']
     colours = [tcod.brass, tcod.dark_orange, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.dark_red]
@@ -171,7 +171,7 @@ class DfnAtkArmour:
 
 class Sword:
     base_stats = {
-        'atk': 15,
+        'atk': 45,
     }
     names = ['Rusted sword', 'Shortsword', 'Broadsword', 'Estoc', 'Claymore', 'Flamberge', 'Zanbato']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.red]
@@ -194,7 +194,7 @@ class Sword:
 
 class Staff:
     base_stats = {
-        'itl': 15,
+        'itl': 45,
     }
     names = ['Bent staff', 'Apprentice staff', 'Novice rod', 'Battlestaff', 'Angel\'s cane', 'Greatstaff', 'Yggdrasil branch']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.red]
@@ -402,7 +402,7 @@ def PoisonDetonation(position):
         .damage_targets("{} detonates toxins at {}! ({} HP)")\
         .with_sp_cost(5)\
         .with_damage(damage.SpellDamage(1, 'fire'))
-        .change_damage(lambda d, s, t, i : damage.AndDamage(damage.Damage(s, 2.5, element='fire'), d),
+        .change_damage(lambda d, s, t, i : damage.AndDamage(damage.SpellDamage(3, 'fire')(s,t,i), d),
                        lambda s, s_e, t_e, i_e : t_e.component('Stats').has_status('POISON'))
         .apply_status_to_user('ASSAULT', 2,
                               lambda s, e, u, m, t, mn : u.component('Stats').get('fire_assault') > 0)
@@ -767,7 +767,7 @@ def FireDamageMod(position):
         'Stats': entity.Stats({'fire_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
-        'Item': entity.Item('Fire Damage Up', 'Increases fire damage dealt by 10%'),
+        'Item': entity.Item('Fire Damage Up', 'Increases fire damage dealt by 20%'),
         'Mod': entity.Mod(),
     })
 
@@ -777,7 +777,7 @@ def IceDamageMod(position):
         'Stats': entity.Stats({'ice_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
-        'Item': entity.Item('Ice Damage Up', 'Increases ice damage dealt by 10%'),
+        'Item': entity.Item('Ice Damage Up', 'Increases ice damage dealt by 20%'),
         'Mod': entity.Mod(),
     })
 
@@ -787,7 +787,7 @@ def LightningDamageMod(position):
         'Stats': entity.Stats({'lght_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
-        'Item': entity.Item('Lightning Damage Up', 'Increases lightning damage dealt by 10%'),
+        'Item': entity.Item('Lightning Damage Up', 'Increases lightning damage dealt by 20%'),
         'Mod': entity.Mod(),
     })
 
@@ -797,7 +797,7 @@ def PhysicalDamageMod(position):
         'Stats': entity.Stats({'phys_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
-        'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 10%'),
+        'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 20%'),
         'Mod': entity.Mod(),
     })
 

@@ -648,7 +648,7 @@ class BossTheTower:
         'fire_res': 90,
     }
 
-    names = ['The Tower'] * 5
+    names = ['XVI - The Tower'] * 5
     colours = [tcod.green, tcod.blue, tcod.red, tcod.pink, tcod.cyan]
 
     def Laser():
@@ -751,7 +751,7 @@ class BossTheTower:
                             .every_n_turns(4, lambda e, ai, ev_d : ai.use_skill(e, 'Smite3'))\
                             .every_n_turns(3, lambda e, ai, ev_d : ai.use_skill(e, 'Smite2'))\
                             .every_n_turns(2, lambda e, ai, ev_d : ai.use_skill(e, 'Smite1'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Laser')))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'HorLaser')))\
                 .with_state('MIDNIGHT_PHASE', ai.AIState()\
                             .after_n_turns(1, lambda e, ai, ev_d : ai.use_skill('Deadline'))\
                             .when_player_within_distance(4, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportPlayer'))\
