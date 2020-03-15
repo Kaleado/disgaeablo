@@ -48,6 +48,8 @@ class Menu:
             console.clear()
             for origin, panel in self._panels.values():
                 panel.render(console, origin)
+            if self._repositioning_panels:
+                console.print_(x=0, y=0, string="Repositioning panels -- press ~ when finished")
             tcod.console_flush()  # Show the console.
             for event in tcod.event.wait(timeout=0.2):
                 if event.type == "KEYDOWN" and event.sym == tcod.event.K_BACKQUOTE:
@@ -65,16 +67,17 @@ class Menu:
                     for _, panel in self._panels.values():
                         panel.handle_event(("TCOD", event), self)
                 else:
-                    pos, pan = self._panels[self._focus_list[self._focus_index]]
                     if event.type == "KEYDOWN":
-                        if event.sym == tcod.event.K_i:
-                            pos = (pos[0], pos[1]-1)
-                        if event.sym == tcod.event.K_j:
-                            pos = (pos[0]-1, pos[1])
-                        if event.sym == tcod.event.K_k:
-                            pos = (pos[0], pos[1]+1)
-                        if event.sym == tcod.event.K_l:
-                            pos = (pos[0]+1, pos[1])
+                        step = 5 if event.mod & tcod.event.KMOD_LSHIFT else 1
+                        pos, pan = self._panels[self._focus_list[self._focus_index]]
+                        if event.sym in [tcod.event.K_i, tcod.event.K_KP_8]:
+                            pos = (pos[0], pos[1]-step)
+                        if event.sym in [tcod.event.K_j, tcod.event.K_KP_4]:
+                            pos = (pos[0]-step, pos[1])
+                        if event.sym in [tcod.event.K_k, tcod.event.K_KP_2]:
+                            pos = (pos[0], pos[1]+step)
+                        if event.sym in [tcod.event.K_l, tcod.event.K_KP_6]:
+                            pos = (pos[0]+step, pos[1])
                     self._panels[self._focus_list[self._focus_index]] = (pos, pan)
             settings.current_map.commit()
         return self._resolution_value
@@ -183,7 +186,7 @@ class MapPanel(Panel):
                     menu.panel('EntityStatsPanel')[1].set_entity(under_cursor[0])
                 else:
                     menu.panel('EntityStatsPanel')[1].set_entity(None)
-                return True
+            return True
 
     def handle_event(self, event, menu):
         if not self._has_focus:
@@ -730,10 +733,11 @@ class InventoryPanel(Panel):
         return False
 
 class ChooseItemPanel(Panel):
-    def __init__(self, entity, with_all_components=[]):
+    def __init__(self, entity, with_all_components=[], title="Choose an item"):
         self._entity = entity
         self._with_all_components = with_all_components
         self._selection_index = 0
+        self._title = title
 
     def handle_event(self, event, menu):
         event_type, event_data = event
@@ -760,10 +764,11 @@ class ChooseItemPanel(Panel):
         old_fg = console.default_fg
         inventory = self._entity.component('Inventory')
         items = inventory.items().as_list()
-        x, y = origin
-        yy = 1
         index = 0
-        console.print_(x=x, y=y, string="Choose an item")
+        x, y = origin
+        yy = 0
+        console.print_(x=x, y=yy+y, string=self._title)
+        yy += 1
         for item in items:
             console.default_fg = tcod.cyan if self._has_focus and self._selection_index == index else console.default_fg
             item.component('Render').render(item, console, (x,yy+y))

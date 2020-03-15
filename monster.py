@@ -29,9 +29,92 @@ def ItemWorldClerkNPC(position):
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.magenta),
         'Combat': Combat(),
-        'NPC': NPC('Item world clerk'),
+        'NPC': NPC('Lisa, item world clerk'),
         'AI': ItemWorldClerk()
     })
+
+def ModShopNPC(position):
+    import director
+    x, y = position
+    items = []
+    for _ in range(10):
+        items += [director.loot_director.loot_from_set(1, director.LootDirector.mods)((0,0))]
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.green),
+        'Combat': Combat(),
+        'NPC': NPC('Leo, mod salesman'),
+        'Inventory': Inventory(items),
+        'AI': Shopkeeper()
+    })
+
+def EquipmentShopNPC(position):
+    import director
+    x, y = position
+    items = []
+    for _ in range(10):
+        items += [director.loot_director.loot_from_set(1, director.LootDirector.equipment).generator(tier=1)((0,0))]
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.blue),
+        'Combat': Combat(),
+        'NPC': NPC('Joseph, equipment salesman'),
+        'Inventory': Inventory(items),
+        'AI': Shopkeeper()
+    })
+
+def SkillShopNPC(position):
+    import director
+    x, y = position
+    items = []
+    for _ in range(10):
+        items += [director.loot_director
+                  .loot_from_set(1, director.LootDirector.attack_skills | director.LootDirector.support_skills)((0,0))]
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.lighter_blue),
+        'Combat': Combat(),
+        'NPC': NPC('Bridget, skillbook librarian'),
+        'Inventory': Inventory(items),
+        'AI': Shopkeeper()
+    })
+
 
 class Slime:
     base_stats = {

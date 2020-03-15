@@ -21,7 +21,8 @@ def TownPortal(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='+', colour=tcod.lighter_blue),
         'Item': entity.Item("Town portal", 'Takes you back to town, fully healing your HP and SP'),
-        'Usable': entity.ConsumeAfter(entity.ReturnToTown())
+        'Usable': entity.ConsumeAfter(entity.ReturnToTown()),
+        'TownPortal': entity.Component()
     })
 
 class Healing:
@@ -224,7 +225,7 @@ def Cleave(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 35}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_green),
+        'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Cleave', 'Deals high physical damage in an area in front'),
         'Usable': skill_factory.Skill(tags=['skill_cleave', 'attack', 'offensive'])\
         .melee_skill()\
@@ -246,7 +247,7 @@ def Pierce(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 35}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_green),
+        'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Pierce', 'Deals high physical damage in a line'),
         'Usable': skill_factory.Skill(tags=['skill_pierce', 'attack', 'offensive'])\
         .melee_skill()\
@@ -265,7 +266,7 @@ def Bypass(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_green),
+        'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Bypass', 'Attack in a line whilst moving diagonally forwards'),
         'Usable': skill_factory.Skill(tags=['skill_bypass', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
@@ -282,7 +283,7 @@ def WhipSlash(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_green),
+        'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Whip slash', 'Deal damage in an arc whilst sidestepping danger'),
         'Usable': skill_factory.Skill(tags=['skill_whip_slash', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
@@ -317,7 +318,7 @@ def RollingStab(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 20}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_green),
+        'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Rolling stab', 'Good for rolling out of the way of incoming attacks'),
         'Usable': skill_factory.Skill(tags=['skill_rolling_stab', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
@@ -335,7 +336,7 @@ def AerialDrop(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 20}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_green),
+        'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Aerial drop', 'Pierce your foes from the sky!'),
         'Usable': skill_factory.Skill(tags=['skill_aerial_drop', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
@@ -353,7 +354,7 @@ def Combustion(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 45}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Combustion', 'Deals high fire damage in front'),
         'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -373,7 +374,7 @@ def Fire(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 35}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Fire', 'Deals fire damage in a single tile'),
         'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -394,7 +395,7 @@ def PoisonDetonation(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Poison Detonation', 'Deals a small amount of fire damage, or a massive amount of fire damage on poisoned targets'),
         'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -413,7 +414,7 @@ def Ice(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 27}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Ice', 'Deals ice damage in a 5-tile line'),
         'Usable': skill_factory.Skill(tags=['spell_ice', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -433,7 +434,7 @@ def Lightning(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 27}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Lightning', 'Deals lightning damage in a 3x3 area'),
         'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -454,7 +455,7 @@ def LightningBreath(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 35}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Lightning Breath', 'Deals lightning damage in an area in front'),
         'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -475,7 +476,7 @@ def StaticShock(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 15}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.light_purple),
+        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Static Shock', 'Deals lightning damage with a chance to paralyze'),
         'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive', 'status', 'debuff'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -693,7 +694,7 @@ def MeleeDeathblowMod(position):
 def SPRegenMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'sp_regen': 1}),
+        'Stats': entity.Stats({'sp_regen': 1}, set(['sp_regen'])),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_blue),
         'Item': entity.Item('SP Regen', 'Restores SP every 4 turns'),
@@ -703,7 +704,7 @@ def SPRegenMod(position):
 def HPRegenMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'hp_regen': 1}),
+        'Stats': entity.Stats({'hp_regen': 1}, set(['hp_regen'])),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_red),
         'Item': entity.Item('HP Regen', 'Restores HP every 4 turns'),
@@ -736,7 +737,7 @@ def ToxicPowerMod(position):
         'Stats': entity.Stats({'self_poison': 1, 'boost_itl': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_green),
-        'Item': entity.Item('Toxic Power', 'Boost ITL, but self-poisons'),
+        'Item': entity.Item('Venom Power', 'Boost ITL, but self-poisons'),
         'Mod': entity.Mod(),
     })
 

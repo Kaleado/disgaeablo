@@ -600,7 +600,6 @@ class Stats(Component):
     ])
 
     REGEN_FREQUENCY = 6
-
     EXP_YIELD_SCALE = 2
 
     """
@@ -904,8 +903,8 @@ class Render(Component):
         console.default_fg = old_fg
 
 class Inventory(Component):
-    def __init__(self):
-        self._items = []
+    def __init__(self, items=[]):
+        self._items = items
 
     def items(self):
         return EntityListView(self._items)
@@ -1098,6 +1097,57 @@ class Neutral(AI):
         if event_type == 'ENTITY_DAMAGED_BY' and event_data[0] == entity.ident() and self._on_attacked is not None:
             self._on_attacked(self, entity, event, resident_map)
             return False
+
+class Shopkeeper(Neutral):
+    def __init__(self):
+        super().__init__(on_chat=Shopkeeper.on_chat, on_attacked=Shopkeeper.on_attacked)
+        self._times_attacked = 0
+
+    def Apocalypse():
+        return SkillSpell(formation=Formation(origin=(10,10), formation=[
+            ['x' for _ in range(20)] for __ in range(20)
+        ]))
+
+    def on_attacked(self, entity, event, resident_map):
+        self._times_attacked += 1
+        if self._times_attacked >= 3:
+            settings.message_panel.info('\"You\'ve REALLY done it now...\"', tcod.green)
+            entity.set_component('AI', Hostile(primary_skill=Shopkeeper.Apocalypse(), primary_skill_range=9999))
+        else:
+            settings.message_panel.info(random.choice(['\"Ouch!\"', '\"Stop it!\"', '\"Hey!\"']), tcod.green)
+
+    def _choose_item_to_buy(self, entity):
+        choose_item_menu = Menu({
+            'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, [], title="\"What'll it be today?\" (Each item costs 1 town portal)"))
+        }, ['ChooseItemPanel'])
+        chosen_item = choose_item_menu.run(settings.root_console)
+        return chosen_item
+
+    def _choose_town_portal(self, entity):
+        choose_item_menu = Menu({
+            'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, ["TownPortal"], title="\"That'll be one town portal\""))
+        }, ['ChooseItemPanel'])
+        chosen_item = choose_item_menu.run(settings.root_console)
+        return chosen_item
+
+    def on_chat(self, entity, event, resident_map):
+        import director
+        player = resident_map.entity('PLAYER')
+        bought_item = self._choose_item_to_buy(entity)
+        if bought_item is None:
+            settings.message_panel.info("\"Aww, gimme a break...\"", tcod.green)
+            return
+        town_portal = self._choose_town_portal(player)
+        if town_portal is None:
+            settings.message_panel.info("\"Aww, gimme a break...\"", tcod.green)
+            return
+        item_name = bought_item.component('Item').name()
+        entity.component('Inventory').remove(bought_item)
+        player.component('Inventory').remove(town_portal)
+        player.component('Inventory').add(bought_item)
+        settings.message_panel.info("\"Thank you for your patronage!\"", tcod.green)
+        settings.message_panel.info("\"...sucker.\"", tcod.green)
+
 
 class ItemWorldClerk(Neutral):
     def __init__(self):

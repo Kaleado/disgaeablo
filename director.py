@@ -59,7 +59,7 @@ class MapDirector:
         mapp = Grid(30,30)
         w,h=30,30
         if self._current_floor == 0:
-            mapp = Town(30, 30, [monster.ItemWorldClerkNPC])
+            mapp = Town(30, 30, [monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC])
             w,h=30,30
         elif self._current_floor == 10:
             mapp = TheSneakArena(30, 30)
@@ -238,7 +238,7 @@ class MonsterDirector:
 monster_director = MonsterDirector()
 
 class LootDirector:
-    items = [
+    items = set([
         loot.Healing,
         loot.Refreshing,
         loot.Sword,
@@ -255,18 +255,18 @@ class LootDirector:
         loot.Weaken,
         loot.Stoneskin,
         loot.Blink,
-    ]
+    ])
 
-    equipment = [
+    equipment = set([
         loot.Staff,
         loot.Sword,
         loot.DfnArmour,
         loot.ResArmour,
         loot.DfnAtkArmour,
         loot.ResItlArmour,
-    ]
+    ])
 
-    attack_skills = [
+    attack_skills = set([
         loot.Cleave,
         loot.Pierce,
         loot.Fire,
@@ -280,9 +280,9 @@ class LootDirector:
         loot.LightningBreath,
         loot.StaticShock,
         loot.Combustion,
-    ]
+    ])
 
-    support_skills = [
+    support_skills = set([
         loot.Paralyze,
         loot.Poison,
         loot.GuardBreak,
@@ -291,9 +291,9 @@ class LootDirector:
         loot.Stoneskin,
         loot.Blink,
         loot.Dash,
-    ]
+    ])
 
-    mods = [
+    mods = set([
         loot.AtkMod,
         loot.DfnMod,
         loot.ItlMod,
@@ -305,6 +305,7 @@ class LootDirector:
         loot.HPRegenMod,
         loot.SpellSoulDrainMod,
         loot.ToxicForceMod,
+        loot.ToxicPowerMod,
         loot.PoisonHealMod,
         loot.SoulConversionMod,
         loot.LightningDamageMod,
@@ -319,7 +320,7 @@ class LootDirector:
         loot.EmpoweringFlameMod,
         loot.RampageMod,
         loot.EnvenomedBladeMod,
-    ]
+    ])
 
     def __init__(self):
         self._item_world = None
@@ -328,24 +329,27 @@ class LootDirector:
         self._item_world = item
 
     def monster_loot(self, level):
-        return random.choice(LootDirector.items)
+        return random.choice(list(LootDirector.items))
+
+    def loot_from_set(self, level, custom_set):
+        return random.choice(list(custom_set))
 
     def ground_loot(self, level):
         roll = random.randint(0,500)
-        if roll < 100:
+        if roll < 50:
             return loot.Healing.generator(tier=1)
-        elif roll < 150:
+        elif roll < 100:
             return loot.Refreshing.generator(tier=1)
-        elif roll < 170:
+        elif roll < 150:
             return loot.TownPortal
         elif roll < 300:
-            return random.choice(LootDirector.mods)
+            return random.choice(list(LootDirector.mods))
         elif roll < 350:
-            return random.choice(LootDirector.equipment).generator(tier=1)
+            return random.choice(list(LootDirector.equipment)).generator(tier=1)
         elif roll < 450:
-            return random.choice(LootDirector.attack_skills)
+            return random.choice(list(LootDirector.attack_skills))
         else:
-            return random.choice(LootDirector.support_skills)
-        return random.choice(LootDirector.items)
+            return random.choice(list(LootDirector.support_skills))
+        return random.choice(list(LootDirector.items))
 
 loot_director = LootDirector()
