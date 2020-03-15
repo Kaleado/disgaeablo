@@ -26,8 +26,8 @@ def TownPortal(position):
 
 class Healing:
     base_stats = {
-        'max_hp': 50,
-        'cur_hp': 50,
+        'max_hp': 175,
+        'cur_hp': 175,
     }
     names = ['Rosemary', 'Sage', 'Daffodil', 'Nettle', 'Chamomile', 'Ginseng', 'Valerian']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.red]

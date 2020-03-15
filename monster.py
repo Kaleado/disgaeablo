@@ -131,7 +131,7 @@ class Golem:
     }
 
     names = ['Mud golem', 'Stone golem', 'Iron golem', 'Magma golem', 'Mithril golem']
-    colours = [tcod.orange, tcod.yellow, tcod.light_gray, tcod.crimson, tcod.cyan]
+    colours = [tcod.darker_orange, tcod.yellow, tcod.light_gray, tcod.crimson, tcod.cyan]
 
     def Stone():
         return SkillRanged(formation=Formation(origin=(1,1), formation=[['x','x','x'],['x','x','x'],['x','x','x']]), max_range=10)
@@ -156,12 +156,12 @@ class Golem:
 
 class Scorpion:
     base_stats = {
-        'max_hp': 150,
-        'cur_hp': 150,
+        'max_hp': 120,
+        'cur_hp': 120,
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 30,
-        'dfn': 12,
+        'dfn': 11,
         'itl': 10,
         'res': 8,
         'spd': 8,
@@ -195,12 +195,12 @@ class Scorpion:
 
 class Spider:
     base_stats = {
-        'max_hp': 120,
-        'cur_hp': 120,
+        'max_hp': 100,
+        'cur_hp': 100,
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 10,
-        'dfn': 16,
+        'dfn': 13,
         'itl': 16,
         'res': 8,
         'spd': 8,
