@@ -206,6 +206,7 @@ class TargetFormation(TargetMode):
         user_pos = user_entity.component('Position').get()
         formation_position = user_pos
         formation_rotation = random.randint(0,4)
+        w, h = mapp.dimensions()
         if not self._directional:
             formation_position = random.randint(0, w-1), random.randint(0, h-1)
             while self._max_range is not None and util.distance(user_pos, formation_position) > self._max_range:

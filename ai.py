@@ -7,10 +7,13 @@ class AIState:
     def __init__(self):
         # Handlers are of the type: (AIState, Entity, AI, EventData) -> Boolean
         self._handlers = {}
+        self._turns_in_state = 0
 
     def handle_event(self, entity, ai, event):
         event_type, event_data = event
         if event_type in self._handlers:
+            if event_type == 'NPC_TURN':
+                self._turns_in_state += 1
             for handler in self._handlers[event_type]:
                 should_stop = handler(self, entity, ai, event_data)
                 if should_stop:
@@ -21,7 +24,30 @@ class AIState:
             self._handlers[event_type] = []
         self._handlers[event_type].append(handler)
 
+    def reset_turns_in_state(self):
+        self._turns_in_state = 0
+
     # Factory methods
+
+    def every_n_turns(self, n, handler, should_stop=True):
+        def f(self, entity, ai, event_data):
+            stats = entity.component('Stats')
+            if self._turns_in_state % n == 0:
+                handler(entity, ai, event_data)
+                return should_stop
+            return False
+        self._add_handler('NPC_TURN', f)
+        return self
+
+    def after_n_turns(self, num_turns, handler, should_stop=True):
+        def f(self, entity, ai, event_data):
+            stats = entity.component('Stats')
+            if self._turns_in_state == num_turns:
+                handler(entity, ai, event_data)
+                return should_stop
+            return False
+        self._add_handler('NPC_TURN', f)
+        return self
 
     def when_under_proportion_hp(self, proportion, handler, should_stop=True):
         def f(self, entity, ai, event_data):
@@ -111,6 +137,7 @@ class AI(entity.Component):
     def change_state(self, new_state):
         old_state = self._current_state
         self._current_state = new_state
+        self._states[self._current_state].reset_turns_in_state()
         return old_state
 
     def handle_event(self, entity, event, resident_map):

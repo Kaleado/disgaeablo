@@ -552,8 +552,8 @@ class BossUltimateBeholder:
 
 class BossTheTower:
     base_stats = {
-        'max_hp': 300,
-        'cur_hp': 300,
+        'max_hp': 400,
+        'cur_hp': 400,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
@@ -561,7 +561,8 @@ class BossTheTower:
         'itl': 50,
         'res': 27,
         'spd': 12,
-        'hit': 12
+        'hit': 12,
+        'fire_res': 90,
     }
 
     names = ['The Tower'] * 5
@@ -577,29 +578,63 @@ class BossTheTower:
                             .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
                             .with_damage(damage.SpellDamage(2, 'fire'))
 
-    def TeleportAdds():
+    def HorLaser():
+        formation = Formation(origin=(2,0), formation=[['x'] * 100,
+                                                       ['x'] * 100,
+                                                       ['x'] * 100])
         return skill_factory.Skill()\
-                            .with_target_mode(WithComponents(['UltimateBeholderAdd'], TargetEveryone()))\
-                            .teleport_targets_randomly()\
-                            .print_message("Azxtryzxtaz emits a sharp screeching noise!")
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
+                            .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
 
     def TeleportPlayer():
         return skill_factory.Skill()\
-                            .with_target_mode(WithComponents(['UltimateBeholderAdd'],
-                                                             TargetFormation(origin=(0,0), formation=[['x']])))\
+                            .with_target_mode(WithComponents(['PlayerLogic'], TargetEveryone()))\
                             .teleport_targets_randomly()\
-                            .print_message("Azxtryzxtaz emits a sharp screeching noise!")
+                            .print_message("You are lifted into the air and thrown by psychic power!")
 
-    def Smite():
+    def Smite1():
         formation = Formation(origin=(2,2), formation=[['.','.','x','.','.'],
                                                        ['.','x','x','x','.'],
                                                        ['x','x','x','x','x'],
                                                        ['.','x','x','x','.'],
                                                        ['.','.','x','.','.']])
         return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{} smites {}! ({} HP)")\
                             .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def Smite2():
+        formation = Formation(origin=(2,3), formation=[['x','x','x','.','.'],
+                                                       ['x','x','x','.','.'],
+                                                       ['x','x','x','.','.'],
+                                                       ['.','.','.','.','.'],
+                                                       ['.','.','x','x','x'],
+                                                       ['.','.','x','x','x'],
+                                                       ['.','.','x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
+                            .damage_targets("{} smites {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def Smite3():
+        formation = Formation(origin=(2,3), formation=[['.','x','x','x','.'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['.','x','x','x','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation))))\
+                            .damage_targets("{} smites {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def Clock():
+        return skill_factory.Skill()\
+                            .print_message("An ominous bell rings...", tcod.dark_crimson)
+
+    def StartCountdown():
+        return skill_factory.Skill()\
+                            .print_message(" -- YOU HAVE 120 TURNS UNTIL MIDNIGHT -- ", tcod.dark_crimson)
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(BossTheTower.base_stats)
@@ -615,17 +650,106 @@ class BossTheTower:
                 'Render': Render(character='T', colour=BossTheTower.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(BossTheTower.names[tier-1]),
-                'AI': ai.AI()\
+                'AI': ai.AI(initial_state='COUNTDOWN_PHASE')\
+                .add_skill('StartCountdown', BossTheTower.StartCountdown(), 0)\
+                .add_skill('Clock', BossTheTower.Clock(), 0)\
                 .add_skill('Laser', BossTheTower.Laser(), 2)\
-                .add_skill('Escape', BossTheTower.Escape(), 3)\
-                .add_skill('TeleportAdds', BossTheTower.TeleportAdds(), 0)\
-                .with_state('IDLE', ai.AIState()\
-                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.change_state('RANGED_PHASE'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
-                .with_state('RANGED_PHASE', ai.AIState()\
-                            .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
-                            .on_turn_randomly(0.2, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportAdds'))\
-                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.use_skill(e, 'Laser'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+                .add_skill('HorLaser', BossTheTower.HorLaser(), 1)\
+                .add_skill('TeleportPlayer', BossTheTower.TeleportPlayer(), 3)\
+                .add_skill('Smite1', BossTheTower.Smite1(), 1)\
+                .add_skill('Smite2', BossTheTower.Smite2(), 1)\
+                .add_skill('Smite3', BossTheTower.Smite3(), 1)\
+                .with_state('COUNTDOWN_PHASE', ai.AIState()\
+                            .after_n_turns(120, lambda e, ai, ev_d : ai.change_state('MIDNIGHT_PHASE'))\
+                            .after_n_turns(1, lambda e, ai, ev_d : ai.use_skill(e, 'StartCountdown'), should_stop=False)\
+                            .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'Clock'), should_stop=False)\
+                            .when_player_within_distance(4, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportPlayer'))\
+                            .every_n_turns(5, lambda e, ai, ev_d : ai.use_skill(e, 'HorLaser'))\
+                            .every_n_turns(4, lambda e, ai, ev_d : ai.use_skill(e, 'Smite3'))\
+                            .every_n_turns(3, lambda e, ai, ev_d : ai.use_skill(e, 'Smite2'))\
+                            .every_n_turns(2, lambda e, ai, ev_d : ai.use_skill(e, 'Smite1'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Laser')))\
+                .with_state('MIDNIGHT_PHASE', ai.AIState()\
+                            .after_n_turns(1, lambda e, ai, ev_d : ai.use_skill('Deadline'))\
+                            .when_player_within_distance(4, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportPlayer'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Smite3')))\
+            })
+        return gen
+
+class BossTheTowerMinion:
+    base_stats = {
+        'max_hp': 80,
+        'cur_hp': 80,
+        'max_sp': 10,
+        'cur_sp': 10,
+        'atk': 20,
+        'dfn': 27,
+        'itl': 50,
+        'res': 27,
+        'spd': 12,
+        'hit': 12,
+        'fire_res': 90,
+    }
+
+    names = ['Grim Watcher'] * 5
+    colours = [tcod.green, tcod.blue, tcod.red, tcod.pink, tcod.cyan]
+
+    def HorLaser():
+        formation = Formation(origin=(2,0), formation=[['x'] * 500,
+                                                       ['x'] * 500,
+                                                       ['x'] * 500])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
+                            .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def Smite1():
+        formation = Formation(origin=(2,2), formation=[['.','.','x','.','.'],
+                                                       ['.','x','x','x','.'],
+                                                       ['x','x','x','x','x'],
+                                                       ['.','x','x','x','.'],
+                                                       ['.','.','x','.','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
+                            .damage_targets("{} smites {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def Smite2():
+        formation = Formation(origin=(2,3), formation=[['x','x','x','.','.'],
+                                                       ['x','x','x','.','.'],
+                                                       ['x','x','x','.','.'],
+                                                       ['.','.','.','.','.'],
+                                                       ['.','.','x','x','x'],
+                                                       ['.','.','x','x','x'],
+                                                       ['.','.','x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
+                            .damage_targets("{} smites {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(BossTheTowerMinion.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (BossTheTowerMinion.base_stats[stat] + BossTheTowerMinion.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='t', colour=BossTheTowerMinion.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(BossTheTowerMinion.names[tier-1]),
+                'AI': ai.AI(initial_state='COUNTDOWN_PHASE')\
+                .add_skill('HorLaser', BossTheTowerMinion.HorLaser(), 1)\
+                .add_skill('Smite1', BossTheTowerMinion.Smite1(), 1)\
+                .add_skill('Smite2', BossTheTowerMinion.Smite2(), 1)\
+                .with_state('COUNTDOWN_PHASE', ai.AIState()\
+                            .on_turn_randomly(0.66, lambda e, ai, ev_d : None)\
+                            .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'Smite2'))\
+                            .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'Smite1'))\
+                            .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'HorLaser'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : None))\
             })
         return gen

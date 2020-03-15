@@ -352,6 +352,21 @@ class Town(Map):
             ent.component('Position').set(x, y)
             self.add_entity(ent)
 
+class TheTowerArena(Map):
+    def _room(self, x, y, w, h):
+        for xx in range(x, x+w):
+            for yy in range(y, y+h):
+                self._terrain[yy][xx] = '.'
+
+    def __init__(self, width, height, map_group=None, turn_limit=None):
+        super().__init__(map_group, turn_limit)
+        self._width = width
+        self._height = height
+        self._terrain = [['#' for x in range(width)] for y in range(height)]
+        self._room(1, height // 3 - 1, width - 2, 2 * height // 3)
+        self._room(width // 2, 1, 1, height - 2)
+        self._terrain[5][width // 2] = '>'
+
 class BeholderArena(Map):
     def __init__(self, width, height, room_size=5, map_group=None, turn_limit=None):
         super().__init__(map_group, turn_limit)

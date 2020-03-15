@@ -16,9 +16,24 @@ class MapDirector:
         self._item_world = item
 
     def _item_world_map(self, level):
-        mapp = Grid(30,30,turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
-        w,h=30,30
+        if self._current_floor == 10:
+            mapp = TheTowerArena(30, 30)
+            w,h=30,30
+        else:
+            mapp = Grid(30,30,turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
+            w,h=30,30
         return mapp, w, h
+
+    def _spawn_the_tower(self, level, mapp):
+        import entity
+        width, height = mapp.dimensions()
+        the_tower = monster.BossTheTower.generator(level=level)((width // 2, 5))
+        mapp.add_entity(the_tower)
+        for _ in range(10):
+            the_tower_minion = monster.BossTheTowerMinion.generator(level=level)((12, 12))
+            x, y = mapp.random_passable_position_for(the_tower_minion)
+            the_tower_minion.component('Position').set(x, y)
+            mapp.add_entity(the_tower_minion)
 
     def _spawn_ultimate_beholder(self, level, mapp):
         import entity
@@ -91,6 +106,10 @@ class MapDirector:
                 return mapp
             elif self._current_floor == 20:
                 self._spawn_ultimate_beholder(level, mapp)
+                return mapp
+        else:
+            if self._current_floor == 10:
+                self._spawn_the_tower(level, mapp)
                 return mapp
 
         if difficulty < 15:
