@@ -348,6 +348,8 @@ class Town(Map):
 
         for generator in residents:
             ent = generator((random.randint(3, width-3),random.randint(3, height-3)))
+            x, y = self.random_passable_position_for(ent)
+            ent.component('Position').set(x, y)
             self.add_entity(ent)
 
 class BeholderArena(Map):
