@@ -260,6 +260,7 @@ class LootDirector:
         loot.PoisonDetonation,
         loot.LightningBreath,
         loot.StaticShock,
+        loot.Combustion,
     ]
 
     support_skills = [

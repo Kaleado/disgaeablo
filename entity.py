@@ -785,7 +785,7 @@ class Stats(Component):
 
     def get_value(self, stat):
         boost_stat = self._stats.get('boost_{}'.format(stat))
-        boost_factor = boost_stat if boost_stat is not None else 0 * 1.333
+        boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333
         if stat == 'spd' and self.has_status('PARALYZE'):
             return 0
         return int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive']) * self._modifiers[stat]['multiplicative'])

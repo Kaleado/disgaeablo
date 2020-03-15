@@ -10,7 +10,7 @@ import random
 import skill_factory
 import damage
 
-LEVEL_PC_STAT_INC = 0.035
+LEVEL_PC_STAT_INC = 0.2
 
 ##################################################### CONSUMABLES
 
@@ -379,7 +379,7 @@ def Fire(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} shoots a fireball at {}! ({} HP)")\
         .with_sp_cost(5)\
-        .override_target_mode(entity.ExcludeItems(entity.TargetFormation(improved_formation)),
+        .override_target_mode(entity.ExcludeItems(entity.TargetFormation(improved_formation, max_range=10)),
                               lambda s, e, u, m, mn : u.component('Stats').get('improve_fire_aoe') > 0)
         .with_damage(damage.SpellDamage(1, 'fire'))
         .apply_status_to_user('ASSAULT', 2,
@@ -877,5 +877,45 @@ def EnvenomedBladeMod(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.light_chartreuse),
         'Item': entity.Item('Envenomed Blade', 'Cleave inflicts poison'),
+        'Mod': entity.Mod(),
+    })
+
+def FireResistanceMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'fire_res': 20}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_red),
+        'Item': entity.Item('Fire Resistance Up', 'Increases fire resistance by 20%'),
+        'Mod': entity.Mod(),
+    })
+
+def IceResistanceMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'ice_res': 20}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_cyan),
+        'Item': entity.Item('Ice Resistance Up', 'Increases ice resistance by 20%'),
+        'Mod': entity.Mod(),
+    })
+
+def LightningResistanceMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'lght_res': 20}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_yellow),
+        'Item': entity.Item('Lightning Resistance Up', 'Increases lightning resistance by 20%'),
+        'Mod': entity.Mod(),
+    })
+
+def PhysicalResistanceMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'phys_res': 20}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.silver),
+        'Item': entity.Item('Physical Resistance Up', 'Increases physical resistance by 20%'),
         'Mod': entity.Mod(),
     })

@@ -153,10 +153,11 @@ class Skill(Usable):
     def apply_status_to_user(self, status, duration, predicate=None):
         use_on_targets = self._use_on_targets
         def f(self, entity, user_entity, mapp, targets, menu):
+            res = use_on_targets(self, entity, user_entity, mapp, targets, menu)
             if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
                 entities_hit, _ = self._target_mode.targets(group='x')
                 if entities_hit is not None and entities_hit.size() > 0:
                     user_entity.component('Stats').inflict_status(status, strength=1, duration=duration)
-            return use_on_targets(self, entity, user_entity, mapp, targets, menu)
+            return res
         self._use_on_targets = f
         return self

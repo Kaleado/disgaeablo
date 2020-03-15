@@ -122,10 +122,10 @@ class Golem:
         'cur_hp': 180,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 22,
+        'atk': 15,
         'dfn': 12,
-        'itl': 18,
-        'res': 10,
+        'itl': 15,
+        'res': 9,
         'spd': 8,
         'hit': 12
     }
@@ -156,8 +156,8 @@ class Golem:
 
 class Scorpion:
     base_stats = {
-        'max_hp': 180,
-        'cur_hp': 180,
+        'max_hp': 150,
+        'cur_hp': 150,
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 30,
@@ -241,9 +241,9 @@ class Eye:
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 20,
-        'dfn': 14,
+        'dfn': 10,
         'itl': 16,
-        'res': 8,
+        'res': 18,
         'spd': 8,
         'hit': 12
     }
@@ -279,9 +279,9 @@ class Wyvern:
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 20,
-        'dfn': 14,
+        'dfn': 12,
         'itl': 16,
-        'res': 8,
+        'res': 12,
         'spd': 8,
         'hit': 12
     }
@@ -362,8 +362,8 @@ class Beholder:
 
 class Giant:
     base_stats = {
-        'max_hp': 70,
-        'cur_hp': 70,
+        'max_hp': 170,
+        'cur_hp': 170,
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 20,
