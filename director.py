@@ -87,10 +87,10 @@ class MapDirector:
 
         if self._item_world is None:
             if self._current_floor == 10:
-                self._spawn_ultimate_beholder(level, mapp)
+                self._spawn_the_sneak(level, mapp)
                 return mapp
             elif self._current_floor == 20:
-                self._spawn_the_sneak(level, mapp)
+                self._spawn_ultimate_beholder(level, mapp)
                 return mapp
 
         if difficulty < 15:

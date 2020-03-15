@@ -183,9 +183,10 @@ class TargetUser(TargetMode):
         return self._targets['x']
 
 class TargetFormation(TargetMode):
-    def __init__(self, formation, directional=False, max_range=None):
+    def __init__(self, formation, directional=False, max_range=None, positioned_randomly=False):
         self._formation = formation
         self._directional = directional
+        self._positioned_randomly = positioned_randomly
         self._max_range = max_range
         self._targets = {'x': (EntityListView([]), [])}
 
@@ -195,9 +196,23 @@ class TargetFormation(TargetMode):
         return self._targets[group]
 
     def choose_targets(self, user_entity, used_entity, mapp, menu):
+        if self._positioned_randomly:
+            return self._choose_targets_positioned_randomly(user_entity, used_entity, mapp, menu)
         if user_entity == mapp.entity('PLAYER'):
             return self._choose_targets_player(user_entity, used_entity, mapp, menu)
         return self._choose_targets_monster(user_entity, used_entity, mapp, menu)
+
+    def _choose_targets_positioned_randomly(self, user_entity, used_entity, mapp, menu):
+        user_pos = user_entity.component('Position').get()
+        formation_position = user_pos
+        formation_rotation = random.randint(0,4)
+        if not self._directional:
+            formation_position = random.randint(0, w-1), random.randint(0, h-1)
+            while self._max_range is not None and util.distance(user_pos, formation_position) > self._max_range:
+                formation_position = random.randint(0, w-1), random.randint(0, h-1)
+        for group in self._formation.groups():
+            self._targets[group] = mapp.entities().in_formation(self._formation, formation_position, formation_rotation, group=group), self._formation.positions_in_formation(formation_position, formation_rotation, group)
+        return self._targets['x']
 
     def _choose_targets_monster(self, user_entity, used_entity, mapp, menu):
         # If the player is nearby, try to hit them, otherwise, just target north

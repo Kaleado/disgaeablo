@@ -549,3 +549,83 @@ class BossUltimateBeholder:
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
+
+class BossTheTower:
+    base_stats = {
+        'max_hp': 300,
+        'cur_hp': 300,
+        'max_sp': 10,
+        'cur_sp': 10,
+        'atk': 20,
+        'dfn': 27,
+        'itl': 50,
+        'res': 27,
+        'spd': 12,
+        'hit': 12
+    }
+
+    names = ['The Tower'] * 5
+    colours = [tcod.green, tcod.blue, tcod.red, tcod.pink, tcod.cyan]
+
+    def Laser():
+        formation = Formation(origin=(2,0), formation=[['x','x','.','x','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','x','x','x','x']] + [['x','x','x','x','x']] * 30)
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def TeleportAdds():
+        return skill_factory.Skill()\
+                            .with_target_mode(WithComponents(['UltimateBeholderAdd'], TargetEveryone()))\
+                            .teleport_targets_randomly()\
+                            .print_message("Azxtryzxtaz emits a sharp screeching noise!")
+
+    def TeleportPlayer():
+        return skill_factory.Skill()\
+                            .with_target_mode(WithComponents(['UltimateBeholderAdd'],
+                                                             TargetFormation(origin=(0,0), formation=[['x']])))\
+                            .teleport_targets_randomly()\
+                            .print_message("Azxtryzxtaz emits a sharp screeching noise!")
+
+    def Smite():
+        formation = Formation(origin=(2,2), formation=[['.','.','x','.','.'],
+                                                       ['.','x','x','x','.'],
+                                                       ['x','x','x','x','x'],
+                                                       ['.','x','x','x','.'],
+                                                       ['.','.','x','.','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} smites {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(2, 'fire'))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(BossTheTower.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (BossTheTower.base_stats[stat] + BossTheTower.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='T', colour=BossTheTower.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(BossTheTower.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Laser', BossTheTower.Laser(), 2)\
+                .add_skill('Escape', BossTheTower.Escape(), 3)\
+                .add_skill('TeleportAdds', BossTheTower.TeleportAdds(), 0)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.change_state('RANGED_PHASE'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('RANGED_PHASE', ai.AIState()\
+                            .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
+                            .on_turn_randomly(0.2, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportAdds'))\
+                            .when_player_within_distance(25, lambda e, ai, ev_d : ai.use_skill(e, 'Laser'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+            })
+        return gen
