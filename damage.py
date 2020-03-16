@@ -18,6 +18,20 @@ def AttackDamage(amount, element='phys'):
         return Damage(s, final_amount, element)
     return f
 
+def MonsterSpellDamage(amount, element='phys'):
+    def f(s, t, i):
+        itl_over_res = s.component('Stats').get('itl') / t.component('Stats').get('res')
+        final_amount = math.floor(itl_over_res * amount)
+        return Damage(s, final_amount, element)
+    return f
+
+def MonsterAttackDamage(amount, element='phys'):
+    def f(s, t, i):
+        atk_over_dfn = s.component('Stats').get('atk') / t.component('Stats').get('dfn')
+        final_amount = math.floor(atk_over_dfn * amount)
+        return Damage(s, final_amount, element)
+    return f
+
 class Damage:
     def __init__(self, source_entity, amount, element='phys'):
         self._source_entity = source_entity

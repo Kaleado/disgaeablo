@@ -8,7 +8,7 @@ import loot
 import ai
 import skill_factory
 
-LEVEL_PC_STAT_INC = 0.2
+LEVEL_PC_STAT_INC = 0.36
 TIER_PC_STAT_INC = 10
 
 def ItemWorldClerkNPC(position):
@@ -134,7 +134,13 @@ class Slime:
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green]
 
     def MonWave():
-        return SkillMelee(formation=Formation(origin=(1,1), formation=[['x','x','x'],['x','.','x'],['x','x','x']]))
+        formation = Formation(origin=(1,1), formation=[['x','x','x'],
+                                                       ['x','.','x'],
+                                                       ['x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} smashes {}! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(35, 'phys'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Slime.base_stats)
@@ -179,7 +185,13 @@ class Mage:
     colours = [tcod.blue, tcod.green, tcod.orange, tcod.purple, tcod.violet]
 
     def Lightning():
-        return SkillSpell(formation=Formation(origin=(1,1), formation=[['.','x','.'],['x','x','x'],['.','x','.']]))
+        formation = Formation(origin=(1,1), formation=[['.','x','.'],
+                                                       ['x','x','x'],
+                                                       ['.','x','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=10))))\
+                            .damage_targets("{} drops a bolt of lightning on {}! ({} HP)")\
+                            .with_damage(damage.MonsterSpellDamage(45, 'lght'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Mage.base_stats)
@@ -195,7 +207,14 @@ class Mage:
                 'Render': Render(character='m', colour=Mage.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Mage.names[tier-1]),
-                'AI': Hostile(aggro_range=7, primary_skill=Mage.Lightning(), primary_skill_range=5)
+                'AI': ai.AI()\
+                .add_skill('Lightning', Mage.Lightning(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Lightning'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -214,10 +233,16 @@ class Golem:
     }
 
     names = ['Mud golem', 'Stone golem', 'Iron golem', 'Magma golem', 'Mithril golem']
-    colours = [tcod.darker_orange, tcod.yellow, tcod.light_gray, tcod.crimson, tcod.cyan]
+    colours = [tcod.darker_orange, tcod.dark_yellow, tcod.light_gray, tcod.crimson, tcod.cyan]
 
     def Stone():
-        return SkillRanged(formation=Formation(origin=(1,1), formation=[['x','x','x'],['x','x','x'],['x','x','x']]), max_range=10)
+        formation = Formation(origin=(1,1), formation=[['x','x','x'],
+                                                       ['x','x','x'],
+                                                       ['x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
+                            .damage_targets("{} throws a boulder at {}! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(25, 'phys'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Golem.base_stats)
@@ -233,7 +258,16 @@ class Golem:
                 'Render': Render(character='G', colour=Golem.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Golem.names[tier-1]),
-                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Golem.Stone(), primary_skill_range=5))
+                'AI': ai.AI()\
+                .add_skill('Stone', Golem.Stone(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .every_n_turns(2, lambda e, ai, ev_d : False)\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .every_n_turns(2, lambda e, ai, ev_d : False)\
+                            .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Stone'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -255,8 +289,12 @@ class Scorpion:
     colours = [tcod.orange, tcod.light_green, tcod.purple, tcod.dark_blue, tcod.crimson]
 
     def Sting():
-        return SkillMelee(formation=Formation(origin=(1,1), formation=[['x','x','x'],
-                                                                       ['.','.','.']]))
+        formation = Formation(origin=(1,1), formation=[['x','x','x'],
+                                                       ['.','.','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} pierces {} with its stinger! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(55, 'phys'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Scorpion.base_stats)
@@ -272,7 +310,14 @@ class Scorpion:
                 'Render': Render(character='S', colour=Scorpion.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Scorpion.names[tier-1]),
-                'AI': Hostile(aggro_range=7, primary_skill=Scorpion.Sting(), primary_skill_range=1.9)
+                'AI': ai.AI()\
+                .add_skill('Sting', Scorpion.Sting(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(11, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .when_player_within_distance(1.9, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -294,10 +339,15 @@ class Spider:
     colours = [tcod.green, tcod.red, tcod.purple, tcod.yellow, tcod.crimson]
 
     def Web():
-        return SkillStatusSpell(status_effect='PARALYZE', status_duration=2,
-                                formation=Formation(origin=(1,1), formation=[['x','x','x'],
-                                                                             ['x','x','x'],
-                                                                             ['x','x','x']]))
+        formation = Formation(origin=(1,1), formation=[['x','x','x'],
+                                                       ['x','x','x'],
+                                                       ['x','x','x']])
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
+                            .damage_targets("{} spins web at {}!")\
+                            .with_damage(None)\
+                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 2, d))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Spider.base_stats)
@@ -313,7 +363,16 @@ class Spider:
                 'Render': Render(character='P', colour=Spider.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Spider.names[tier-1]),
-                'AI': Slow(ai=Hostile(aggro_range=7, primary_skill=Spider.Web(), primary_skill_range=5, keep_at_range=3, primary_skill_delay=2))
+                'AI': ai.AI()\
+                .add_skill('Web', Spider.Web(), delay=2)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .every_n_turns(2, lambda e, ai, ev_d : False)\
+                            .when_player_within_distance(3, lambda e, ai, ev_d : ai.step_away_from_player(e))\
+                            .when_player_within_distance(6, lambda e, ai, ev_d : ai.use_skill(e, 'Web'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -335,7 +394,11 @@ class Eye:
     colours = [tcod.lighter_yellow, tcod.turquoise, tcod.purple, tcod.dark_crimson, tcod.yellow]
 
     def Gaze():
-        return SkillMelee(formation=Formation(origin=(0,0), formation=[['.'] + ['x'] * 100]))
+        formation = Formation(origin=(0,0), formation=[['.'] + ['x'] * 100])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} scorches {} with a ray of light! ({} HP)")\
+                            .with_damage(damage.MonsterSpellDamage(45, 'fire'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Eye.base_stats)
@@ -351,7 +414,10 @@ class Eye:
                 'Render': Render(character='e', colour=Eye.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Eye.names[tier-1]),
-                'AI': Hostile(aggro_range=1000, primary_skill=Eye.Gaze(), immobile=True)
+                'AI': ai.AI()\
+                .add_skill('Gaze', Eye.Gaze(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Gaze')))\
             })
         return gen
 
@@ -373,13 +439,15 @@ class Wyvern:
     colours = [tcod.lighter_yellow, tcod.turquoise, tcod.purple, tcod.dark_crimson, tcod.yellow]
 
     def Ray():
-        return SkillSpell(formation=Formation(origin=(2,2), formation=[
-            ['x','x','x','x','x'],
-            ['x','x','x','.','x'],
-            ['x','x','x','x','x'],
-            ['x','.','x','x','x'],
-            ['x','x','x','x','x'],
-        ]))
+        formation = Formation(origin=(2,2), formation=[['x','x','x','x','x'],
+                                                       ['x','x','x','.','x'],
+                                                       ['x','x','x','x','x'],
+                                                       ['x','.','x','x','x'],
+                                                       ['x','x','x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
+                            .damage_targets("{} scorches {} with rays from its jaw! ({} HP)")\
+                            .with_damage(damage.MonsterSpellDamage(40, 'fire'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Wyvern.base_stats)
@@ -395,7 +463,15 @@ class Wyvern:
                 'Render': Render(character='W', colour=Wyvern.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Wyvern.names[tier-1]),
-                'AI': Hostile(aggro_range=12, primary_skill=Wyvern.Ray(), keep_at_range=3)
+                'AI': ai.AI()\
+                .add_skill('Ray', Wyvern.Ray(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(9, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .when_player_within_distance(5, lambda e, ai, ev_d : ai.step_away_from_player(e))\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -405,9 +481,9 @@ class Beholder:
         'cur_hp': 70,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 20,
+        'atk': 12,
         'dfn': 14,
-        'itl': 12,
+        'itl': 20,
         'res': 8,
         'spd': 8,
         'hit': 12
@@ -417,13 +493,16 @@ class Beholder:
     colours = [tcod.lighter_yellow, tcod.turquoise, tcod.purple, tcod.dark_crimson, tcod.yellow]
 
     def Ray():
-        return SkillMelee(formation=Formation(origin=(0,2), formation=[
-            ['.','.','.','x','x','x','x'],
-            ['.','.','x','x','x','x','x'],
-            ['.','x','x','x','x','x','x'],
-            ['.','.','x','x','x','x','x'],
-            ['.','.','.','x','x','x','x'],
-        ]))
+        formation = Formation(origin=(0,2), formation=[['.','.','.','x','x','x','x','x'],
+                                                       ['.','.','x','x','x','x','x','.'],
+                                                       ['.','x','x','x','x','x','.','.'],
+                                                       ['.','.','x','x','x','x','x','.'],
+                                                       ['.','.','.','x','x','x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} scorches {} its eye ray! ({} HP)")\
+                            .with_damage(damage.MonsterSpellDamage(45, 'fire'))
+
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Beholder.base_stats)
@@ -439,7 +518,15 @@ class Beholder:
                 'Render': Render(character='E', colour=Beholder.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Beholder.names[tier-1]),
-                'AI': Hostile(aggro_range=10, primary_skill=Beholder.Ray(), primary_skill_range=5, keep_at_range=3)
+                'AI': ai.AI()\
+                .add_skill('Ray', Beholder.Ray(), delay=2)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(9, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .when_player_within_distance(4, lambda e, ai, ev_d : ai.step_away_from_player(e))\
+                            .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -461,12 +548,14 @@ class Giant:
     colours = [tcod.lighter_orange, tcod.dark_green, tcod.lighter_gray, tcod.silver, tcod.red]
 
     def Smash():
-        return SkillMelee(formation=Formation(origin=(1,3), formation=[
-            ['x','x','x'],
-            ['x','x','x'],
-            ['x','x','x'],
-            ['.','.','.']
-        ]))
+        formation = Formation(origin=(1,3), formation=[['x','.','x'],
+                                                       ['x','x','x'],
+                                                       ['x','x','x'],
+                                                       ['.','.','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} smashes {}! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(60, 'phys'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Giant.base_stats)
@@ -482,7 +571,14 @@ class Giant:
                 'Render': Render(character='G', colour=Giant.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Giant.names[tier-1]),
-                'AI': Hostile(aggro_range=10, primary_skill=Giant.Smash(), primary_skill_range=2)
+                'AI': ai.AI()\
+                .add_skill('Smash', Beholder.Smash(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(9, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
 
@@ -490,14 +586,14 @@ class Giant:
 
 class BossTheSneak:
     base_stats = {
-        'max_hp': 300,
-        'cur_hp': 300,
+        'max_hp': 200,
+        'cur_hp': 200,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
-        'dfn': 17,
+        'dfn': 15,
         'itl': 50,
-        'res': 27,
+        'res': 15,
         'spd': 12,
         'hit': 12
     }
@@ -512,7 +608,7 @@ class BossTheSneak:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation))))\
                             .damage_targets("{} drops a bolt of lightning on {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(1, 'lght'))
+                            .with_damage(damage.MonsterSpellDamage(65, 'lght'))
 
     def BigFire():
         formation = Formation(origin=(2,2), formation=[['x','x','x','x','x'],
@@ -523,7 +619,7 @@ class BossTheSneak:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation))))\
                             .damage_targets("{} emits a blast of fire at {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(1, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(70, 'fire'))
 
     def Escape():
         return skill_factory.Skill()\
@@ -567,14 +663,14 @@ class BossTheSneak:
 
 class BossUltimateBeholder:
     base_stats = {
-        'max_hp': 300,
-        'cur_hp': 300,
+        'max_hp': 200,
+        'cur_hp': 200,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
-        'dfn': 12,
+        'dfn': 15,
         'itl': 50,
-        'res': 27,
+        'res': 15,
         'spd': 12,
         'hit': 12
     }
@@ -590,7 +686,7 @@ class BossUltimateBeholder:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
                             .damage_targets("{}'s blazing eye ray scorches {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(70, 'fire'))
 
     def TeleportAdds():
         return skill_factory.Skill()\
@@ -635,17 +731,16 @@ class BossUltimateBeholder:
 
 class BossTheTower:
     base_stats = {
-        'max_hp': 400,
-        'cur_hp': 400,
+        'max_hp': 250,
+        'cur_hp': 250,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
-        'dfn': 27,
-        'itl': 50,
-        'res': 27,
+        'dfn': 17,
+        'itl': 35,
+        'res': 17,
         'spd': 12,
         'hit': 12,
-        'fire_res': 90,
     }
 
     names = ['XVI - The Tower'] * 5
@@ -659,7 +754,7 @@ class BossTheTower:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
                             .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(2, 'fire'))
 
     def HorLaser():
         formation = Formation(origin=(2,0), formation=[['x'] * 100,
@@ -668,7 +763,7 @@ class BossTheTower:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(2, 'fire'))
 
     def TeleportPlayer():
         return skill_factory.Skill()\
@@ -685,7 +780,7 @@ class BossTheTower:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{} smites {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(85, 'fire'))
 
     def Smite2():
         formation = Formation(origin=(2,3), formation=[['x','x','x','.','.'],
@@ -698,7 +793,7 @@ class BossTheTower:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{} smites {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(85, 'fire'))
 
     def Smite3():
         formation = Formation(origin=(2,3), formation=[['.','x','x','x','.'],
@@ -709,7 +804,7 @@ class BossTheTower:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation))))\
                             .damage_targets("{} smites {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(90, 'fire'))
 
     def Clock():
         return skill_factory.Skill()\
@@ -766,16 +861,15 @@ class BossTheTowerMinion:
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
-        'dfn': 27,
-        'itl': 50,
-        'res': 27,
+        'dfn': 20,
+        'itl': 35,
+        'res': 20,
         'spd': 12,
         'hit': 12,
-        'fire_res': 90,
     }
 
     names = ['Grim Watcher'] * 5
-    colours = [tcod.green, tcod.blue, tcod.red, tcod.pink, tcod.cyan]
+    colours = [tcod.darker_green, tcod.darker_blue, tcod.darker_red, tcod.darker_pink, tcod.darker_cyan]
 
     def HorLaser():
         formation = Formation(origin=(2,0), formation=[['x'] * 500,
@@ -784,7 +878,7 @@ class BossTheTowerMinion:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(85, 'fire'))
 
     def Smite1():
         formation = Formation(origin=(2,2), formation=[['.','.','x','.','.'],
@@ -795,7 +889,7 @@ class BossTheTowerMinion:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{} smites {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(85, 'fire'))
 
     def Smite2():
         formation = Formation(origin=(2,3), formation=[['x','x','x','.','.'],
@@ -808,7 +902,7 @@ class BossTheTowerMinion:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{} smites {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(90, 'fire'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(BossTheTowerMinion.base_stats)

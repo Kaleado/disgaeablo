@@ -10,7 +10,7 @@ import random
 import skill_factory
 import damage
 
-LEVEL_PC_STAT_INC = 0.2
+LEVEL_PC_STAT_INC = 0.4
 
 ##################################################### CONSUMABLES
 

@@ -165,8 +165,10 @@ class AI(entity.Component):
         if self._delay > 0:
             return False
         targeted_positions = self._delayed_targets[1]
-        targets = resident_map.entities().without_components(['Item']).with_component('Position')\
-                                            .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
+        # TODO: make this work with / without friendly fire
+        targets = resident_map.entities().without_components(['Item', 'NPC'])\
+                                         .with_component('Position')\
+                                         .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
         self._delayed_attack.use_on_targets(entity, entity, resident_map, targets, None)
         self._delay = None
         self._delayed_attack = None

@@ -127,13 +127,13 @@ class MapDirector:
 
     def difficulty(self):
         if self._item_world == None:
-            return math.floor(3 + (self._current_floor - 1) * 7)
+            return math.floor(3 + (self._current_floor - 1) * 4)
         else:
             import entity
             stats = self._item_world.component('Stats')
             primaries = entity.Stats.primary_stats - set(['max_hp', 'max_sp'])
             tot = sum([stats.get_base(stat) for stat in primaries])
-            return 3 + (self._current_floor - 1) * 5 + math.floor(tot / 3)
+            return 3 + (self._current_floor - 1) * 3 + math.floor(tot / 3)
 
     def _change_floor(self):
         if self._item_world is None:
