@@ -421,7 +421,7 @@ def Ice(position):
         .damage_targets("{} rains icicles on {}! ({} HP)")\
         .with_sp_cost(2)\
         .with_damage(damage.SpellDamage(1, 'ice'))\
-        .change_damage(lambda d, s, t, i : damage.WithSoulDrain(d),
+        .change_damage(lambda d, s, t, i : damage.WithSoulDrain(d, 0.1),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('ice_souldrain') > 0
         )
     })
@@ -441,7 +441,7 @@ def Lightning(position):
         .damage_targets("{} drops a bolt of lightning on {}! ({} HP)")\
         .with_sp_cost(2)\
         .with_damage(damage.SpellDamage(1, 'lght'))
-        .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d),
+        .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d, 0.2),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('lightning_lifedrain') > 0
         )
     })
@@ -462,7 +462,7 @@ def LightningBreath(position):
         .damage_targets("{} breathes lightning on {}! ({} HP)")\
         .with_sp_cost(3)\
         .with_damage(damage.SpellDamage(1, 'lght'))
-        .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d),
+        .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d, 0.2),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('lightning_lifedrain') > 0
         )
     })
@@ -477,14 +477,14 @@ def StaticShock(position):
         'Stats': entity.Stats({'itl': 15}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
-        'Item': entity.Item('Spell: Static Shock', 'Deals lightning damage with a chance to paralyze'),
+        'Item': entity.Item('Spell: Static Shock', 'Deals lightning damage with a chance to paralyze for 3 turns'),
         'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive', 'status', 'debuff'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{} fires static electricity at {}! ({} HP)")\
         .with_sp_cost(7)\
         .with_damage(damage.SpellDamage(1, 'lght'))
-        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 2, d))
-        .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d),
+        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 4, d))
+        .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d, 0.2),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('lightning_lifedrain') > 0)
     })
 
@@ -588,13 +588,13 @@ def Stoneskin(position):
         'Stats': entity.Stats({'itl': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Stoneskin', 'Boosts DFN by 50% for 10 turns'),
+        'Item': entity.Item('Spell: Stoneskin', 'Boosts DFN by 50% for 40 turns'),
         'Usable': skill_factory.Skill(tags=['spell_stoneskin', 'spell', 'buff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} gives stoneskin to {}!")\
         .with_sp_cost(3)\
         .with_damage(None)\
-        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('STONESKIN', 1, 12, d))
+        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('STONESKIN', 1, 40, d))
     })
 
 def Blink(position):
@@ -677,7 +677,7 @@ def MeleeLifeDrainMod(position):
         'Stats': entity.Stats({'lifedrain': 15}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.red),
-        'Item': entity.Item('Melee Lifedrain', 'Grants lifedrain for melee attacks'),
+        'Item': entity.Item('Melee Lifedrain', 'Grants 15% lifedrain for melee attacks'),
         'Mod': entity.Mod(),
     })
 
@@ -687,7 +687,7 @@ def MeleeDeathblowMod(position):
         'Stats': entity.Stats({'deathblow': 2}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_crimson),
-        'Item': entity.Item('Melee Deathblow', 'Grants a chance to deal a deathblow on melee attacks'),
+        'Item': entity.Item('Melee Deathblow', 'Grants a 2% chance to deal a deathblow on melee attacks'),
         'Mod': entity.Mod(),
     })
 
@@ -697,17 +697,17 @@ def SPRegenMod(position):
         'Stats': entity.Stats({'sp_regen': 1}, set(['sp_regen'])),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_blue),
-        'Item': entity.Item('SP Regen', 'Restores SP every 4 turns'),
+        'Item': entity.Item('SP Regen', 'Restores 1 SP every 4 turns (can level)'),
         'Mod': entity.Mod(),
     })
 
 def HPRegenMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'hp_regen': 1}, set(['hp_regen'])),
+        'Stats': entity.Stats({'hp_regen': 4}, set(['hp_regen'])),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_red),
-        'Item': entity.Item('HP Regen', 'Restores HP every 4 turns'),
+        'Item': entity.Item('HP Regen', 'Restores 4 HP every 4 turns (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -717,7 +717,7 @@ def SpellSoulDrainMod(position):
         'Stats': entity.Stats({'souldrain': 10}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.blue),
-        'Item': entity.Item('Spell Souldrain', 'Grants 2 spell souldrain'),
+        'Item': entity.Item('Spell Souldrain', 'Grants 10% spell souldrain'),
         'Mod': entity.Mod(),
     })
 
@@ -727,7 +727,7 @@ def ToxicForceMod(position):
         'Stats': entity.Stats({'self_poison': 1, 'boost_atk': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.chartreuse),
-        'Item': entity.Item('Toxic Force', 'Boosts ATK, but self-poisons'),
+        'Item': entity.Item('Toxic Force', 'Boosts ATK (stacks), but self-poisons'),
         'Mod': entity.Mod(),
     })
 
@@ -737,7 +737,7 @@ def ToxicPowerMod(position):
         'Stats': entity.Stats({'self_poison': 1, 'boost_itl': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_green),
-        'Item': entity.Item('Venom Power', 'Boost ITL, but self-poisons'),
+        'Item': entity.Item('Venom Power', 'Boost ITL (stacks), but self-poisons'),
         'Mod': entity.Mod(),
     })
 
@@ -767,7 +767,7 @@ def FireDamageMod(position):
         'Stats': entity.Stats({'fire_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
-        'Item': entity.Item('Fire Damage Up', 'Increases fire damage dealt by 20%'),
+        'Item': entity.Item('Fire Damage Up', 'Increases fire damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -777,7 +777,7 @@ def IceDamageMod(position):
         'Stats': entity.Stats({'ice_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
-        'Item': entity.Item('Ice Damage Up', 'Increases ice damage dealt by 20%'),
+        'Item': entity.Item('Ice Damage Up', 'Increases ice damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -787,7 +787,7 @@ def LightningDamageMod(position):
         'Stats': entity.Stats({'lght_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
-        'Item': entity.Item('Lightning Damage Up', 'Increases lightning damage dealt by 20%'),
+        'Item': entity.Item('Lightning Damage Up', 'Increases lightning damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -797,7 +797,7 @@ def PhysicalDamageMod(position):
         'Stats': entity.Stats({'phys_dam': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
-        'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 20%'),
+        'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -837,7 +837,7 @@ def EnergisingColdMod(position):
         'Stats': entity.Stats({'ice_souldrain': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
-        'Item': entity.Item('Energising Cold', 'Ice spells have souldrain'),
+        'Item': entity.Item('Energising Cold', 'Ice spells have 10% souldrain'),
         'Mod': entity.Mod(),
     })
 
@@ -847,7 +847,7 @@ def InvigoratingPowerMod(position):
         'Stats': entity.Stats({'lightning_lifedrain': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
-        'Item': entity.Item('Invigorating Power', 'Lightning spells have lifedrain'),
+        'Item': entity.Item('Invigorating Power', 'Lightning spells have 10% lifedrain'),
         'Mod': entity.Mod(),
     })
 
@@ -867,7 +867,7 @@ def RampageMod(position):
         'Stats': entity.Stats({'assault_regen_hp': 5}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
-        'Item': entity.Item('Rampage', 'You regenerate 5% of your max HP per turn when you have assault'),
+        'Item': entity.Item('Rampage', 'You regenerate 5% of your max HP per turn when you have assault (stacks)'),
         'Mod': entity.Mod(),
     })
 
@@ -887,7 +887,7 @@ def FireResistanceMod(position):
         'Stats': entity.Stats({'fire_res': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
-        'Item': entity.Item('Fire Resistance Up', 'Increases fire resistance by 20%'),
+        'Item': entity.Item('Fire Resistance Up', 'Increases fire resistance by 20% (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -897,7 +897,7 @@ def IceResistanceMod(position):
         'Stats': entity.Stats({'ice_res': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
-        'Item': entity.Item('Ice Resistance Up', 'Increases ice resistance by 20%'),
+        'Item': entity.Item('Ice Resistance Up', 'Increases ice resistance by 20% (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -907,7 +907,7 @@ def LightningResistanceMod(position):
         'Stats': entity.Stats({'lght_res': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
-        'Item': entity.Item('Lightning Resistance Up', 'Increases lightning resistance by 20%'),
+        'Item': entity.Item('Lightning Resistance Up', 'Increases lightning resistance by 20% (can level)'),
         'Mod': entity.Mod(),
     })
 
@@ -917,6 +917,6 @@ def PhysicalResistanceMod(position):
         'Stats': entity.Stats({'phys_res': 20}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
-        'Item': entity.Item('Physical Resistance Up', 'Increases physical resistance by 20%'),
+        'Item': entity.Item('Physical Resistance Up', 'Increases physical resistance by 20% (can level)'),
         'Mod': entity.Mod(),
     })
