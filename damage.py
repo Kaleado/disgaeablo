@@ -77,6 +77,10 @@ class WithStatusEffect(DamageDecorator):
         stats = destination_entity.component('Stats')
         if stats is not None:
             stats.inflict_status(self._status_effect, self._strength, self._duration)
+            mindbreak_paralyzes = self._source_entity.component('Stats').get('mindbreak_paralyzes')
+            if self._status == 'MIND_BREAK' and mindbreak_paralyzes > 0:
+                dam = WithStatusEffect("PARALYZE", self._strength, self._duration, Damage(self._source_entity, 0))
+                dam.inflict(destination_entity, mapp)
         if self._damage is None:
             return 0
         return self._damage.inflict(destination_entity, mapp)

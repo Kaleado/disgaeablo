@@ -940,3 +940,13 @@ def MindchillMod(position):
         'Item': entity.Item('Mindchill', 'Ice spells inflict mind break for 4 turns'),
         'Mod': entity.Mod(),
     })
+
+def StupefyMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'mindbreak_paralyzes': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.fuchsia),
+        'Item': entity.Item('Stupefy', 'Inflicting mind break on enemies paralyzes them as well'),
+        'Mod': entity.Mod(),
+    })
