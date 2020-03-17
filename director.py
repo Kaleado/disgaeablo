@@ -188,6 +188,7 @@ class MonsterDirector:
             monster.Scorpion,
             monster.Spider,
             monster.Eye,
+            monster.Gremlin,
         ],
         35: [
             monster.Wyvern,

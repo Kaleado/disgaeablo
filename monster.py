@@ -8,7 +8,7 @@ import loot
 import ai
 import skill_factory
 
-LEVEL_PC_STAT_INC = 0.36
+LEVEL_PC_STAT_INC = 0.45
 TIER_PC_STAT_INC = 10
 
 def ItemWorldClerkNPC(position):
@@ -988,7 +988,7 @@ class Gremlin:
                 .add_skill('GuardBreak', Gremlin.GuardBreak(), delay=2)\
                 .add_skill('MindBreak', Gremlin.MindBreak(), delay=2)\
                 .with_state('IDLE', ai.AIState()\
-                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
                 .with_state('USE_SPELLS', ai.AIState()\
                             .when_player_beyond_distance(7, lambda e, ai, ev_d : ai.change_state('GET_CLOSER'))\
