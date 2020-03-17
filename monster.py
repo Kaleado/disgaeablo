@@ -992,9 +992,8 @@ class Gremlin:
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
                 .with_state('USE_SPELLS', ai.AIState()\
                             .when_player_beyond_distance(7, lambda e, ai, ev_d : ai.change_state('GET_CLOSER'))\
-                            .when_player_within_distance(3, lambda e, ai, ev_d : ai.step_away_from_player(e))\
                             .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'GuardBreak'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'MindBreak')))\
                 .with_state('GET_CLOSER', ai.AIState()\
                             .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
