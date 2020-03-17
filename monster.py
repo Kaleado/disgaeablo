@@ -954,7 +954,7 @@ class Gremlin:
                                                        ['x','.','x']])
 
         return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
                             .damage_targets("{} points and laughs {}'s pathetic DFN!")\
                             .with_damage(None)\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 25, d))
@@ -965,7 +965,7 @@ class Gremlin:
                                                        ['.','x','.']])
 
         return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
                             .damage_targets("{} keels over laughing at {}'s pathetic RES!")\
                             .with_damage(None)\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
