@@ -572,7 +572,7 @@ class Giant:
                 'Combat': Combat(),
                 'NPC': NPC(Giant.names[tier-1]),
                 'AI': ai.AI()\
-                .add_skill('Smash', Beholder.Smash(), delay=1)\
+                .add_skill('Smash', Giant.Smash(), delay=1)\
                 .with_state('IDLE', ai.AIState()\
                             .when_player_within_distance(9, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
@@ -928,5 +928,75 @@ class BossTheTowerMinion:
                             .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'Smite1'))\
                             .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'HorLaser'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : None))\
+            })
+        return gen
+
+class Gremlin:
+    base_stats = {
+        'max_hp': 60,
+        'cur_hp': 60,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 6,
+        'dfn': 6,
+        'itl': 6,
+        'res': 6,
+        'spd': 6,
+        'hit': 6
+    }
+
+    names = ['Snickering gremlin', 'Giggling gremlin', 'Laughing gremlin', 'Shrieking gremlin', 'Howling gremlin']
+    colours = [tcod.darker_green, tcod.darker_red, tcod.darker_purple, tcod.darker_yellow, tcod.darker_crimson]
+
+    def GuardBreak():
+        formation = Formation(origin=(1,1), formation=[['x','.','x'],
+                                                       ['.','x','.'],
+                                                       ['x','.','x']])
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
+                            .damage_targets("{} points and laughs {}'s pathetic DFN!")\
+                            .with_damage(None)\
+                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 25, d))
+
+    def MindBreak():
+        formation = Formation(origin=(1,1), formation=[['.','x','.'],
+                                                       ['x','x','x'],
+                                                       ['.','x','.']])
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
+                            .damage_targets("{} keels over laughing at {}'s pathetic RES!")\
+                            .with_damage(None)\
+                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
+
+    def generator(tier=1, level=1):
+        actual_stats = util.copy_dict(Spider.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Spider.base_stats[stat] + Spider.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='g', colour=Spider.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Spider.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('GuardBreak', Gremlin.GuardBreak(), delay=2)\
+                .add_skill('MindBreak', Gremlin.MindBreak(), delay=2)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('USE_SPELLS', ai.AIState()\
+                            .when_player_beyond_distance(7, lambda e, ai, ev_d : ai.change_state('GET_CLOSER'))\
+                            .when_player_within_distance(3, lambda e, ai, ev_d : ai.step_away_from_player(e))\
+                            .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'GuardBreak'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+                .with_state('GET_CLOSER', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
