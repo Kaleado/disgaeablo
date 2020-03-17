@@ -223,7 +223,7 @@ class MonsterDirector:
 
     def monster_from_set(self, level, monster_set):
         tier = 1
-        if random.randint(0, 100) == 0:
+        if random.randint(0, 100) <= 1:
             tier += 1
             level = math.floor(level * 0.1)
         return random.choice(monster_set).generator(tier=tier, level=level)
@@ -231,7 +231,7 @@ class MonsterDirector:
     def monster(self, difficulty, level):
         available_set = sum([v for (k, v) in MonsterDirector.monsters.items() if k <= difficulty], [])
         tier = 1
-        if random.randint(0, 100) == 0:
+        if random.randint(0, 100) == 1:
             tier += 1
             level = math.floor(level * 0.1)
         return random.choice(available_set).generator(tier=tier, level=level)
