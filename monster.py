@@ -946,7 +946,7 @@ class Gremlin:
     }
 
     names = ['Snickering gremlin', 'Giggling gremlin', 'Laughing gremlin', 'Shrieking gremlin', 'Howling gremlin']
-    colours = [tcod.darker_green, tcod.darker_red, tcod.darker_purple, tcod.darker_yellow, tcod.darker_crimson]
+    colours = [tcod.darker_purple, tcod.darker_green, tcod.darker_yellow, tcod.darker_red, tcod.darker_blue]
 
     def GuardBreak():
         formation = Formation(origin=(1,1), formation=[['x','.','x'],

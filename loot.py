@@ -14,6 +14,16 @@ LEVEL_PC_STAT_INC = 0.4
 
 ##################################################### CONSUMABLES
 
+def CharredSkull(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='+', colour=tcod.light_gray),
+        'Item': entity.Item("Charred skull", 'Someone strange might want this...'),
+        'CharredSkull': entity.Component()
+    })
+
 def TownPortal(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
