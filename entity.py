@@ -643,7 +643,7 @@ class Stats(Component):
         return math.floor(Stats.EXP_YIELD_SCALE * sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])]))
 
     def increase_level(self, num):
-        self.add_base('max_exp', num * 50)
+        self.add_base('max_exp', num * 150)
         self.add_base('level', num)
         for stat in self._stats_gained_on_level:
             self.add_base(stat, self._base_stats[stat] * num * 0.2)
@@ -799,6 +799,8 @@ class Stats(Component):
         return self.get_value(stat)
 
     def get_value(self, stat):
+        if stat == 'level':
+            return self.get_base(stat)
         boost_stat = self._stats.get('boost_{}'.format(stat))
         boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333
         if stat == 'spd' and self.has_status('PARALYZE'):
@@ -1148,6 +1150,43 @@ class Shopkeeper(Neutral):
         settings.message_panel.info("\"Thank you for your patronage!\"", tcod.green)
         settings.message_panel.info("\"...sucker.\"", tcod.green)
 
+class UptierShopkeeper(Neutral):
+    def __init__(self):
+        super().__init__(on_chat=UptierShopkeeper.on_chat, on_attacked=UptierShopkeeper.on_attacked)
+        self._times_attacked = 0
+
+    def Apocalypse():
+        return SkillSpell(formation=Formation(origin=(10,10), formation=[
+            ['x' for _ in range(20)] for __ in range(20)
+        ]))
+
+    def on_attacked(self, entity, event, resident_map):
+        self._times_attacked += 1
+        if self._times_attacked >= 3:
+            settings.message_panel.info('\"You\'ve REALLY done it now...\"', tcod.green)
+            entity.set_component('AI', Hostile(primary_skill=UptierShopkeeper.Apocalypse(), primary_skill_range=9999))
+        else:
+            settings.message_panel.info(random.choice(['\"Ouch!\"', '\"Stop it!\"', '\"Hey!\"']), tcod.green)
+
+    def _choose_charred_skull(self, entity):
+        title = "Give a charred skull to uptier all loot -- and enemies\n\"Your charred skull, please... hehehe...\""
+        choose_item_menu = Menu({
+            'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, ["CharredSkull"], title=title))
+        }, ['ChooseItemPanel'])
+        chosen_item = choose_item_menu.run(settings.root_console)
+        return chosen_item
+
+    def on_chat(self, entity, event, resident_map):
+        import director
+        player = resident_map.entity('PLAYER')
+        charred_skull = self._choose_charred_skull(player)
+        if charred_skull is None:
+            settings.message_panel.info("\"Aww, gimme a break...\"", tcod.green)
+            return
+        player.component('Inventory').remove(charred_skull)
+        settings.loot_tier += 1
+        settings.monster_tier += 1
+        settings.message_panel.info("\"Good luck, traveller...\"", tcod.green)
 
 class ItemWorldClerk(Neutral):
     def __init__(self):

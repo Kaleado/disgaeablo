@@ -8,7 +8,7 @@ import loot
 import ai
 import skill_factory
 
-LEVEL_PC_STAT_INC = 0.45
+LEVEL_PC_STAT_INC = 0.75
 TIER_PC_STAT_INC = 10
 
 def ItemWorldClerkNPC(position):
@@ -33,11 +33,33 @@ def ItemWorldClerkNPC(position):
         'AI': ItemWorldClerk()
     })
 
+def UptierShopNPC(position):
+    x, y = position
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.light_gray),
+        'Combat': Combat(),
+        'NPC': NPC('Alan, weird occultist'),
+        'AI': UptierShopkeeper()
+    })
+
 def ModShopNPC(position):
     import director
     x, y = position
     items = []
-    for _ in range(10):
+    for _ in range(8):
         items += [director.loot_director.loot_from_set(1, director.LootDirector.mods)((0,0))]
     return Entity(str(uuid.uuid4()), components={
         'Stats': Stats({
@@ -64,8 +86,8 @@ def EquipmentShopNPC(position):
     import director
     x, y = position
     items = []
-    for _ in range(10):
-        items += [director.loot_director.loot_from_set(1, director.LootDirector.equipment).generator(tier=1)((0,0))]
+    for _ in range(8):
+        items += [director.loot_director.loot_from_set(1, director.LootDirector.equipment).generator(tier=settings.loot_tier)((0,0))]
     return Entity(str(uuid.uuid4()), components={
         'Stats': Stats({
             'level': 999999,
@@ -91,7 +113,7 @@ def SkillShopNPC(position):
     import director
     x, y = position
     items = []
-    for _ in range(10):
+    for _ in range(8):
         items += [director.loot_director
                   .loot_from_set(1, director.LootDirector.attack_skills | director.LootDirector.support_skills)((0,0))]
     return Entity(str(uuid.uuid4()), components={
@@ -142,7 +164,7 @@ class Slime:
                             .damage_targets("{} smashes {}! ({} HP)")\
                             .with_damage(damage.MonsterAttackDamage(35, 'phys'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Slime.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -193,7 +215,7 @@ class Mage:
                             .damage_targets("{} drops a bolt of lightning on {}! ({} HP)")\
                             .with_damage(damage.MonsterSpellDamage(45, 'lght'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Mage.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -244,7 +266,7 @@ class Golem:
                             .damage_targets("{} throws a boulder at {}! ({} HP)")\
                             .with_damage(damage.MonsterAttackDamage(25, 'phys'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Golem.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -296,7 +318,7 @@ class Scorpion:
                             .damage_targets("{} pierces {} with its stinger! ({} HP)")\
                             .with_damage(damage.MonsterAttackDamage(45, 'phys'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Scorpion.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -349,7 +371,7 @@ class Spider:
                             .with_damage(None)\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 2, d))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Spider.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -400,7 +422,7 @@ class Eye:
                             .damage_targets("{} scorches {} with a ray of light! ({} HP)")\
                             .with_damage(damage.MonsterSpellDamage(45, 'fire'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Eye.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -449,7 +471,7 @@ class Wyvern:
                             .damage_targets("{} scorches {} with rays from its jaw! ({} HP)")\
                             .with_damage(damage.MonsterSpellDamage(40, 'fire'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Wyvern.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -504,7 +526,7 @@ class Beholder:
                             .with_damage(damage.MonsterSpellDamage(45, 'fire'))
 
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Beholder.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -557,7 +579,7 @@ class Giant:
                             .damage_targets("{} smashes {}! ({} HP)")\
                             .with_damage(damage.MonsterAttackDamage(60, 'phys'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Giant.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -627,7 +649,7 @@ class BossTheSneak:
                             .teleport_targets_randomly()\
                             .print_message("Jerome laughs as he disappears into thin air!")
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(BossTheSneak.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -700,7 +722,7 @@ class BossUltimateBeholder:
                             .teleport_targets_randomly()\
                             .print_message("Azxtryzxtaz laughs as he disappears into thin air!")
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(BossUltimateBeholder.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -723,6 +745,7 @@ class BossUltimateBeholder:
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
                 .with_state('RANGED_PHASE', ai.AIState()\
                             .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
+                            .on_turn_randomly(0.1, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
                             .on_turn_randomly(0.2, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportAdds'))\
                             .when_player_within_distance(25, lambda e, ai, ev_d : ai.use_skill(e, 'Laser'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
@@ -814,7 +837,7 @@ class BossTheTower:
         return skill_factory.Skill()\
                             .print_message(" -- YOU HAVE 120 TURNS UNTIL MIDNIGHT -- ", tcod.dark_crimson)
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(BossTheTower.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -904,7 +927,7 @@ class BossTheTowerMinion:
                             .damage_targets("{} smites {}! ({} HP)")\
                             .with_damage(damage.MonsterSpellDamage(90, 'fire'))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(BossTheTowerMinion.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
@@ -970,7 +993,7 @@ class Gremlin:
                             .with_damage(None)\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
 
-    def generator(tier=1, level=1):
+    def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Gremlin.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):

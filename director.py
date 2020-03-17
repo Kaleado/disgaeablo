@@ -59,7 +59,7 @@ class MapDirector:
         mapp = Grid(30,30)
         w,h=30,30
         if self._current_floor == 0:
-            mapp = Town(30, 30, [monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC])
+            mapp = Town(30, 30, [monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC, monster.UptierShopNPC])
             w,h=30,30
         elif self._current_floor == 10:
             mapp = TheSneakArena(30, 30)
@@ -222,7 +222,7 @@ class MonsterDirector:
         return list(monster_set)
 
     def monster_from_set(self, level, monster_set):
-        tier = 1
+        tier = settings.monster_tier
         if random.randint(0, 100) <= 1:
             tier += 1
             level = math.floor(level * 0.1)
@@ -230,7 +230,7 @@ class MonsterDirector:
 
     def monster(self, difficulty, level):
         available_set = sum([v for (k, v) in MonsterDirector.monsters.items() if k <= difficulty], [])
-        tier = 1
+        tier = settings.monster_tier
         if random.randint(0, 100) == 1:
             tier += 1
             level = math.floor(level * 0.1)
@@ -321,6 +321,14 @@ class LootDirector:
         loot.EmpoweringFlameMod,
         loot.RampageMod,
         loot.EnvenomedBladeMod,
+        loot.LightningResistanceMod,
+        loot.FireResistanceMod,
+        loot.IceResistanceMod,
+        loot.PhysicalResistanceMod,
+    ])
+
+    rare = set([
+        loot.CharredSkull,
     ])
 
     def __init__(self):
@@ -337,16 +345,18 @@ class LootDirector:
 
     def ground_loot(self, level):
         roll = random.randint(0,500)
-        if roll < 50:
-            return loot.Healing.generator(tier=1)
+        if roll < 3:
+            return random.choice(list(LootDirector.rare))
+        elif roll < 50:
+            return loot.Healing.generator(tier=settings.loot_tier)
         elif roll < 100:
-            return loot.Refreshing.generator(tier=1)
+            return loot.Refreshing.generator(tier=settings.loot_tier)
         elif roll < 150:
             return loot.TownPortal
         elif roll < 300:
             return random.choice(list(LootDirector.mods))
         elif roll < 350:
-            return random.choice(list(LootDirector.equipment)).generator(tier=1)
+            return random.choice(list(LootDirector.equipment)).generator(tier=settings.loot_tier)
         elif roll < 450:
             return random.choice(list(LootDirector.attack_skills))
         else:

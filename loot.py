@@ -19,7 +19,7 @@ def CharredSkull(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({}),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='+', colour=tcod.light_gray),
+        'Render': entity.Render(character='+', colour=tcod.red),
         'Item': entity.Item("Charred skull", 'Someone strange might want this...'),
         'CharredSkull': entity.Component()
     })
@@ -40,7 +40,7 @@ class Healing:
         'max_hp': 175,
         'cur_hp': 175,
     }
-    names = ['Rosemary', 'Sage', 'Daffodil', 'Nettle', 'Chamomile', 'Ginseng', 'Valerian']
+    names = ['Rosemary', 'Sage', 'Daffodil', 'Ginseng', 'Valerian']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green, tcod.magenta, tcod.red]
 
     def generator(tier=1, level=1):
@@ -64,7 +64,7 @@ class Refreshing:
         'max_sp': 25,
         'cur_sp': 25,
     }
-    names = ['Spring water', 'Apple juice', 'Nectar', 'Morning dew']
+    names = ['Spring water', 'Apple juice', 'Rosewater', 'Nectar', 'Morning dew']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green]
 
     def generator(tier=1, level=1):

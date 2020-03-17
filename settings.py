@@ -9,6 +9,8 @@ from console import *
 import loot
 
 main_dungeon_lowest_floor = 1
+loot_tier = 1
+monster_tier = 1
 
 message_panel = MessagePanel(14)
 
