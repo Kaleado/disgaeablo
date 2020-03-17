@@ -577,7 +577,7 @@ class Giant:
                             .when_player_within_distance(9, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
                 .with_state('AGGRO', ai.AIState()\
-                            .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
+                            .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Smash'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
