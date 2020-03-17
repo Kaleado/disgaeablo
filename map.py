@@ -229,8 +229,10 @@ class Grid(Map):
         room_size = 6
         rooms_w = width // room_size
         rooms_h = height // room_size
-        rooms_grid = [[random.choice(['N', 'E', 'S', 'W']) for x in range(rooms_w)] for y in range(rooms_h)]
-        self._terrain = [['#' if (x % room_size) * (y % room_size) == 0 else '.' for x in range(width)] for y in range(height)]
+        rooms_grid = [[random.choice(['N', 'E', 'S', 'W', '#']) for x in range(rooms_w)] for y in range(rooms_h)]
+        self._terrain = [['#' if (x % room_size) * (y % room_size) == 0 or \
+                          rooms_grid[y//room_size][x//room_size] == '#' \
+                          else '.' for x in range(width)] for y in range(height)]
         start_room = (random.randint(0, rooms_w - 1), random.randint(0, rooms_h - 1))
         seen = set([start_room])
         q = [start_room]
@@ -240,7 +242,8 @@ class Grid(Map):
                 for dy in range(-1,2):
                     if dy * dx != 0 or (dx == 0 and dy == 0):
                         continue
-                    if x + dx >= 0 and y + dy >= 0 and x + dx < rooms_w and y + dy < rooms_h and (x+dx, y+dy) not in seen:
+                    in_bounds = x + dx >= 0 and y + dy >= 0 and x + dx < rooms_w and y + dy < rooms_h
+                    if in_bounds and (x+dx, y+dy) not in seen and rooms_grid[y+dy][x+dx] != '#':
                         seen = seen | set([(x+dx, y+dy)])
                         rooms_grid[y+dy][x+dx] = 'W' if dx == 1 else 'E' if dx == -1 else 'N' if dy == 1 else 'S'
                         if random.randint(0,1) == 1:
@@ -257,6 +260,8 @@ class Grid(Map):
                     door_x, door_y = floor((xx + 0.5) * room_size), (yy + 1) * room_size
                 elif rooms_grid[yy][xx] == 'W':
                     door_x, door_y = xx * room_size, floor((yy + 0.5) * room_size)
+                else:
+                    continue
                 if door_x < width and door_y < height:
                     self._terrain[door_y][door_x] = '.'
         stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
