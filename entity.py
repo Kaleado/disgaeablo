@@ -601,7 +601,7 @@ class Stats(Component):
     ])
 
     REGEN_FREQUENCY = 6
-    EXP_YIELD_SCALE = 1.4
+    EXP_YIELD_SCALE = 1.0
 
     """
     There is no need to initialise all the base_stats -- any ones left out will
@@ -644,7 +644,7 @@ class Stats(Component):
         return math.floor(Stats.EXP_YIELD_SCALE * sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])]))
 
     def increase_level(self, num):
-        self.add_base('max_exp', num * 150)
+        self.add_base('max_exp', num * 90)
         self.add_base('level', num)
         for stat in self._stats_gained_on_level:
             self.add_base(stat, self._base_stats[stat] * num * 0.2)
