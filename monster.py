@@ -8,7 +8,7 @@ import loot
 import ai
 import skill_factory
 
-LEVEL_PC_STAT_INC = 0.6
+LEVEL_PC_STAT_INC = 0.5
 TIER_PC_STAT_INC = 10
 
 def ItemWorldClerkNPC(position):
