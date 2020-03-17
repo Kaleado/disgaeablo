@@ -597,6 +597,7 @@ class Stats(Component):
         'fire_assault',
         'assault_regen_hp',
         'cleave_poison',
+        'ice_mind_break',
     ])
 
     REGEN_FREQUENCY = 6

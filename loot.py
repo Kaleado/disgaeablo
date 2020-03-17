@@ -930,3 +930,13 @@ def PhysicalResistanceMod(position):
         'Item': entity.Item('Physical Resistance Up', 'Increases physical resistance by 20% (can level)'),
         'Mod': entity.Mod(),
     })
+
+def MindchillMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'ice_mind_break': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.lighter_purple),
+        'Item': entity.Item('Mindchill', 'Ice spells inflict mind break for 4 turns'),
+        'Mod': entity.Mod(),
+    })
