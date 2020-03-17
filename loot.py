@@ -511,7 +511,7 @@ def Paralyze(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to paralyze {}!")\
         .with_sp_cost(2)\
-        .with_damage(None)\
+        .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 6, d))
     })
 
@@ -530,7 +530,7 @@ def Poison(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to poison {}!")\
         .with_sp_cost(3)\
-        .with_damage(None)\
+        .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('POISON', 1, 8, d))
     })
 
@@ -549,7 +549,7 @@ def GuardBreak(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to guard break {}!")\
         .with_sp_cost(3)\
-        .with_damage(None)\
+        .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 12, d))
     })
 
@@ -568,7 +568,7 @@ def MindBreak(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to mind break {}!")\
         .with_sp_cost(3)\
-        .with_damage(None)\
+        .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 12, d))
     })
 
@@ -587,7 +587,7 @@ def Weaken(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} attempts to weaken {}!")\
         .with_sp_cost(3)\
-        .with_damage(None)\
+        .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('WEAKEN', 1, 12, d))
     })
 
@@ -603,7 +603,7 @@ def Stoneskin(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
         .damage_targets("{} gives stoneskin to {}!")\
         .with_sp_cost(3)\
-        .with_damage(None)\
+        .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('STONESKIN', 1, 40, d))
     })
 

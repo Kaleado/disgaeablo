@@ -140,8 +140,8 @@ def SkillShopNPC(position):
 
 class Slime:
     base_stats = {
-        'max_hp': 100,
-        'cur_hp': 100,
+        'max_hp': 80,
+        'cur_hp': 80,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
@@ -191,14 +191,14 @@ class Slime:
 
 class Mage:
     base_stats = {
-        'max_hp': 80,
-        'cur_hp': 80,
+        'max_hp': 50,
+        'cur_hp': 50,
         'max_sp': 50,
         'cur_sp': 50,
         'atk': 8,
         'dfn': 12,
-        'itl': 18,
-        'res': 20,
+        'itl': 25,
+        'res': 18,
         'spd': 12,
         'hit': 12
     }
@@ -242,13 +242,13 @@ class Mage:
 
 class Golem:
     base_stats = {
-        'max_hp': 180,
-        'cur_hp': 180,
+        'max_hp': 100,
+        'cur_hp': 100,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 15,
+        'atk': 20,
         'dfn': 12,
-        'itl': 15,
+        'itl': 20,
         'res': 9,
         'spd': 8,
         'hit': 12
@@ -295,8 +295,8 @@ class Golem:
 
 class Scorpion:
     base_stats = {
-        'max_hp': 120,
-        'cur_hp': 120,
+        'max_hp': 90,
+        'cur_hp': 90,
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 30,
@@ -345,8 +345,8 @@ class Scorpion:
 
 class Spider:
     base_stats = {
-        'max_hp': 100,
-        'cur_hp': 100,
+        'max_hp': 90,
+        'cur_hp': 90,
         'max_sp': 40,
         'cur_sp': 40,
         'atk': 10,
@@ -368,7 +368,7 @@ class Spider:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
                             .damage_targets("{} spins web at {}!")\
-                            .with_damage(None)\
+                            .with_damage(damage.SpellDamage(0))\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 2, d))
 
     def generator(tier=settings.monster_tier, level=1):
@@ -406,7 +406,7 @@ class Eye:
         'cur_sp': 40,
         'atk': 20,
         'dfn': 10,
-        'itl': 16,
+        'itl': 20,
         'res': 18,
         'spd': 8,
         'hit': 12
@@ -451,7 +451,7 @@ class Wyvern:
         'cur_sp': 40,
         'atk': 20,
         'dfn': 12,
-        'itl': 16,
+        'itl': 20,
         'res': 12,
         'spd': 8,
         'hit': 12
@@ -505,7 +505,7 @@ class Beholder:
         'cur_sp': 40,
         'atk': 12,
         'dfn': 14,
-        'itl': 20,
+        'itl': 25,
         'res': 8,
         'spd': 8,
         'hit': 12
@@ -558,7 +558,7 @@ class Giant:
         'cur_hp': 170,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 20,
+        'atk': 25,
         'dfn': 14,
         'itl': 12,
         'res': 8,
@@ -614,7 +614,7 @@ class BossTheSneak:
         'cur_sp': 10,
         'atk': 20,
         'dfn': 15,
-        'itl': 50,
+        'itl': 30,
         'res': 15,
         'spd': 12,
         'hit': 12
@@ -754,8 +754,8 @@ class BossUltimateBeholder:
 
 class BossTheTower:
     base_stats = {
-        'max_hp': 250,
-        'cur_hp': 250,
+        'max_hp': 220,
+        'cur_hp': 220,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
@@ -879,8 +879,8 @@ class BossTheTower:
 
 class BossTheTowerMinion:
     base_stats = {
-        'max_hp': 80,
-        'cur_hp': 80,
+        'max_hp': 60,
+        'cur_hp': 60,
         'max_sp': 10,
         'cur_sp': 10,
         'atk': 20,
@@ -979,7 +979,7 @@ class Gremlin:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
                             .damage_targets("{} points and laughs {}'s pathetic DFN!")\
-                            .with_damage(None)\
+                            .with_damage(damage.SpellDamage(0))\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 25, d))
 
     def MindBreak():
@@ -990,7 +990,7 @@ class Gremlin:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
                             .damage_targets("{} keels over laughing at {}'s pathetic RES!")\
-                            .with_damage(None)\
+                            .with_damage(damage.SpellDamage(0))\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
 
     def generator(tier=settings.monster_tier, level=1):
