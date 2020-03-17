@@ -294,7 +294,7 @@ class Scorpion:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
                             .damage_targets("{} pierces {} with its stinger! ({} HP)")\
-                            .with_damage(damage.MonsterAttackDamage(55, 'phys'))
+                            .with_damage(damage.MonsterAttackDamage(45, 'phys'))
 
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Scorpion.base_stats)
