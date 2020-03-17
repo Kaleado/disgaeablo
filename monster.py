@@ -971,19 +971,19 @@ class Gremlin:
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
 
     def generator(tier=1, level=1):
-        actual_stats = util.copy_dict(Spider.base_stats)
+        actual_stats = util.copy_dict(Gremlin.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Spider.base_stats[stat] + Spider.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] = (Gremlin.base_stats[stat] + Gremlin.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='g', colour=Spider.colours[tier-1]),
+                'Render': Render(character='g', colour=Gremlin.colours[tier-1]),
                 'Combat': Combat(),
-                'NPC': NPC(Spider.names[tier-1]),
+                'NPC': NPC(Gremlin.names[tier-1]),
                 'AI': ai.AI()\
                 .add_skill('GuardBreak', Gremlin.GuardBreak(), delay=2)\
                 .add_skill('MindBreak', Gremlin.MindBreak(), delay=2)\

@@ -600,7 +600,7 @@ class Stats(Component):
     ])
 
     REGEN_FREQUENCY = 6
-    EXP_YIELD_SCALE = 2
+    EXP_YIELD_SCALE = 0.75
 
     """
     There is no need to initialise all the base_stats -- any ones left out will
