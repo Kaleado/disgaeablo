@@ -39,15 +39,9 @@ settings.current_map._entities = {
     })
 }
 
-settings.current_map.add_entity(monster.Inferno.generator(tier=1, level=1)((10,10)))
-
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.StupefyMod((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.MindchillMod((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.Fire((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.CharredSkull((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.Blink((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 
 settings.root_menu.run(settings.root_console)
