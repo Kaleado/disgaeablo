@@ -768,7 +768,7 @@ class ChooseItemPanel(Panel):
         x, y = origin
         yy = 0
         console.print_(x=x, y=yy+y, string=self._title)
-        yy += 1
+        yy += self._title.count("\n") + 1
         for item in items:
             console.default_fg = tcod.cyan if self._has_focus and self._selection_index == index else console.default_fg
             item.component('Render').render(item, console, (x,yy+y))

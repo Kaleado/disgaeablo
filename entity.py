@@ -1286,7 +1286,7 @@ class UptierShopkeeper(Neutral):
             settings.message_panel.info(random.choice(['\"Ouch!\"', '\"Stop it!\"', '\"Hey!\"']), tcod.green)
 
     def _choose_charred_skull(self, entity):
-        title = "Give a charred skull to uptier all loot -- and enemies\n\"Your charred skull, please... hehehe...\""
+        title = "Give a charred skull to:\n - Reset your dungeon progression, and\n - Uptier all loot and enemies\n\"Your charred skull, please... hehehe...\""
         choose_item_menu = Menu({
             'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, ["CharredSkull"], title=title))
         }, ['ChooseItemPanel'])
@@ -1303,6 +1303,7 @@ class UptierShopkeeper(Neutral):
         player.component('Inventory').remove(charred_skull)
         settings.loot_tier += 1
         settings.monster_tier += 1
+        settings.main_dungeon_lowest_floor = 1
         settings.message_panel.info("\"Good luck, traveller...\"", tcod.green)
 
 class ItemWorldClerk(Neutral):
