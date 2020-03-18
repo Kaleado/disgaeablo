@@ -44,5 +44,6 @@ settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.StupefyMod((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.MindchillMod((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.Ice((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.CharredSkull((0,0)))
 
 settings.root_menu.run(settings.root_console)

@@ -11,6 +11,7 @@ import skill_factory
 import damage
 
 LEVEL_PC_STAT_INC = 0.4
+TIER_PC_STAT_INC = 10
 
 ##################################################### CONSUMABLES
 
@@ -46,7 +47,7 @@ class Healing:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Healing.base_stats)
         for stat in Healing.base_stats:
-            actual_stats[stat] = (Healing.base_stats[stat] + Healing.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Healing.base_stats[stat] + Healing.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -70,7 +71,7 @@ class Refreshing:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Refreshing.base_stats)
         for stat in Refreshing.base_stats:
-            actual_stats[stat] = (Refreshing.base_stats[stat] + Refreshing.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Refreshing.base_stats[stat] + Refreshing.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -95,7 +96,7 @@ class DfnArmour:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(DfnArmour.base_stats)
         for stat in DfnArmour.base_stats:
-            actual_stats[stat] = (DfnArmour.base_stats[stat] + DfnArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (DfnArmour.base_stats[stat] + DfnArmour.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -118,7 +119,7 @@ class ResArmour:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(ResArmour.base_stats)
         for stat in ResArmour.base_stats:
-            actual_stats[stat] = (ResArmour.base_stats[stat] + ResArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (ResArmour.base_stats[stat] + ResArmour.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -142,7 +143,7 @@ class ResItlArmour:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(ResItlArmour.base_stats)
         for stat in ResItlArmour.base_stats:
-            actual_stats[stat] = (ResItlArmour.base_stats[stat] + ResItlArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (ResItlArmour.base_stats[stat] + ResItlArmour.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -166,7 +167,7 @@ class DfnAtkArmour:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(DfnAtkArmour.base_stats)
         for stat in DfnAtkArmour.base_stats:
-            actual_stats[stat] = (DfnAtkArmour.base_stats[stat] + DfnAtkArmour.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (DfnAtkArmour.base_stats[stat] + DfnAtkArmour.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -189,7 +190,7 @@ class Sword:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Sword.base_stats)
         for stat in Sword.base_stats:
-            actual_stats[stat] = (Sword.base_stats[stat] + Sword.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Sword.base_stats[stat] + Sword.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
@@ -212,7 +213,7 @@ class Staff:
     def generator(tier=1, level=1):
         actual_stats = util.copy_dict(Staff.base_stats)
         for stat in Staff.base_stats:
-            actual_stats[stat] = (Staff.base_stats[stat] + Staff.base_stats[stat] * (tier - 1) * 100)
+            actual_stats[stat] = (Staff.base_stats[stat] + Staff.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
             actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
         def gen(position):
             x, y = position
