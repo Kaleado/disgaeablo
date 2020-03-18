@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 import math
+import random
 
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+
+def random_permutation(lst):
+    res = []
+    while len(lst):
+        idx = random.randint(0, len(lst)-1)
+        res.append(lst[idx])
+        lst.remove(lst[idx])
+    return res
 
 def find_path(passability_map, source, dest):
     q = [source]
@@ -12,8 +21,8 @@ def find_path(passability_map, source, dest):
     seen = set()
     while len(q) > 0:
         (x, y) = q.pop()
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
+        for dx in random_permutation([-1, 0, 1]):
+            for dy in random_permutation([-1, 0, 1]):
                 if (dx == 0 and dy == 0) or \
                    x + dx < 0 or y + dy < 0 or \
                    x + dx >= w or y + dy >= h or (x+dx, y+dy) in seen or passability_map[y+dy][x+dx] == False:
