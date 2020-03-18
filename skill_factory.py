@@ -161,3 +161,22 @@ class Skill(Usable):
             return res
         self._use_on_targets = f
         return self
+
+    def summon_monsters(self, monsters, tier=settings.monster_tier, level=None, predicate=None):
+        import director
+        use_on_targets = self._use_on_targets
+        def f(self, entity, user_entity, mapp, targets, menu):
+            lev = level
+            if lev is None:
+                lev = director.map_director.difficulty()
+            res = use_on_targets(self, entity, user_entity, mapp, targets, menu)
+            if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
+                _, positions = self._target_mode.targets(group='x')
+                if positions is not None and len(positions) > 0:
+                    for position in positions:
+                        monster = random.choice(monsters)
+                        mon = monster.generator(tier=tier, level=lev)(position)
+                        mapp.add_entity(mon)
+            return res
+        self._use_on_targets = f
+        return self

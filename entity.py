@@ -182,6 +182,62 @@ class TargetUser(TargetMode):
         self._targets[self._group] = EntityListView([user_entity]), [user_entity.component('Position').get()]
         return self._targets['x']
 
+class TargetAnd(TargetMode):
+    def __init__(self, target_mode, other_target_mode):
+        self._target_mode = target_mode
+        self._other_target_mode = other_target_mode
+
+    def targets(self, group='x'):
+        targets_1 = self._target_mode.targets(group)
+        targets_2 = self._other_target_mode.targets(group)
+        if targets_1[0] is None or targets_1[1] is None:
+            return None, None
+        if targets_2[0] is None or targets_2[1] is None:
+            return None, None
+        ents = EntityListView(list(set(targets_1[0].as_list() + targets_2[0].as_list())))
+        pos = list(set(targets_1[1] + targets_2[1]))
+        return ents, pos
+
+    def choose_targets(self, user_entity, used_entity, mapp, menu):
+        targets_1 = self._target_mode.choose_targets(user_entity, used_entity, mapp, menu)
+        targets_2 = self._other_target_mode.choose_targets(user_entity, used_entity, mapp, menu)
+        ents = EntityListView(list(set(targets_1[0].as_list() + targets_2[0].as_list())))
+        pos = list(set(targets_1[1] + targets_2[1]))
+        return ents, pos
+
+class TargetRandomPositions(TargetMode):
+    def __init__(self, num_positions, within_distance=None, passable_only=False, group='x'):
+        self._targets = {'x': (None, None)}
+        self._group = group
+        self._num_positions = num_positions
+        self._passable_only = passable_only
+        self._within_distance = within_distance
+
+    def targets(self, group='x'):
+        if group not in self._targets:
+            return None, None
+        return self._targets[group]
+
+    def choose_targets(self, user_entity, used_entity, mapp, menu):
+        import util
+        random_positions = []
+        w, h = mapp.dimensions()
+        x, y = user_entity.component('Position').get()
+        for _ in range(self._num_positions):
+            if not self._within_distance:
+                p = (random.randint(0, w), random.randint(0, h))
+            else:
+                dist = random.uniform(1, self._within_distance)
+                angl = random.uniform(0, 2 * math.pi)
+                p = (math.floor(util.clamp(x + math.sin(angl) * dist, 0, w)), math.floor(util.clamp(y + math.cos(angl) * dist, 0, h)))
+            tries = 0
+            while tries < 3 and self._passable_only and not mapp.is_passable_for(user_entity, p):
+                p = (random.randint(0, w-1), random.randint(0, h-1))
+                tries += 1
+            random_positions.append(p)
+        self._targets[self._group] = EntityListView([]), random_positions
+        return self._targets['x']
+
 class TargetFormation(TargetMode):
     def __init__(self, formation, directional=False, max_range=None, positioned_randomly=False):
         self._formation = formation
@@ -598,6 +654,8 @@ class Stats(Component):
         'assault_regen_hp',
         'cleave_poison',
         'ice_mind_break',
+        'mindbreak_paralyzes',
+        'improve_dash_length',
     ])
 
     REGEN_FREQUENCY = 6
@@ -738,6 +796,12 @@ class Stats(Component):
             self.add_additive_modifier('fire_res', 20)
             self.add_additive_modifier('ice_res', 20)
             self.add_additive_modifier('lght_res', 20)
+        elif status == 'INVINCIBLE':
+            message_panel.info("{} is no longer invincible".format(ent_name), colour)
+            self.sub_multiplicative_modifier('res', 3)
+        elif status == 'UNSTOPPABLE':
+            message_panel.info("{} is no longer unstoppable".format(ent_name), colour)
+            self.sub_multiplicative_modifier('dfn', 3)
         else:
             message_panel.info("{} no longer has {}".format(ent_name, status), colour)
 
@@ -769,6 +833,10 @@ class Stats(Component):
             self.sub_additive_modifier('fire_res', 20)
             self.sub_additive_modifier('ice_res', 20)
             self.sub_additive_modifier('lght_res', 20)
+        if status == 'INVINCIBLE':
+            self.add_multiplicative_modifier('res', 3)
+        if status == 'UNSTOPPABLE':
+            self.add_multiplicative_modifier('dfn', 3)
 
     def apply_healing(self, entity, resident_map, amount):
         amount = min(amount, self.get_value('max_hp') - self.get_value('cur_hp'))

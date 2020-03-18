@@ -269,8 +269,8 @@ def Pierce(position):
 
 def Bypass(position):
     formation = Formation(origin=(0,3), formation=[['x','.'],
-                                                   ['x','.'],
                                                    ['x','P'],
+                                                   ['x','.'],
                                                    ['.','.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
@@ -288,17 +288,18 @@ def Bypass(position):
 
 def WhipSlash(position):
     formation = Formation(origin=(1,1), formation=[['x','x','x'],
-                                                   ['x','.','P']])
+                                                   ['x','.','x'],
+                                                   ['.','P','.',]])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 25}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
-        'Item': entity.Item('Skill: Whip slash', 'Deal damage in an arc whilst sidestepping danger'),
+        'Item': entity.Item('Skill: Crescent slash', 'Deal damage in an arc whilst sidestepping danger'),
         'Usable': skill_factory.Skill(tags=['skill_whip_slash', 'attack', 'movement', 'offensive'])\
         .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
-        .damage_targets("{}'s whip slash hits {}! ({} HP)")\
+        .damage_targets("{}'s crescent slash hits {}! ({} HP)")\
         .with_sp_cost(3)\
         .with_damage(damage.AttackDamage(1, 'phys'))
     })
@@ -307,6 +308,11 @@ def Dash(position):
     formation = Formation(origin=(0,2), formation=[['P'],
                                                    ['.'],
                                                    ['.']])
+
+    improved_formation = Formation(origin=(0,3), formation=[['P'],
+                                                            ['.'],
+                                                            ['.'],
+                                                            ['.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({}),
@@ -315,6 +321,8 @@ def Dash(position):
         'Item': entity.Item('Skill: Dash', 'Cheap mobility skill, good for evading attacks'),
         'Usable': skill_factory.Skill(tags=['skill_dash', 'movement'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
+        .override_target_mode(entity.ExcludeItems(entity.TargetFormation(improved_formation, max_range=10)),
+                              lambda s, e, u, m, mn : u.component('Stats').get('improve_dash_length') > 0)
         .move_to_targeted_position()\
         .with_sp_cost(2)
     })
@@ -432,8 +440,9 @@ def Ice(position):
         .with_sp_cost(2)\
         .with_damage(damage.SpellDamage(1, 'ice'))\
         .change_damage(lambda d, s, t, i : damage.WithSoulDrain(d, 0.1),
-                       lambda s, s_e, t_e, i_e : s_e.component('Stats').get('ice_souldrain') > 0
-        )
+                       lambda s, s_e, t_e, i_e : s_e.component('Stats').get('ice_souldrain') > 0)
+        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', strength=1, duration=4, damage=d),
+                       lambda s, s_e, t_e, i_e : s_e.component('Stats').get('ice_mind_break') > 0)
     })
 
 def Lightning(position):
@@ -606,6 +615,39 @@ def Stoneskin(position):
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('STONESKIN', 1, 40, d))
     })
+
+def Invincible(position):
+    formation = Formation(origin=(0,0), formation=[['x']])
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'itl': 20}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Item': entity.Item('Spell: Invincible', 'Boosts RES by 300% for 4 turns'),
+        'Usable': skill_factory.Skill(tags=['spell_invincible', 'spell', 'buff', 'status'])\
+        .with_target_mode(entity.TargetUser(formation))\
+        .damage_targets("{} becomes invincibile!")\
+        .with_sp_cost(11)\
+        .with_damage(damage.SpellDamage(0))\
+        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('INVINCIBLE', 1, 4, d))
+    })
+
+def Unstoppable(position):
+    formation = Formation(origin=(0,0), formation=[['x']])
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'itl': 20}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Item': entity.Item('Spell: Invincible', 'Boosts DFN by 300% for 4 turns'),
+        'Usable': skill_factory.Skill(tags=['spell_unstoppable', 'spell', 'buff', 'status'])\
+        .with_target_mode(entity.TargetUser(formation))\
+        .damage_targets("{} becomes unstoppable!")\
+        .with_sp_cost(11)\
+        .with_damage(damage.SpellDamage(0))\
+        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('UNSTOPPABLE', 1, 4, d))
+    })
+
 
 def Blink(position):
     formation = Formation(origin=(0,0), formation=[['P']])
@@ -937,7 +979,7 @@ def MindchillMod(position):
         'Stats': entity.Stats({'ice_mind_break': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_purple),
-        'Item': entity.Item('Mindchill', 'Ice spells inflict mind break for 4 turns'),
+        'Item': entity.Item('Brain freeze', 'Ice spells inflict mind break for 4 turns'),
         'Mod': entity.Mod(),
     })
 
@@ -948,5 +990,25 @@ def StupefyMod(position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.fuchsia),
         'Item': entity.Item('Stupefy', 'Inflicting mind break on enemies paralyzes them as well'),
+        'Mod': entity.Mod(),
+    })
+
+def StrideMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'improve_dash_length': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
+        'Item': entity.Item('Stride', 'Dash moves you 3 tiles instead of 2'),
+        'Mod': entity.Mod(),
+    })
+
+def SuddenDeathMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'deathblow_multiplier': 3}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
+        'Item': entity.Item('Sudden death', 'Your deathblow is tripled'),
         'Mod': entity.Mod(),
     })

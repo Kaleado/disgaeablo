@@ -49,3 +49,6 @@ def abbrev(value):
     if value > 9999:
         return str(value // 1000) + "K"
     return str(value)
+
+def clamp(n, smallest, largest):
+    return max(smallest, min(n, largest))
