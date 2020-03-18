@@ -322,7 +322,7 @@ def Dash(position):
         'Item': entity.Item('Skill: Dash', 'Cheap mobility skill, good for evading attacks'),
         'Usable': skill_factory.Skill(tags=['skill_dash', 'movement'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
-        .override_target_mode(entity.ExcludeItems(entity.TargetFormation(improved_formation, max_range=10)),
+        .override_target_mode(entity.ExcludeItems(entity.TargetFormation(improved_formation, directional=True)),
                               lambda s, e, u, m, mn : u.component('Stats').get('improve_dash_length') > 0)
         .move_to_targeted_position()\
         .with_sp_cost(2)

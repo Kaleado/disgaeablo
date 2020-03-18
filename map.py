@@ -61,7 +61,8 @@ class Map:
 
     def is_descendable(self, pos):
         x, y = pos
-        return self._terrain[y][x] == '>'
+        ents_at_pos = self.entities().at_position(pos).with_all_components('Descendable')
+        return self._terrain[y][x] == '>' or (ents_at_pos.size() > 0 and ents_at_pos.where(lambda e : e.component('Descendable').can_descend()))
 
     def render(self, console, origin=(0,0)):
         x, y = origin

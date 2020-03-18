@@ -125,6 +125,7 @@ class AI(entity.Component):
         self._delayed_attack = None
         self._delay = None
         self._delayed_targets = None
+        self._passive_attacks = [] # Items of the form (usable, delay, (entitylistview, [positions]))
 
     def bb_get(self, key):
         return self._blackboard.get(key)
@@ -143,11 +144,15 @@ class AI(entity.Component):
     def handle_event(self, entity, event, resident_map):
         event_type, event_data = event
         is_paralyzed = entity.component('Stats').has_status('PARALYZE')
+
+        # Remove this creature's threatened positions after they die
         if event_type == 'ENTITY_KILLED' and event_data == entity and self._delayed_targets is not None:
             targeted_positions = self._delayed_targets[1]
             resident_map.remove_threatened_positions(entity.ident())
             return False
+
         if event_type == 'NPC_TURN':
+            self._handle_passive_attacks(entity, resident_map)
             if is_paralyzed:
                 return False
             elif self._delayed_attack is not None:
@@ -158,6 +163,22 @@ class AI(entity.Component):
         state = self._states.get(self._current_state)
         if state is not None:
             return state.handle_event(entity, self, event)
+        return False
+
+    def _handle_passive_attacks(self, entity, resident_map):
+        new_passive_attacks = []
+        for passive_attack, delay, passive_targets in self._passive_attacks:
+            delay -= 1
+            if delay == 0:
+                targeted_positions = passive_targets[1]
+                # TODO: make this work with / without friendly fire
+                targets = resident_map.entities().without_components(['Item', 'NPC'])\
+                                                 .with_component('Position')\
+                                                 .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
+                passive_attack.use_on_targets(entity, entity, resident_map, targets, None)
+            else:
+                new_passive_attacks.append((passive_attack, delay, passive_targets))
+        self._passive_attacks = new_passive_attacks
         return False
 
     def _handle_delayed_attack(self, entity, resident_map):
@@ -219,6 +240,10 @@ class AI(entity.Component):
         my_combat = entity.component('Combat')
         my_combat.attack(entity, settings.current_map, target.component('Position').get())
 
+    '''
+    Delayed attacks delay other actions (e.g. movement, other attacks, etc.)
+    aside from passive attacks until they are performed.
+    '''
     def perform_delayed_attack_against(self, entity, target, usable, delay):
         import settings
         if delay == 0:
@@ -229,16 +254,32 @@ class AI(entity.Component):
         self._delayed_targets = usable.choose_targets(entity, entity, settings.current_map, None)
         settings.current_map.add_threatened_positions(self._delayed_targets[1], delay, entity.ident())
 
+    '''
+    Passive attacks can be performed even whilst performing other actions such
+    as moving, using delayed attacks, etc.
+    '''
+    def perform_passive_attack_against(self, entity, target, usable, delay):
+        import settings
+        if delay == 0:
+            usable.use(entity, entity, settings.current_map, None)
+            return
+        passive_targets = usable.choose_targets(entity, entity, settings.current_map, None)
+        self._passive_attacks.append((usable, delay, passive_targets))
+        settings.current_map.add_threatened_positions(passive_targets[1], delay, entity.ident())
+
     # Factory methods
 
     def use_skill(self, entity, skill_ident):
         import settings
-        usable, delay = self._skills[skill_ident]
+        usable, delay, is_passive = self._skills[skill_ident]
         player = settings.current_map.entity('PLAYER')
-        self.perform_delayed_attack_against(entity, player, usable, delay)
+        if is_passive:
+            self.perform_passive_attack_against(entity, player, usable, delay)
+        else:
+            self.perform_delayed_attack_against(entity, player, usable, delay)
 
-    def add_skill(self, skill_ident, usable, delay=0):
-        self._skills[skill_ident] = usable, delay
+    def add_skill(self, skill_ident, usable, delay=0, is_passive=False):
+        self._skills[skill_ident] = usable, delay, is_passive
         return self
 
     def with_state(self, state_name, state):

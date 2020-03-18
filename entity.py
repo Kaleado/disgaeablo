@@ -581,6 +581,20 @@ class Equipment(Component):
         resident_map.entities().transform(lambda ent: \
                                           ent.handle_event(("ITEM_UNEQUIPPED", (to_entity, item_entity)), resident_map))
 
+class Descendable(Component):
+    def __init__(self, predicate=None):
+        super().__init__()
+        self._predicate = predicate
+        self._can_descend = False if predicate is not None else True
+
+    def can_descend(self):
+        return self._can_descend
+
+    def handle_event(self, entity, event, resident_map):
+        if self._predicate is not None and self._predicate(entity, event, resident_map) == True:
+            self._can_descend = True
+        return False
+
 class Stats(Component):
     primary_stats = set([
         'max_hp',
@@ -656,6 +670,7 @@ class Stats(Component):
         'ice_mind_break',
         'mindbreak_paralyzes',
         'improve_dash_length',
+        'deathblow_multiplier',
     ])
 
     REGEN_FREQUENCY = 6
@@ -874,7 +889,9 @@ class Stats(Component):
         boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333
         if stat == 'spd' and self.has_status('PARALYZE'):
             return 0
-        return int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive']) * self._modifiers[stat]['multiplicative'])
+        other_mult = 1 if stat != 'deathblow' else self.get('deathblow_multiplier')
+        return int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive'])
+                   * self._modifiers[stat]['multiplicative'] * other_mult)
 
     def get_additive_modifier(self, stat):
         return self._modifiers[stat]['additive']
@@ -962,16 +979,47 @@ class Render(Component):
     def render(self, entity, console, origin):
         x, y = origin
         old_fg = console.default_fg
-        console.default_fg = self._colour
+        console.default_fg = self.colour()
         self._status_render_idx = -1 if self._status_render_idx >= len(self._status_chars(entity)) else self._status_render_idx
         if self._status_render_idx == -1:
-            console.print_(x=x, y=y, string=self._character)
+            console.print_(x=x, y=y, string=self.character())
         else:
             console.print_(x=x, y=y, string=self._status_chars(entity)[self._status_render_idx])
         self._status_render_idx += 1
         if self._status_render_idx >= len(self._status_chars(entity)):
             self._status_render_idx = -1
         console.default_fg = old_fg
+
+'''
+if_true and if_false are of the form (char, tcod_colour)
+if trigger_once is false, the render state will match that of the predicate
+'''
+class ConditionalRender(Render):
+    def __init__(self, if_true, if_false, predicate, trigger_once=True):
+        self._if_true = if_true
+        self._if_false = if_false
+        self._predicate = predicate
+        self._flag = False
+        self._trigger_once = trigger_once
+
+    def character(self):
+        if self._flag:
+            return self._if_true[0]
+        return self._if_false[0]
+
+    def colour(self):
+        if self._flag:
+            return self._if_true[1]
+        return self._if_false[1]
+
+    def handle_event(self, entity, event, resident_map):
+        predicate_value = self._predicate(entity, event, resident_map)
+        if predicate_value == True:
+            self._flag = True
+        if not self._trigger_once and predicate_value == False:
+            self._flag = False
+        return False
+
 
 class Inventory(Component):
     def __init__(self, items=[]):

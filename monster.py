@@ -1022,3 +1022,63 @@ class Gremlin:
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             })
         return gen
+
+class Inferno:
+    base_stats = {
+        'max_hp': 80,
+        'cur_hp': 80,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 10,
+        'dfn': 10,
+        'itl': 12,
+        'res': 10,
+        'spd': 6,
+        'hit': 6,
+        'fire_res': 100,
+    }
+
+    names = ['Flame', 'Blaze', 'Firestorm', 'Inferno', 'Hellfire']
+    colours = [tcod.dark_red, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def Explosion():
+        formation = Formation(origin=(2,2), formation=util.rectangle(5,5))
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
+                            .damage_targets("{} causes a fiery explosion on top of {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(90, 'fire'))\
+
+    def Firestorm():
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(7, passable_only=True, within_distance=2))))\
+                            .damage_targets("{} singes {} with fire! ({} HP)")\
+                            .with_damage(damage.SpellDamage(60, 'fire'))\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Inferno.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Inferno.base_stats[stat] + Inferno.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='I', colour=Inferno.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Inferno.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Firestorm', Inferno.Firestorm(), delay=1, is_passive=True)\
+                .add_skill('Explosion', Inferno.Explosion(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('USE_SPELLS', ai.AIState()\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
+                            .when_player_beyond_distance(6, lambda e, ai, ev_d : ai.step_towards_player(e))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Explosion')))\
+            })
+        return gen

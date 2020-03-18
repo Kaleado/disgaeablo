@@ -61,3 +61,6 @@ def abbrev(value):
 
 def clamp(n, smallest, largest):
     return max(smallest, min(n, largest))
+
+def rectangle(w, h, group='x'):
+    return [[group] * w] * h

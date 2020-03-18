@@ -195,6 +195,9 @@ class MonsterDirector:
             monster.Beholder,
             monster.Giant,
         ],
+        50: [
+            monster.Inferno,
+        ],
     }
 
     bosses = {
@@ -325,6 +328,10 @@ class LootDirector:
         loot.FireResistanceMod,
         loot.IceResistanceMod,
         loot.PhysicalResistanceMod,
+        loot.SuddenDeathMod,
+        loot.MindchillMod,
+        loot.StupefyMod,
+        loot.StrideMod,
     ])
 
     rare = set([
