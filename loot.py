@@ -244,7 +244,7 @@ def Cleave(position):
         .damage_targets("{}'s cleave hits {}! ({} HP)")\
         .with_sp_cost(3)\
         .with_damage(damage.AttackDamage(1, 'phys'))
-        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('POISON', strength=1, duration=2, damage=d),
+        .change_damage(lambda d, s, t, i : damage.WithStatusEffect('POISON', strength=1, duration=4, damage=d),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('cleave_poison') > 0)
     })
 
@@ -618,7 +618,6 @@ def Stoneskin(position):
     })
 
 def Invincible(position):
-    formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
@@ -626,7 +625,7 @@ def Invincible(position):
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Invincible', 'Boosts RES by 300% for 4 turns'),
         'Usable': skill_factory.Skill(tags=['spell_invincible', 'spell', 'buff', 'status'])\
-        .with_target_mode(entity.TargetUser(formation))\
+        .with_target_mode(entity.TargetUser())\
         .damage_targets("{} becomes invincibile!")\
         .with_sp_cost(11)\
         .with_damage(damage.SpellDamage(0))\
@@ -634,7 +633,6 @@ def Invincible(position):
     })
 
 def Unstoppable(position):
-    formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
@@ -642,7 +640,7 @@ def Unstoppable(position):
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Invincible', 'Boosts DFN by 300% for 4 turns'),
         'Usable': skill_factory.Skill(tags=['spell_unstoppable', 'spell', 'buff', 'status'])\
-        .with_target_mode(entity.TargetUser(formation))\
+        .with_target_mode(entity.TargetUser())\
         .damage_targets("{} becomes unstoppable!")\
         .with_sp_cost(11)\
         .with_damage(damage.SpellDamage(0))\
@@ -1017,9 +1015,33 @@ def StrideMod(position):
 def SuddenDeathMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
+<<<<<<< HEAD
         'Stats': entity.Stats({'deathblow_multiplier': 3}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+=======
+        'Stats': entity.Stats({'deathblow_multiplier': 3, 'max_hp_pc_penalty': 25}),
+>>>>>>> added stuff
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
-        'Item': entity.Item('Sudden death', 'Your deathblow is tripled'),
+        'Item': entity.Item('Sudden death', 'Your deathblow is tripled, but your max HP is reduced by 25%'),
+        'Mod': entity.Mod(),
+    })
+
+def WillpowerMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'atk_becomes_itl': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.magenta),
+        'Item': entity.Item('Willpower', 'Your ATK is set to your ITL'),
+        'Mod': entity.Mod(),
+    })
+
+def BrutalStrengthMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'itl_becomes_atk': 1}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.yellow),
+        'Item': entity.Item('Brutal Strength', 'Your ITL is set to your ATK'),
         'Mod': entity.Mod(),
     })

@@ -87,7 +87,6 @@ class Map:
     def passability_map_for(self, entity):
         w = len(self._terrain[0])
         h = len(self._terrain)
-        print(w, h)
         passable_tiles = ['.', '<', '>']
         return [[(self._terrain[y][x] in passable_tiles and self._is_entity_passable_at((x, y))) for x in range(w)] for y in range(h)]
 

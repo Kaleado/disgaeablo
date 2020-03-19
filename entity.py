@@ -671,6 +671,9 @@ class Stats(Component):
         'mindbreak_paralyzes',
         'improve_dash_length',
         'deathblow_multiplier',
+        'itl_becomes_atk',
+        'atk_becomes_itl',
+        'max_hp_pc_penalty',
     ])
 
     REGEN_FREQUENCY = 6
@@ -884,15 +887,24 @@ class Stats(Component):
         return self.get_value(stat)
 
     def get_value(self, stat):
+        if stat in ['atk', 'itl']:
+            atk_becomes_itl = self.get('atk_becomes_itl') > 0
+            itl_becomes_atk = self.get('itl_becomes_atk') > 0
+            if not (atk_becomes_itl and itl_becomes_atk):
+                if stat == 'atk' and atk_becomes_itl:
+                    return self.get('itl')
+                if stat == 'itl' and itl_becomes_atk:
+                    return self.get('atk')
         if stat in ['level', 'cur_exp', 'max_exp', 'cur_hp', 'cur_sp']:
             return self.get_base(stat)
         boost_stat = self._stats.get('boost_{}'.format(stat))
         boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333
         if stat == 'spd' and self.has_status('PARALYZE'):
             return 0
-        other_mult = 1 if stat != 'deathblow' else self.get('deathblow_multiplier')
+        deathblow_mult = 1 if stat != 'deathblow' else self.get('deathblow_multiplier')
+        max_hp_mult = 1 if stat != 'max_hp' else (100 - self.get('max_hp_pc_penalty'))/100
         return int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive'])
-                   * self._modifiers[stat]['multiplicative'] * other_mult)
+                   * self._modifiers[stat]['multiplicative'] * deathblow_mult * max_hp_mult)
 
     def get_additive_modifier(self, stat):
         return self._modifiers[stat]['additive']

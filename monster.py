@@ -144,7 +144,7 @@ class Slime:
         'cur_hp': 80,
         'max_sp': 10,
         'cur_sp': 10,
-        'atk': 20,
+        'atk': 30,
         'dfn': 10,
         'itl': 12,
         'res': 10,
@@ -197,7 +197,7 @@ class Mage:
         'cur_sp': 50,
         'atk': 8,
         'dfn': 12,
-        'itl': 25,
+        'itl': 37,
         'res': 18,
         'spd': 12,
         'hit': 12
@@ -246,9 +246,9 @@ class Golem:
         'cur_hp': 100,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 20,
+        'atk': 30,
         'dfn': 12,
-        'itl': 20,
+        'itl': 30,
         'res': 9,
         'spd': 8,
         'hit': 12
@@ -299,7 +299,7 @@ class Scorpion:
         'cur_hp': 90,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 30,
+        'atk': 45,
         'dfn': 11,
         'itl': 10,
         'res': 8,
@@ -349,9 +349,9 @@ class Spider:
         'cur_hp': 90,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 10,
+        'atk': 15,
         'dfn': 13,
-        'itl': 16,
+        'itl': 24,
         'res': 8,
         'spd': 8,
         'hit': 12
@@ -404,9 +404,9 @@ class Eye:
         'cur_hp': 80,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 20,
+        'atk': 30,
         'dfn': 10,
-        'itl': 20,
+        'itl': 30,
         'res': 18,
         'spd': 8,
         'hit': 12
@@ -449,9 +449,9 @@ class Wyvern:
         'cur_hp': 80,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 20,
+        'atk': 30,
         'dfn': 12,
-        'itl': 20,
+        'itl': 30,
         'res': 12,
         'spd': 8,
         'hit': 12
@@ -503,9 +503,9 @@ class Beholder:
         'cur_hp': 70,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 12,
+        'atk': 18,
         'dfn': 14,
-        'itl': 25,
+        'itl': 37,
         'res': 8,
         'spd': 8,
         'hit': 12
@@ -558,9 +558,9 @@ class Giant:
         'cur_hp': 170,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 25,
+        'atk': 37,
         'dfn': 14,
-        'itl': 12,
+        'itl': 18,
         'res': 8,
         'spd': 8,
         'hit': 12
@@ -612,9 +612,9 @@ class BossTheSneak:
         'cur_hp': 200,
         'max_sp': 10,
         'cur_sp': 10,
-        'atk': 20,
+        'atk': 30,
         'dfn': 15,
-        'itl': 30,
+        'itl': 45,
         'res': 15,
         'spd': 12,
         'hit': 12
@@ -689,7 +689,7 @@ class BossUltimateBeholder:
         'cur_hp': 200,
         'max_sp': 10,
         'cur_sp': 10,
-        'atk': 20,
+        'atk': 30,
         'dfn': 15,
         'itl': 50,
         'res': 15,
@@ -758,9 +758,9 @@ class BossTheTower:
         'cur_hp': 220,
         'max_sp': 10,
         'cur_sp': 10,
-        'atk': 20,
+        'atk': 30,
         'dfn': 17,
-        'itl': 35,
+        'itl': 50,
         'res': 17,
         'spd': 12,
         'hit': 12,
@@ -883,9 +883,9 @@ class BossTheTowerMinion:
         'cur_hp': 60,
         'max_sp': 10,
         'cur_sp': 10,
-        'atk': 20,
+        'atk': 30,
         'dfn': 20,
-        'itl': 35,
+        'itl': 45,
         'res': 20,
         'spd': 12,
         'hit': 12,
@@ -960,9 +960,9 @@ class Gremlin:
         'cur_hp': 60,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 6,
+        'atk': 9,
         'dfn': 6,
-        'itl': 6,
+        'itl': 9,
         'res': 6,
         'spd': 6,
         'hit': 6
@@ -1029,9 +1029,9 @@ class Inferno:
         'cur_hp': 80,
         'max_sp': 40,
         'cur_sp': 40,
-        'atk': 10,
+        'atk': 30,
         'dfn': 10,
-        'itl': 12,
+        'itl': 35,
         'res': 10,
         'spd': 6,
         'hit': 6,
@@ -1080,5 +1080,99 @@ class Inferno:
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
                             .when_player_beyond_distance(6, lambda e, ai, ev_d : ai.step_towards_player(e))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Explosion')))\
+            })
+        return gen
+
+class Bee:
+    base_stats = {
+        'max_hp': 20,
+        'cur_hp': 20,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 20,
+        'dfn': 8,
+        'itl': 20,
+        'res': 8,
+        'spd': 6,
+        'hit': 6,
+    }
+
+    names = ['Beehive', 'Wasp hive', 'Hornet hive', 'Spiderhawk hive', 'Apisterax hive']
+    colours = [tcod.light_yellow, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def Sting():
+        formation = Formation(origin=(0,0), formation=['.','x','x'])
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} stings {}! ({} HP)")\
+                            .with_damage(damage.SpellDamage(60, 'phys'))\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Bee.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Bee.base_stats[stat] + Bee.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='b', colour=Bee.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Bee.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Sting', Bee.Sting(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(14, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('USE_SPELLS', ai.AIState()\
+                            .when_player_within_distance(1, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'), False)\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+            })
+        return gen
+
+class Beehive:
+    base_stats = {
+        'max_hp': 150,
+        'cur_hp': 150,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 1,
+        'dfn': 12,
+        'itl': 1,
+        'res': 12,
+        'spd': 6,
+        'hit': 6,
+    }
+
+    names = ['Beehive', 'Wasp hive', 'Hornet hive', 'Spiderhawk hive', 'Apisterax hive']
+    colours = [tcod.light_yellow, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def SummonBees():
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(1, passable_only=True, within_distance=2))))\
+                            .summon_monsters([Bee])\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Beehive.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Beehive.base_stats[stat] + Beehive.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='B', colour=Beehive.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Beehive.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('SummonBees', Beehive.SummonBees(), delay=0, is_passive=True)\
+                .with_state('IDLE', ai.AIState()\
+                            .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'SummonBees'), False)\
+                            .on_turn_otherwise(lambda e, ai, ev_d : False))\
             })
         return gen

@@ -182,21 +182,22 @@ class MonsterDirector:
         0: [
             monster.Slime,
         ],
-        10: [
+        20: [
             monster.Mage,
             monster.Golem,
             monster.Scorpion,
             monster.Spider,
             monster.Eye,
-            monster.Gremlin,
         ],
         35: [
             monster.Wyvern,
             monster.Beholder,
             monster.Giant,
+            monster.Gremlin,
         ],
-        50: [
+        55: [
             monster.Inferno,
+            monster.Beehive,
         ],
     }
 
@@ -297,6 +298,8 @@ class LootDirector:
         loot.Stoneskin,
         loot.Blink,
         loot.Dash,
+        loot.Invincible,
+        loot.Unstoppable,
     ])
 
     mods = set([
@@ -334,6 +337,8 @@ class LootDirector:
         loot.MindchillMod,
         loot.StupefyMod,
         loot.StrideMod,
+        loot.WillpowerMod,
+        loot.BrutalStrengthMod,
     ])
 
     rare = set([
