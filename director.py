@@ -259,6 +259,8 @@ class LootDirector:
         loot.Weaken,
         loot.Stoneskin,
         loot.Blink,
+        loot.Invincible,
+        loot.Unstoppable,
     ])
 
     equipment = set([

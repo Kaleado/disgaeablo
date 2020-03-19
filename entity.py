@@ -680,7 +680,8 @@ class Stats(Component):
     There is no need to initialise all the base_stats -- any ones left out will
     be zero by default
     """
-    def __init__(self, base_stats, stats_gained_on_level=None):
+    def __init__(self, base_stats, stats_gained_on_level=None, stat_inc_per_level=0.2):
+        self._stat_inc_per_level = stat_inc_per_level
         self._regen_counter = 0
         self._stats = {}
         if stats_gained_on_level is None:
@@ -720,7 +721,7 @@ class Stats(Component):
         self.add_base('max_exp', num * 90)
         self.add_base('level', num)
         for stat in self._stats_gained_on_level:
-            self.add_base(stat, self._base_stats[stat] * num * 0.2)
+            self.add_base(stat, self._base_stats[stat] * num * self._stat_inc_per_level)
 
     def grant_exp(self, exp):
         message_panel.info("Gained {} EXP".format(exp), tcod.yellow)
@@ -883,7 +884,7 @@ class Stats(Component):
         return self.get_value(stat)
 
     def get_value(self, stat):
-        if stat == 'level':
+        if stat in ['level', 'cur_exp', 'max_exp', 'cur_hp', 'cur_sp']:
             return self.get_base(stat)
         boost_stat = self._stats.get('boost_{}'.format(stat))
         boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333

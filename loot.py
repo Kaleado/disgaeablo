@@ -18,7 +18,7 @@ TIER_PC_STAT_INC = 10
 def CharredSkull(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({}),
+        'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='+', colour=tcod.red),
         'Item': entity.Item("Charred skull", 'Someone strange might want this...'),
@@ -28,7 +28,7 @@ def CharredSkull(position):
 def TownPortal(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({}),
+        'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='+', colour=tcod.lighter_blue),
         'Item': entity.Item("Town portal", 'Takes you back to town, fully healing your HP and SP'),
@@ -52,7 +52,7 @@ class Healing:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Render': entity.Render(character='"', colour=Healing.colours[tier-1]),
                 'Item': entity.Item(Healing.names[tier-1], 'Heals some HP'),
@@ -76,7 +76,7 @@ class Refreshing:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Render': entity.Render(character='!', colour=Refreshing.colours[tier-1]),
                 'Item': entity.Item(Refreshing.names[tier-1], 'Heals some SP'),
@@ -101,7 +101,7 @@ class DfnArmour:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='[', colour=DfnArmour.colours[tier-1]),
@@ -124,7 +124,7 @@ class ResArmour:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='{', colour=ResArmour.colours[tier-1]),
@@ -148,7 +148,7 @@ class ResItlArmour:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character=']', colour=ResItlArmour.colours[tier-1]),
@@ -172,7 +172,7 @@ class DfnAtkArmour:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character=')', colour=DfnAtkArmour.colours[tier-1]),
@@ -195,7 +195,7 @@ class Sword:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='/', colour=Sword.colours[tier-1]),
@@ -218,7 +218,7 @@ class Staff:
         def gen(position):
             x, y = position
             return entity.Entity(str(uuid.uuid4()), components={
-                'Stats': entity.Stats(actual_stats),
+                'Stats': entity.Stats(actual_stats, stat_inc_per_level=LEVEL_PC_STAT_INC),
                 'Position': entity.Position(x, y),
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='|', colour=Staff.colours[tier-1]),
@@ -234,7 +234,7 @@ def Cleave(position):
                                                    ['.','.','.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 35}),
+        'Stats': entity.Stats({'atk': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Cleave', 'Deals high physical damage in an area in front'),
@@ -256,7 +256,7 @@ def Pierce(position):
                                                    ['.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 35}),
+        'Stats': entity.Stats({'atk': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Pierce', 'Deals high physical damage in a line'),
@@ -275,7 +275,7 @@ def Bypass(position):
                                                    ['.','.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 25}),
+        'Stats': entity.Stats({'atk': 25}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Bypass', 'Attack in a line whilst moving diagonally forwards'),
@@ -293,7 +293,7 @@ def WhipSlash(position):
                                                    ['.','P','.',]])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 25}),
+        'Stats': entity.Stats({'atk': 25}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Crescent slash', 'Deal damage in an arc whilst sidestepping danger'),
@@ -316,7 +316,7 @@ def Dash(position):
                                                             ['.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({}),
+        'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.green),
         'Item': entity.Item('Skill: Dash', 'Cheap mobility skill, good for evading attacks'),
@@ -335,7 +335,7 @@ def RollingStab(position):
                                                    ['.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 20}),
+        'Stats': entity.Stats({'atk': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Rolling stab', 'Good for rolling out of the way of incoming attacks'),
@@ -353,7 +353,7 @@ def AerialDrop(position):
                                                    ['x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 20}),
+        'Stats': entity.Stats({'atk': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Aerial drop', 'Pierce your foes from the sky!'),
@@ -371,7 +371,7 @@ def Combustion(position):
                                                    ['.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 45}),
+        'Stats': entity.Stats({'itl': 45}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Combustion', 'Deals high fire damage in front'),
@@ -391,7 +391,7 @@ def Fire(position):
                                                             ['x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 35}),
+        'Stats': entity.Stats({'itl': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Fire', 'Deals fire damage in a single tile'),
@@ -412,7 +412,7 @@ def PoisonDetonation(position):
                                                    ['.','x','.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Poison Detonation', 'Deals a small amount of fire damage, or a massive amount of fire damage on poisoned targets'),
@@ -431,7 +431,7 @@ def Ice(position):
     formation = Formation(origin=(1,0), formation=[['x', 'x', 'x', 'x', 'x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 27}),
+        'Stats': entity.Stats({'itl': 27}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Ice', 'Deals ice damage in a 5-tile line'),
@@ -452,7 +452,7 @@ def Lightning(position):
                                                    ['x', 'x', 'x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 27}),
+        'Stats': entity.Stats({'itl': 27}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Lightning', 'Deals lightning damage in a 3x3 area'),
@@ -473,7 +473,7 @@ def LightningBreath(position):
                                                    ['.', '.', '.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 35}),
+        'Stats': entity.Stats({'itl': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Lightning Breath', 'Deals lightning damage in an area in front'),
@@ -494,7 +494,7 @@ def StaticShock(position):
                                                    ['.', '.', '.']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 15}),
+        'Stats': entity.Stats({'itl': 15}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Static Shock', 'Deals lightning damage with a chance to paralyze for 3 turns'),
@@ -513,7 +513,7 @@ def Paralyze(position):
                                                    ['x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Paralyze', 'Prevents actions for 6 turns'),
@@ -532,7 +532,7 @@ def Poison(position):
                                                    ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Poison', 'Deals 5% of max HP as damage per turn, for 8 turns. Can\'t reduce HP below 5%'),
@@ -551,7 +551,7 @@ def GuardBreak(position):
                                                    ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Guard Break', 'Lowers DFN by 50% for 12 turns'),
@@ -570,7 +570,7 @@ def MindBreak(position):
                                                    ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Mind Break', 'Lowers RES by 50% for 12 turns'),
@@ -589,7 +589,7 @@ def Weaken(position):
                                                    ['x','x','x','x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Weaken', 'Lowers ATK by 50% for 12 turns'),
@@ -605,7 +605,7 @@ def Stoneskin(position):
     formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Stoneskin', 'Boosts DFN by 50% for 40 turns'),
@@ -621,7 +621,7 @@ def Invincible(position):
     formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Invincible', 'Boosts RES by 300% for 4 turns'),
@@ -637,7 +637,7 @@ def Unstoppable(position):
     formation = Formation(origin=(0,0), formation=[['x']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Invincible', 'Boosts DFN by 300% for 4 turns'),
@@ -654,7 +654,7 @@ def Blink(position):
     formation = Formation(origin=(0,0), formation=[['P']])
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 20}),
+        'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
         'Item': entity.Item('Spell: Blink', 'Performs a short-range, targeted teleport'),
@@ -667,7 +667,7 @@ def Blink(position):
 def AtkMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 12}),
+        'Stats': entity.Stats({'atk': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('ATK Up', 'Provides a boost in ATK to the attached item'),
@@ -677,7 +677,7 @@ def AtkMod(position):
 def DfnMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'dfn': 12}),
+        'Stats': entity.Stats({'dfn': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('DFN Up', 'Provides a boost in DFN to the attached item'),
@@ -687,7 +687,7 @@ def DfnMod(position):
 def ItlMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 12}),
+        'Stats': entity.Stats({'itl': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('ITL Up', 'Provides a boost in ITL to the attached item'),
@@ -697,7 +697,7 @@ def ItlMod(position):
 def ResMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'res': 12}),
+        'Stats': entity.Stats({'res': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('RES Up', 'Provides a boost in RES to the attached item'),
@@ -707,7 +707,7 @@ def ResMod(position):
 def SpdMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'spd': 12}),
+        'Stats': entity.Stats({'spd': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('SPD Up', 'Provides a boost in SPD to the attached item'),
@@ -717,17 +717,27 @@ def SpdMod(position):
 def HitMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'hit': 12}),
+        'Stats': entity.Stats({'hit': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('HIT Up', 'Provides a boost in HIT to the attached item'),
         'Mod': entity.Mod(),
     })
 
+def MaxHPMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'max_hp': 55}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.peach),
+        'Item': entity.Item('Max HP Up', 'Provides a boost in max HP to the attached item'),
+        'Mod': entity.Mod(),
+    })
+
 def MeleeLifeDrainMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'lifedrain': 15}),
+        'Stats': entity.Stats({'lifedrain': 15}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.red),
         'Item': entity.Item('Melee Lifedrain', 'Grants 15% lifedrain for melee attacks'),
@@ -737,7 +747,7 @@ def MeleeLifeDrainMod(position):
 def MeleeDeathblowMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'deathblow': 2}),
+        'Stats': entity.Stats({'deathblow': 2}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_crimson),
         'Item': entity.Item('Melee Deathblow', 'Grants a 2% chance to deal a deathblow on melee attacks'),
@@ -747,7 +757,7 @@ def MeleeDeathblowMod(position):
 def SPRegenMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'sp_regen': 1}, set(['sp_regen'])),
+        'Stats': entity.Stats({'sp_regen': 1}, set(['sp_regen']), stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_blue),
         'Item': entity.Item('SP Regen', 'Restores 1 SP every 4 turns (can level)'),
@@ -757,7 +767,7 @@ def SPRegenMod(position):
 def HPRegenMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'hp_regen': 4}, set(['hp_regen'])),
+        'Stats': entity.Stats({'hp_regen': 4}, set(['hp_regen']), stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_red),
         'Item': entity.Item('HP Regen', 'Restores 4 HP every 4 turns (can level)'),
@@ -767,7 +777,7 @@ def HPRegenMod(position):
 def SpellSoulDrainMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'souldrain': 10}),
+        'Stats': entity.Stats({'souldrain': 10}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.blue),
         'Item': entity.Item('Spell Souldrain', 'Grants 10% spell souldrain'),
@@ -777,7 +787,7 @@ def SpellSoulDrainMod(position):
 def ToxicForceMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'self_poison': 1, 'boost_atk': 1}),
+        'Stats': entity.Stats({'self_poison': 1, 'boost_atk': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.chartreuse),
         'Item': entity.Item('Toxic Force', 'Boosts ATK (stacks), but self-poisons'),
@@ -787,7 +797,7 @@ def ToxicForceMod(position):
 def ToxicPowerMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'self_poison': 1, 'boost_itl': 1}),
+        'Stats': entity.Stats({'self_poison': 1, 'boost_itl': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_green),
         'Item': entity.Item('Venom Power', 'Boost ITL (stacks), but self-poisons'),
@@ -797,7 +807,7 @@ def ToxicPowerMod(position):
 def PoisonHealMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'poison_heal': 1}),
+        'Stats': entity.Stats({'poison_heal': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.green),
         'Item': entity.Item('Poison Heal', 'Poison heals you'),
@@ -807,7 +817,7 @@ def PoisonHealMod(position):
 def SoulConversionMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'sp_usage_heals': 1}),
+        'Stats': entity.Stats({'sp_usage_heals': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.purple),
         'Item': entity.Item('Soul Conversion', 'Spending SP restores HP'),
@@ -817,7 +827,7 @@ def SoulConversionMod(position):
 def FireDamageMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'fire_dam': 20}),
+        'Stats': entity.Stats({'fire_dam': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Fire Damage Up', 'Increases fire damage dealt by 20% (can level)'),
@@ -827,7 +837,7 @@ def FireDamageMod(position):
 def IceDamageMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'ice_dam': 20}),
+        'Stats': entity.Stats({'ice_dam': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
         'Item': entity.Item('Ice Damage Up', 'Increases ice damage dealt by 20% (can level)'),
@@ -837,7 +847,7 @@ def IceDamageMod(position):
 def LightningDamageMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'lght_dam': 20}),
+        'Stats': entity.Stats({'lght_dam': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
         'Item': entity.Item('Lightning Damage Up', 'Increases lightning damage dealt by 20% (can level)'),
@@ -847,7 +857,7 @@ def LightningDamageMod(position):
 def PhysicalDamageMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'phys_dam': 20}),
+        'Stats': entity.Stats({'phys_dam': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
         'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 20% (can level)'),
@@ -857,7 +867,7 @@ def PhysicalDamageMod(position):
 def BloodMagicMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'blood_magic': 1}),
+        'Stats': entity.Stats({'blood_magic': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_purple),
         'Item': entity.Item('Blood Magic', 'Use HP instead of SP for costs'),
@@ -867,7 +877,7 @@ def BloodMagicMod(position):
 def AssaultMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'assault': 1}),
+        'Stats': entity.Stats({'assault': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.gray),
         'Item': entity.Item('Assault', 'Using melee attack skills grants Assault for 2 turns (deal and take 20% more damage)'),
@@ -877,7 +887,7 @@ def AssaultMod(position):
 def BlazeMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'improve_fire_aoe': 1}),
+        'Stats': entity.Stats({'improve_fire_aoe': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Blaze', 'Fire\'s area of effect is improved'),
@@ -887,7 +897,7 @@ def BlazeMod(position):
 def EnergisingColdMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'ice_souldrain': 1}),
+        'Stats': entity.Stats({'ice_souldrain': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
         'Item': entity.Item('Energising Cold', 'Ice spells have 10% souldrain'),
@@ -897,7 +907,7 @@ def EnergisingColdMod(position):
 def InvigoratingPowerMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'lightning_lifedrain': 1}),
+        'Stats': entity.Stats({'lightning_lifedrain': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
         'Item': entity.Item('Invigorating Power', 'Lightning spells have 10% lifedrain'),
@@ -907,7 +917,7 @@ def InvigoratingPowerMod(position):
 def EmpoweringFlameMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'fire_assault': 1}),
+        'Stats': entity.Stats({'fire_assault': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Empowering Flame', 'Fire spells grant Assault for 2 turns'),
@@ -917,7 +927,7 @@ def EmpoweringFlameMod(position):
 def RampageMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'assault_regen_hp': 5}),
+        'Stats': entity.Stats({'assault_regen_hp': 5}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
         'Item': entity.Item('Rampage', 'You regenerate 5% of your max HP per turn when you have assault (stacks)'),
@@ -927,7 +937,7 @@ def RampageMod(position):
 def EnvenomedBladeMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'cleave_poison': 5}),
+        'Stats': entity.Stats({'cleave_poison': 5}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.light_chartreuse),
         'Item': entity.Item('Envenomed Blade', 'Cleave inflicts poison'),
@@ -937,7 +947,7 @@ def EnvenomedBladeMod(position):
 def FireResistanceMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'fire_res': 20}),
+        'Stats': entity.Stats({'fire_res': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Fire Resistance Up', 'Increases fire resistance by 20% (can level)'),
@@ -947,7 +957,7 @@ def FireResistanceMod(position):
 def IceResistanceMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'ice_res': 20}),
+        'Stats': entity.Stats({'ice_res': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
         'Item': entity.Item('Ice Resistance Up', 'Increases ice resistance by 20% (can level)'),
@@ -957,7 +967,7 @@ def IceResistanceMod(position):
 def LightningResistanceMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'lght_res': 20}),
+        'Stats': entity.Stats({'lght_res': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
         'Item': entity.Item('Lightning Resistance Up', 'Increases lightning resistance by 20% (can level)'),
@@ -967,7 +977,7 @@ def LightningResistanceMod(position):
 def PhysicalResistanceMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'phys_res': 20}),
+        'Stats': entity.Stats({'phys_res': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.silver),
         'Item': entity.Item('Physical Resistance Up', 'Increases physical resistance by 20% (can level)'),
@@ -977,7 +987,7 @@ def PhysicalResistanceMod(position):
 def MindchillMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'ice_mind_break': 1}),
+        'Stats': entity.Stats({'ice_mind_break': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.lighter_purple),
         'Item': entity.Item('Brain freeze', 'Ice spells inflict mind break for 4 turns'),
@@ -987,7 +997,7 @@ def MindchillMod(position):
 def StupefyMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'mindbreak_paralyzes': 1}),
+        'Stats': entity.Stats({'mindbreak_paralyzes': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.fuchsia),
         'Item': entity.Item('Stupefy', 'Inflicting mind break on enemies paralyzes them as well'),
@@ -997,7 +1007,7 @@ def StupefyMod(position):
 def StrideMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'improve_dash_length': 1}),
+        'Stats': entity.Stats({'improve_dash_length': 1}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
         'Item': entity.Item('Stride', 'Dash moves you 3 tiles instead of 2'),
@@ -1007,7 +1017,7 @@ def StrideMod(position):
 def SuddenDeathMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'deathblow_multiplier': 3}),
+        'Stats': entity.Stats({'deathblow_multiplier': 3}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
         'Item': entity.Item('Sudden death', 'Your deathblow is tripled'),

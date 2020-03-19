@@ -777,16 +777,16 @@ class BossTheTower:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
                             .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
-                            .with_damage(damage.MonsterSpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(85, 'fire'))
 
     def HorLaser():
-        formation = Formation(origin=(2,0), formation=[['x'] * 100,
+        formation = Formation(origin=(50,1), formation=[['x'] * 100,
                                                        ['x'] * 100,
                                                        ['x'] * 100])
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, positioned_randomly=True))))\
                             .damage_targets("{}'s blazing ray scorches {}! ({} HP)")\
-                            .with_damage(damage.MonsterSpellDamage(2, 'fire'))
+                            .with_damage(damage.MonsterSpellDamage(85, 'fire'))
 
     def TeleportPlayer():
         return skill_factory.Skill()\
