@@ -1015,11 +1015,7 @@ def StrideMod(position):
 def SuddenDeathMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-<<<<<<< HEAD
-        'Stats': entity.Stats({'deathblow_multiplier': 3}, stat_inc_per_level=LEVEL_PC_STAT_INC),
-=======
-        'Stats': entity.Stats({'deathblow_multiplier': 3, 'max_hp_pc_penalty': 25}),
->>>>>>> added stuff
+        'Stats': entity.Stats({'deathblow_multiplier': 3, 'max_hp_pc_penalty': 25}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
         'Item': entity.Item('Sudden death', 'Your deathblow is tripled, but your max HP is reduced by 25%'),
