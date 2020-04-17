@@ -11,6 +11,32 @@ import skill_factory
 LEVEL_PC_STAT_INC = 0.4
 TIER_PC_STAT_INC = 30
 
+def Player(position):
+    x, y = position
+    return Entity('PLAYER', components={
+        'Stats': Stats({
+            'level': 1,
+            'max_hp': 200,
+            'cur_hp': 200,
+            'max_sp': 25,
+            'cur_sp': 25,
+            'atk': 45,
+            'dfn': 15,
+            'itl': 45,
+            'res': 15,
+            'spd': 15,
+            'hit': 15,
+            'max_exp': 50
+        }),
+        'Combat': Combat(),
+        'Position': Position(x, y),
+        'Render': Render(character="@", colour=tcod.red),
+        'PlayerLogic': PlayerLogic(),
+        'Inventory': Inventory(),
+        'AI': AI(),
+        'EquipmentSlots': EquipmentSlots(['Weapon', 'Armour', 'Armour', 'Armour']),
+    }, ttype='Player')
+
 def ItemWorldClerkNPC(position):
     x, y = position
     return Entity(str(uuid.uuid4()), components={
@@ -31,7 +57,7 @@ def ItemWorldClerkNPC(position):
         'Combat': Combat(),
         'NPC': NPC('Lisa, item world clerk'),
         'AI': ItemWorldClerk()
-    })
+    }, ttype='ItemWorldClerkNPC')
 
 def UptierShopNPC(position):
     x, y = position
@@ -53,7 +79,7 @@ def UptierShopNPC(position):
         'Combat': Combat(),
         'NPC': NPC('Alan, weird occultist'),
         'AI': UptierShopkeeper()
-    })
+    }, ttype='UptierShopNPC')
 
 def ModShopNPC(position):
     import director
@@ -80,7 +106,7 @@ def ModShopNPC(position):
         'NPC': NPC('Leo, mod salesman'),
         'Inventory': Inventory(items),
         'AI': Shopkeeper()
-    })
+    }, ttype='ModShopNPC')
 
 def EquipmentShopNPC(position):
     import director
@@ -107,7 +133,7 @@ def EquipmentShopNPC(position):
         'NPC': NPC('Joseph, equipment salesman'),
         'Inventory': Inventory(items),
         'AI': Shopkeeper()
-    })
+    }, ttype='EquipmentShopNPC')
 
 def SkillShopNPC(position):
     import director
@@ -135,7 +161,7 @@ def SkillShopNPC(position):
         'NPC': NPC('Bridget, skillbook librarian'),
         'Inventory': Inventory(items),
         'AI': Shopkeeper()
-    })
+    }, ttype='SkillShopNPC')
 
 
 class Slime:
@@ -186,7 +212,7 @@ class Slime:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'MonWave'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Slime')
         return gen
 
 class Mage:
@@ -237,7 +263,7 @@ class Mage:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Lightning'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Mage')
         return gen
 
 class Golem:
@@ -290,7 +316,7 @@ class Golem:
                             .every_n_turns(2, lambda e, ai, ev_d : False)\
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Stone'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Golem')
         return gen
 
 class Scorpion:
@@ -340,7 +366,7 @@ class Scorpion:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(1.9, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Scorpion')
         return gen
 
 class Spider:
@@ -395,7 +421,7 @@ class Spider:
                             .when_player_within_distance(3, lambda e, ai, ev_d : ai.step_away_from_player(e))\
                             .when_player_within_distance(6, lambda e, ai, ev_d : ai.use_skill(e, 'Web'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Spider')
         return gen
 
 class Eye:
@@ -440,7 +466,7 @@ class Eye:
                 .add_skill('Gaze', Eye.Gaze(), delay=1)\
                 .with_state('IDLE', ai.AIState()\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Gaze')))\
-            })
+            }, ttype='Eye')
         return gen
 
 class Wyvern:
@@ -494,7 +520,7 @@ class Wyvern:
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.step_away_from_player(e))\
                             .when_player_within_distance(7, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Wyvern')
         return gen
 
 class Beholder:
@@ -549,7 +575,7 @@ class Beholder:
                             .when_player_within_distance(4, lambda e, ai, ev_d : ai.step_away_from_player(e))\
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Beholder')
         return gen
 
 class Giant:
@@ -601,7 +627,7 @@ class Giant:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Smash'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Giant')
         return gen
 
 # Bosses
@@ -680,7 +706,7 @@ class BossTheSneak:
                             .when_player_beyond_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'BigFire'))\
                             .on_turn_randomly(0.1, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_away_from_player(e)))\
-            })
+            }, ttype='BossTheSneak')
         return gen
 
 class BossUltimateBeholder:
@@ -749,7 +775,7 @@ class BossUltimateBeholder:
                             .on_turn_randomly(0.2, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportAdds'))\
                             .when_player_within_distance(25, lambda e, ai, ev_d : ai.use_skill(e, 'Laser'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='BossUltimateBeholder')
         return gen
 
 class BossTheTower:
@@ -874,7 +900,7 @@ class BossTheTower:
                             .after_n_turns(1, lambda e, ai, ev_d : ai.use_skill('Deadline'))\
                             .when_player_within_distance(4, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportPlayer'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Smite3')))\
-            })
+            }, ttype='BossTheTower')
         return gen
 
 class BossTheTowerMinion:
@@ -951,7 +977,7 @@ class BossTheTowerMinion:
                             .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'Smite1'))\
                             .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'HorLaser'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : None))\
-            })
+            }, ttype='BossTheTowerMinion')
         return gen
 
 class Gremlin:
@@ -1020,7 +1046,7 @@ class Gremlin:
                 .with_state('GET_CLOSER', ai.AIState()\
                             .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Gremlin')
         return gen
 
 class Inferno:
@@ -1080,7 +1106,7 @@ class Inferno:
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
                             .when_player_beyond_distance(6, lambda e, ai, ev_d : ai.step_towards_player(e))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Explosion')))\
-            })
+            }, ttype='Inferno')
         return gen
 
 class Bee:
@@ -1130,7 +1156,7 @@ class Bee:
                 .with_state('USE_SPELLS', ai.AIState()\
                             .when_player_within_distance(1, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'), False)\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            })
+            }, ttype='Bee')
         return gen
 
 class Beehive:
@@ -1174,5 +1200,5 @@ class Beehive:
                 .with_state('IDLE', ai.AIState()\
                             .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'SummonBees'), False)\
                             .on_turn_otherwise(lambda e, ai, ev_d : False))\
-            })
+            }, ttype='Beehive')
         return gen

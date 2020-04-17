@@ -23,7 +23,7 @@ def CharredSkull(position):
         'Render': entity.Render(character='+', colour=tcod.red),
         'Item': entity.Item("Charred skull", 'Someone strange might want this...'),
         'CharredSkull': entity.Component()
-    })
+    }, ttype='CharredSkull')
 
 def TownPortal(position):
     x, y = position
@@ -34,7 +34,7 @@ def TownPortal(position):
         'Item': entity.Item("Town portal", 'Takes you back to town, fully healing your HP and SP'),
         'Usable': entity.ConsumeAfter(entity.ReturnToTown()),
         'TownPortal': entity.Component()
-    })
+    }, ttype='TownPortal')
 
 class Healing:
     base_stats = {
@@ -57,7 +57,7 @@ class Healing:
                 'Render': entity.Render(character='"', colour=Healing.colours[tier-1]),
                 'Item': entity.Item(Healing.names[tier-1], 'Heals some HP'),
                 'Usable': entity.ConsumeAfter(entity.Heal(entity.TargetUser()))
-            })
+            }, ttype='Healing_'+str(tier))
         return gen
 
 class Refreshing:
@@ -81,7 +81,7 @@ class Refreshing:
                 'Render': entity.Render(character='!', colour=Refreshing.colours[tier-1]),
                 'Item': entity.Item(Refreshing.names[tier-1], 'Heals some SP'),
                 'Usable': entity.ConsumeAfter(entity.Refresh(entity.TargetUser()))
-            })
+            }, ttype='Refreshing_'+str(tier))
         return gen
 
 ##################################################### EQUIPMENT
@@ -106,7 +106,7 @@ class DfnArmour:
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='[', colour=DfnArmour.colours[tier-1]),
                 'Item': entity.Item(DfnArmour.names[tier-1], 'Raises DFN'),
-            })
+            }, ttype='DfnArmour_'+str(tier))
         return gen
 
 class ResArmour:
@@ -129,7 +129,7 @@ class ResArmour:
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='{', colour=ResArmour.colours[tier-1]),
                 'Item': entity.Item(ResArmour.names[tier-1], 'Raises RES'),
-            })
+            }, ttype='ResArmour_'+str(tier))
         return gen
 
 class ResItlArmour:
@@ -153,7 +153,7 @@ class ResItlArmour:
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character=']', colour=ResItlArmour.colours[tier-1]),
                 'Item': entity.Item(ResItlArmour.names[tier-1], 'Raises RES and ITL'),
-            })
+            }, ttype='ResItlArmour_'+str(tier))
         return gen
 
 class DfnAtkArmour:
@@ -177,7 +177,7 @@ class DfnAtkArmour:
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character=')', colour=DfnAtkArmour.colours[tier-1]),
                 'Item': entity.Item(DfnAtkArmour.names[tier-1], 'Raises DFN and ATK'),
-            })
+            }, ttype='DfnAtkArmour_'+str(tier))
         return gen
 
 class Sword:
@@ -200,7 +200,7 @@ class Sword:
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='/', colour=Sword.colours[tier-1]),
                 'Item': entity.Item(Sword.names[tier-1], 'Boost physical attacks'),
-            })
+            }, ttype='Sword_'+str(tier))
         return gen
 
 class Staff:
@@ -223,7 +223,7 @@ class Staff:
                 'Equipment': entity.Equipment(mod_slots=[None] * random.randint(0,4)),
                 'Render': entity.Render(character='|', colour=Staff.colours[tier-1]),
                 'Item': entity.Item(Staff.names[tier-1], 'Boost magical attacks'),
-            })
+            }, ttype='Staff_'+str(tier))
         return gen
 
 ##################################################### SKLLS
@@ -246,7 +246,7 @@ def Cleave(position):
         .with_damage(damage.AttackDamage(1, 'phys'))
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('POISON', strength=1, duration=4, damage=d),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('cleave_poison') > 0)
-    })
+    }, ttype='Cleave')
 
 def Pierce(position):
     formation = Formation(origin=(0,4), formation=[['x'],
@@ -266,7 +266,7 @@ def Pierce(position):
         .damage_targets("{}'s pierce hits {}! ({} HP)")\
         .with_sp_cost(3)\
         .with_damage(damage.AttackDamage(1, 'phys'))
-    })
+    }, ttype='Pierce')
 
 def Bypass(position):
     formation = Formation(origin=(0,3), formation=[['x','.'],
@@ -285,7 +285,7 @@ def Bypass(position):
         .damage_targets("{}'s bypass hits {}! ({} HP)")\
         .with_sp_cost(3)\
         .with_damage(damage.AttackDamage(1, 'phys'))
-    })
+    }, ttype='Bypass')
 
 def WhipSlash(position):
     formation = Formation(origin=(1,1), formation=[['x','x','x'],
@@ -303,7 +303,7 @@ def WhipSlash(position):
         .damage_targets("{}'s crescent slash hits {}! ({} HP)")\
         .with_sp_cost(3)\
         .with_damage(damage.AttackDamage(1, 'phys'))
-    })
+    }, ttype='WhipSlash')
 
 def Dash(position):
     formation = Formation(origin=(0,2), formation=[['P'],
@@ -326,7 +326,7 @@ def Dash(position):
                               lambda s, e, u, m, mn : u.component('Stats').get('improve_dash_length') > 0)
         .move_to_targeted_position()\
         .with_sp_cost(2)
-    })
+    }, ttype='Dash')
 
 def RollingStab(position):
     formation = Formation(origin=(0,3), formation=[['P'],
@@ -345,7 +345,7 @@ def RollingStab(position):
         .damage_targets("{} deftly rolls whilst piercing {}! ({} HP)")\
         .with_sp_cost(7)\
         .with_damage(damage.AttackDamage(1, 'phys'))
-    })
+    }, ttype='RollingStab')
 
 def AerialDrop(position):
     formation = Formation(origin=(1,1), formation=[['x','x','x'],
@@ -363,7 +363,7 @@ def AerialDrop(position):
         .damage_targets("{} plunges down on to {}! ({} HP)")\
         .with_sp_cost(15)\
         .with_damage(damage.AttackDamage(1, 'phys'))\
-    })
+    }, ttype='AerialDrop')
 
 def Combustion(position):
     formation = Formation(origin=(0,2), formation=[['x'],
@@ -382,7 +382,7 @@ def Combustion(position):
         .with_damage(damage.SpellDamage(1, 'fire'))
         .apply_status_to_user('ASSAULT', 2,
                               lambda s, e, u, m, t, mn : u.component('Stats').get('fire_assault') > 0)
-    })
+    }, ttype='Combustion')
 
 def Fire(position):
     formation = Formation(origin=(0,0), formation=[['x']])
@@ -404,7 +404,7 @@ def Fire(position):
         .with_damage(damage.SpellDamage(1, 'fire'))
         .apply_status_to_user('ASSAULT', 2,
                               lambda s, e, u, m, t, mn : u.component('Stats').get('fire_assault') > 0)
-    })
+    }, ttype='Fire')
 
 def PoisonDetonation(position):
     formation = Formation(origin=(1,1), formation=[['.','x','.'],
@@ -425,7 +425,7 @@ def PoisonDetonation(position):
                        lambda s, s_e, t_e, i_e : t_e.component('Stats').has_status('POISON'))
         .apply_status_to_user('ASSAULT', 2,
                               lambda s, e, u, m, t, mn : u.component('Stats').get('fire_assault') > 0)
-    })
+    }, ttype='PoisonDetonation')
 
 def Ice(position):
     formation = Formation(origin=(1,0), formation=[['x', 'x', 'x', 'x', 'x']])
@@ -444,7 +444,7 @@ def Ice(position):
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('ice_souldrain') > 0)
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', strength=1, duration=4, damage=d),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('ice_mind_break') > 0)
-    })
+    }, ttype='Ice')
 
 def Lightning(position):
     formation = Formation(origin=(1,1), formation=[['x', 'x', 'x'],
@@ -464,7 +464,7 @@ def Lightning(position):
         .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d, 0.2),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('lightning_lifedrain') > 0
         )
-    })
+    }, ttype='Lightning')
 
 def LightningBreath(position):
     formation = Formation(origin=(1,3), formation=[['x', 'x', 'x'],
@@ -485,7 +485,7 @@ def LightningBreath(position):
         .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d, 0.2),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('lightning_lifedrain') > 0
         )
-    })
+    }, ttype='LightningBreath')
 
 def StaticShock(position):
     formation = Formation(origin=(1,3), formation=[['x', 'x', 'x'],
@@ -506,7 +506,7 @@ def StaticShock(position):
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 4, d))
         .change_damage(lambda d, s, t, i : damage.WithLifeDrain(d, 0.2),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('lightning_lifedrain') > 0)
-    })
+    }, ttype='StaticShock')
 
 def Paralyze(position):
     formation = Formation(origin=(0,0), formation=[['x','x'],
@@ -523,7 +523,7 @@ def Paralyze(position):
         .with_sp_cost(2)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 6, d))
-    })
+    }, ttype='Paralyze')
 
 def Poison(position):
     formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
@@ -542,7 +542,7 @@ def Poison(position):
         .with_sp_cost(3)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('POISON', 1, 8, d))
-    })
+    }, ttype='Poison')
 
 def GuardBreak(position):
     formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
@@ -561,7 +561,7 @@ def GuardBreak(position):
         .with_sp_cost(3)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 12, d))
-    })
+    }, ttype='GuardBreak')
 
 def MindBreak(position):
     formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
@@ -580,7 +580,7 @@ def MindBreak(position):
         .with_sp_cost(3)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 12, d))
-    })
+    }, ttype='MindBreak')
 
 def Weaken(position):
     formation = Formation(origin=(0,0), formation=[['x','x','x','x'],
@@ -599,7 +599,7 @@ def Weaken(position):
         .with_sp_cost(3)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('WEAKEN', 1, 12, d))
-    })
+    }, ttype='Weaken')
 
 def Stoneskin(position):
     formation = Formation(origin=(0,0), formation=[['x']])
@@ -615,7 +615,7 @@ def Stoneskin(position):
         .with_sp_cost(3)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('STONESKIN', 1, 40, d))
-    })
+    }, ttype='Stoneskin')
 
 def Invincible(position):
     x, y = position
@@ -630,7 +630,7 @@ def Invincible(position):
         .with_sp_cost(11)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('INVINCIBLE', 1, 4, d))
-    })
+    }, ttype='Invincible')
 
 def Unstoppable(position):
     x, y = position
@@ -645,8 +645,7 @@ def Unstoppable(position):
         .with_sp_cost(11)\
         .with_damage(damage.SpellDamage(0))\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('UNSTOPPABLE', 1, 4, d))
-    })
-
+    }, ttype='Unstoppable')
 
 def Blink(position):
     formation = Formation(origin=(0,0), formation=[['P']])
@@ -660,7 +659,7 @@ def Blink(position):
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=8)))\
         .move_to_targeted_position()\
         .with_sp_cost(15)
-    })
+    }, ttype='Blink')
 
 def AtkMod(position):
     x, y = position
@@ -670,7 +669,7 @@ def AtkMod(position):
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('ATK Up', 'Provides a boost in ATK to the attached item'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='AtkMod')
 
 def DfnMod(position):
     x, y = position
@@ -680,7 +679,7 @@ def DfnMod(position):
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('DFN Up', 'Provides a boost in DFN to the attached item'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='DfnMod')
 
 def ItlMod(position):
     x, y = position
@@ -690,7 +689,7 @@ def ItlMod(position):
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('ITL Up', 'Provides a boost in ITL to the attached item'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='ItlMod')
 
 def ResMod(position):
     x, y = position
@@ -700,7 +699,7 @@ def ResMod(position):
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('RES Up', 'Provides a boost in RES to the attached item'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='ResMod')
 
 def SpdMod(position):
     x, y = position
@@ -710,7 +709,7 @@ def SpdMod(position):
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('SPD Up', 'Provides a boost in SPD to the attached item'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='SpdMod')
 
 def HitMod(position):
     x, y = position
@@ -720,7 +719,7 @@ def HitMod(position):
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('HIT Up', 'Provides a boost in HIT to the attached item'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='HitMod')
 
 def MaxHPMod(position):
     x, y = position
@@ -730,7 +729,7 @@ def MaxHPMod(position):
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('Max HP Up', 'Provides a boost in max HP to the attached item'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='MaxHPMod')
 
 def MeleeLifeDrainMod(position):
     x, y = position
@@ -740,7 +739,7 @@ def MeleeLifeDrainMod(position):
         'Render': entity.Render(character='*', colour=tcod.red),
         'Item': entity.Item('Melee Lifedrain', 'Grants 15% lifedrain for melee attacks'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='MeleeLifeDrainMod')
 
 def MeleeDeathblowMod(position):
     x, y = position
@@ -750,7 +749,7 @@ def MeleeDeathblowMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_crimson),
         'Item': entity.Item('Melee Deathblow', 'Grants a 2% chance to deal a deathblow on melee attacks'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='MeleeDeathblowMod')
 
 def SPRegenMod(position):
     x, y = position
@@ -760,7 +759,7 @@ def SPRegenMod(position):
         'Render': entity.Render(character='*', colour=tcod.lighter_blue),
         'Item': entity.Item('SP Regen', 'Restores 1 SP every 4 turns (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='SPRegenMod')
 
 def HPRegenMod(position):
     x, y = position
@@ -770,7 +769,7 @@ def HPRegenMod(position):
         'Render': entity.Render(character='*', colour=tcod.lighter_red),
         'Item': entity.Item('HP Regen', 'Restores 4 HP every 4 turns (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='HPRegenMod')
 
 def SpellSoulDrainMod(position):
     x, y = position
@@ -780,7 +779,7 @@ def SpellSoulDrainMod(position):
         'Render': entity.Render(character='*', colour=tcod.blue),
         'Item': entity.Item('Spell Souldrain', 'Grants 10% spell souldrain'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='SpellSoulDrainMod')
 
 def ToxicForceMod(position):
     x, y = position
@@ -790,7 +789,7 @@ def ToxicForceMod(position):
         'Render': entity.Render(character='*', colour=tcod.chartreuse),
         'Item': entity.Item('Toxic Force', 'Boosts ATK (stacks), but self-poisons'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='ToxicForceMod')
 
 def ToxicPowerMod(position):
     x, y = position
@@ -800,7 +799,7 @@ def ToxicPowerMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_green),
         'Item': entity.Item('Venom Power', 'Boost ITL (stacks), but self-poisons'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='ToxicPowerMod')
 
 def PoisonHealMod(position):
     x, y = position
@@ -810,7 +809,7 @@ def PoisonHealMod(position):
         'Render': entity.Render(character='*', colour=tcod.green),
         'Item': entity.Item('Poison Heal', 'Poison heals you'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='PoisonHealMod')
 
 def SoulConversionMod(position):
     x, y = position
@@ -820,7 +819,7 @@ def SoulConversionMod(position):
         'Render': entity.Render(character='*', colour=tcod.purple),
         'Item': entity.Item('Soul Conversion', 'Spending SP restores HP'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='SoulConversionMod')
 
 def FireDamageMod(position):
     x, y = position
@@ -830,7 +829,7 @@ def FireDamageMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Fire Damage Up', 'Increases fire damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='FireDamageMod')
 
 def IceDamageMod(position):
     x, y = position
@@ -840,7 +839,7 @@ def IceDamageMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
         'Item': entity.Item('Ice Damage Up', 'Increases ice damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='IceDamageMod')
 
 def LightningDamageMod(position):
     x, y = position
@@ -850,7 +849,7 @@ def LightningDamageMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
         'Item': entity.Item('Lightning Damage Up', 'Increases lightning damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='LightningDamageMod')
 
 def PhysicalDamageMod(position):
     x, y = position
@@ -860,7 +859,7 @@ def PhysicalDamageMod(position):
         'Render': entity.Render(character='*', colour=tcod.silver),
         'Item': entity.Item('Physical Damage Up', 'Increases physical damage dealt by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='PhysicalDamageMod')
 
 def BloodMagicMod(position):
     x, y = position
@@ -870,7 +869,7 @@ def BloodMagicMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_purple),
         'Item': entity.Item('Blood Magic', 'Use HP instead of SP for costs'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='BloodMagicMod')
 
 def AssaultMod(position):
     x, y = position
@@ -880,7 +879,7 @@ def AssaultMod(position):
         'Render': entity.Render(character='*', colour=tcod.gray),
         'Item': entity.Item('Assault', 'Using melee attack skills grants Assault for 2 turns (deal and take 20% more damage)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='AssaultMod')
 
 def BlazeMod(position):
     x, y = position
@@ -890,7 +889,7 @@ def BlazeMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Blaze', 'Fire\'s area of effect is improved'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='BlazeMod')
 
 def EnergisingColdMod(position):
     x, y = position
@@ -900,7 +899,7 @@ def EnergisingColdMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
         'Item': entity.Item('Energising Cold', 'Ice spells have 10% souldrain'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='EnergisingColdMod')
 
 def InvigoratingPowerMod(position):
     x, y = position
@@ -910,7 +909,7 @@ def InvigoratingPowerMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
         'Item': entity.Item('Invigorating Power', 'Lightning spells have 10% lifedrain'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='InvigoratingPowerMod')
 
 def EmpoweringFlameMod(position):
     x, y = position
@@ -920,7 +919,7 @@ def EmpoweringFlameMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Empowering Flame', 'Fire spells grant Assault for 2 turns'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='EmpoweringFlameMod')
 
 def RampageMod(position):
     x, y = position
@@ -930,7 +929,7 @@ def RampageMod(position):
         'Render': entity.Render(character='*', colour=tcod.silver),
         'Item': entity.Item('Rampage', 'You regenerate 5% of your max HP per turn when you have assault (stacks)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='RampageMod')
 
 def EnvenomedBladeMod(position):
     x, y = position
@@ -940,7 +939,7 @@ def EnvenomedBladeMod(position):
         'Render': entity.Render(character='*', colour=tcod.light_chartreuse),
         'Item': entity.Item('Envenomed Blade', 'Cleave inflicts poison'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='EnvenomedBladeMod')
 
 def FireResistanceMod(position):
     x, y = position
@@ -950,7 +949,7 @@ def FireResistanceMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_red),
         'Item': entity.Item('Fire Resistance Up', 'Increases fire resistance by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='FireResistanceMod')
 
 def IceResistanceMod(position):
     x, y = position
@@ -960,7 +959,7 @@ def IceResistanceMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_cyan),
         'Item': entity.Item('Ice Resistance Up', 'Increases ice resistance by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='IceResistanceMod')
 
 def LightningResistanceMod(position):
     x, y = position
@@ -970,7 +969,7 @@ def LightningResistanceMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_yellow),
         'Item': entity.Item('Lightning Resistance Up', 'Increases lightning resistance by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='LightningResistanceMod')
 
 def PhysicalResistanceMod(position):
     x, y = position
@@ -980,7 +979,7 @@ def PhysicalResistanceMod(position):
         'Render': entity.Render(character='*', colour=tcod.silver),
         'Item': entity.Item('Physical Resistance Up', 'Increases physical resistance by 20% (can level)'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='PhysicalResistanceMod')
 
 def MindchillMod(position):
     x, y = position
@@ -990,7 +989,7 @@ def MindchillMod(position):
         'Render': entity.Render(character='*', colour=tcod.lighter_purple),
         'Item': entity.Item('Brain freeze', 'Ice spells inflict mind break for 4 turns'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='MindchillMod')
 
 def StupefyMod(position):
     x, y = position
@@ -1000,7 +999,7 @@ def StupefyMod(position):
         'Render': entity.Render(character='*', colour=tcod.fuchsia),
         'Item': entity.Item('Stupefy', 'Inflicting mind break on enemies paralyzes them as well'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='StupefyMod')
 
 def StrideMod(position):
     x, y = position
@@ -1010,7 +1009,7 @@ def StrideMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
         'Item': entity.Item('Stride', 'Dash moves you 3 tiles instead of 2'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='StrideMod')
 
 def SuddenDeathMod(position):
     x, y = position
@@ -1020,7 +1019,7 @@ def SuddenDeathMod(position):
         'Render': entity.Render(character='*', colour=tcod.dark_chartreuse),
         'Item': entity.Item('Sudden death', 'Your deathblow is tripled, but your max HP is reduced by 25%'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='SuddenDeathMod')
 
 def WillpowerMod(position):
     x, y = position
@@ -1030,7 +1029,7 @@ def WillpowerMod(position):
         'Render': entity.Render(character='*', colour=tcod.magenta),
         'Item': entity.Item('Willpower', 'Your ATK is set to your ITL'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='WillpowerMod')
 
 def BrutalStrengthMod(position):
     x, y = position
@@ -1040,4 +1039,4 @@ def BrutalStrengthMod(position):
         'Render': entity.Render(character='*', colour=tcod.yellow),
         'Item': entity.Item('Brutal Strength', 'Your ITL is set to your ATK'),
         'Mod': entity.Mod(),
-    })
+    }, ttype='BrutalStrengthMod')

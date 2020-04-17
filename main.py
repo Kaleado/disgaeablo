@@ -7,6 +7,7 @@ import random
 import loot
 import monster
 import settings
+import ai
 from map import *
 from panel import *
 from entity import *
@@ -15,28 +16,7 @@ from director import *
 settings.set_current_map(map_director.map(1))
 
 settings.current_map._entities = {
-    'PLAYER': Entity('PLAYER', components={
-        'Stats': Stats({
-            'level': 1,
-            'max_hp': 200,
-            'cur_hp': 200,
-            'max_sp': 25,
-            'cur_sp': 25,
-            'atk': 45,
-            'dfn': 15,
-            'itl': 45,
-            'res': 15,
-            'spd': 15,
-            'hit': 15,
-            'max_exp': 50
-        }),
-        'Combat': Combat(),
-        'Position': Position(15, 15),
-        'Render': Render(character="@", colour=tcod.red),
-        'PlayerLogic': PlayerLogic(),
-        'Inventory': Inventory(),
-        'EquipmentSlots': EquipmentSlots(['Weapon', 'Armour', 'Armour', 'Armour']),
-    })
+    'PLAYER': monster.Player((15, 15))
 }
 
 # settings.current_map.add_entity(monster.Beehive.generator()((10,10)))

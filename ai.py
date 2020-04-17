@@ -282,6 +282,10 @@ class AI(entity.Component):
         self._skills[skill_ident] = usable, delay, is_passive
         return self
 
+    def remove_skill(self, skill_ident, usable, delay=0, is_passive=False):
+        self._skills.pop(skill_ident, None)
+        return self
+
     def with_state(self, state_name, state):
         self._states[state_name] = state
         return self

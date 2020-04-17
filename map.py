@@ -4,12 +4,14 @@ import tcod
 import tcod.event
 import random
 import math
+import json
 from entitylistview import EntityListView
 
 class Map:
     def __init__(self, map_group=None, turn_limit=None):
         self._turn_limit = turn_limit
         self._map_group = map_group
+        self._can_save = False
         self._entities = {}
         self._terrain = []
         self._entities_updates = {
@@ -18,6 +20,25 @@ class Map:
         }
         # dict<position -> ident -> delay[]>
         self._threatened_positions = {}
+
+    def can_save(self):
+        return self._can_save
+
+    def save(self):
+        def save_entities():
+            ents = {}
+            for (k, v) in self._entities.items():
+                ents[k] = v.save()
+            return ents
+       
+        obj = {
+            'TYPE': 'MAP',
+            'turn_limit': self._turn_limit if self._turn_limit is not None else 'None',
+            'entities': save_entities(),
+            'terrain': self._terrain,
+            'can_save': self._can_save,
+        }
+        return obj
 
     def random_passable_position_for(self, entity):
         w, h = self.dimensions()
@@ -336,6 +357,7 @@ class Town(Map):
 
     def __init__(self, width, height, residents, map_group=None, turn_limit=None):
         super().__init__(map_group, turn_limit)
+        self._can_save = True
         self._terrain = [['.' for x in range(width)] for y in range(height)]
         x, y = width // 2, height // 2
         self._terrain[y][x] = '>'

@@ -10,17 +10,49 @@ from console import *
 from formation import *
 import damage
 import math
+import pickle
+
+SERIALIZED_COMPONENTS = ['Stats', 'Inventory', 'Position', 'EquipmentSlots']
 
 class Component:
     def handle_event(self, entity, event, resident_map):
         return False
 
+    def save_subtype_string(self):
+        return 'ERROR'
+
+    def save(self):
+        obj = {
+            'TYPE': 'COMPONENT',
+            'SUBTYPE': self.save_subtype_string(),
+        }
+        return obj
+
 class Entity:
-    def __init__(self, ident, components, tags=[]):
+    def __init__(self, ident, components, ttype, tags=[]):
        self._ident = ident
        self._components = components
        self._disabled = False
        self._tags = tags
+       self._type = ttype
+
+    def save(self):
+        def save_components():
+            cmps = {}
+            for k in SERIALIZED_COMPONENTS:
+                if not self.has_component(k):
+                    continue
+                v = self.component(k)
+                cmps[k] = v.save()
+            return cmps
+
+        obj = {
+            'TYPE': 'ENTITY',
+            'generator_type': self._type,
+            'ident': self._ident,
+            'components': save_components(),
+        }
+        return obj
 
     def tags(self):
         return self._tags
@@ -688,8 +720,8 @@ class Stats(Component):
         self._regen_counter = 0
         self._stats = {}
         if stats_gained_on_level is None:
-            stats_gained_on_level = Stats.primary_stats | Stats.resistance_stats | Stats.damage_stats
-        self._stats_gained_on_level = stats_gained_on_level
+            stats_gained_on_level = list(Stats.primary_stats | Stats.resistance_stats | Stats.damage_stats)
+        self._stats_gained_on_level = list(stats_gained_on_level)
         self._modifiers = {}
         for stat in Stats.all_stats:
             self._stats[stat] = 0
@@ -701,6 +733,19 @@ class Stats(Component):
         for (stat, value) in base_stats.items():
             self._stats[stat] = value
         self._base_stats = copy_dict(self._stats)
+
+    def save_subtype_string(self):
+        return 'STATS'
+
+    def save(self):
+        obj = super().save()
+        obj['stats'] = self._stats
+        obj['stat_inc_per_level'] = self._stat_inc_per_level
+        obj['base_stats'] = self._base_stats
+        obj['stats_gained_on_level'] = self._stats_gained_on_level
+        obj['modifiers'] = self._modifiers
+        obj['status_effects'] = self._status_effects
+        return obj
 
     def apply_melee_damage_decorators(self, entity, target, dam):
         lifedrain = self.get_value('lifedrain')
@@ -950,6 +995,15 @@ class Position(Component):
         self._x = x
         self._y = y
 
+    def save_subtype_string(self):
+        return 'POSITION'
+
+    def save(self):
+        obj = super().save()
+        obj['x'] = self._x
+        obj['y'] = self._y
+        return obj
+
     def get(self):
         return (self._x, self._y)
 
@@ -1038,6 +1092,17 @@ class Inventory(Component):
     def __init__(self, items=[]):
         self._items = items
 
+    def save_subtype_string(self):
+        return 'INVENTORY'
+
+    def save(self):
+        def save_items():
+            return [i.save() for i in self._items]
+
+        obj = super().save()
+        obj['items'] = save_items()
+        return obj
+
     def items(self):
         return EntityListView(self._items)
 
@@ -1069,6 +1134,16 @@ class EquipmentSlots(Component):
             if self._slots.get(slot) is None:
                 self._slots[slot] = []
             self._slots[slot].append(None)
+
+    def save_subtype_string(self):
+        return 'EQUIPMENTSLOTS'
+
+    def save(self):
+        obj = super().save()
+        obj['slots'] = {}
+        for k, v in self._slots.items():
+            obj['slots'][k] = [i.save() if i is not None else 'None' for i in self._slots[k]]
+        return obj
 
     def slots(self):
         return self._slots
@@ -1433,6 +1508,23 @@ class PlayerLogic(Component):
             if event_data.sym == tcod.event.K_c:
                 self._chat_mode = not self._chat_mode
                 return True
+            elif event_data.sym in [tcod.event.K_t]:
+                import load
+                m = load.load_save_file('save.json')
+                settings.current_map = None
+                settings.set_current_map(m)
+            elif event_data.sym in [tcod.event.K_y]:
+                if not settings.current_map.can_save():
+                    message_panel.info("You can only save in town", tcod.red)
+                    return False
+                save = {
+                    'current_map': settings.current_map.save(),
+                    'main_dungeon_lowest_floor': settings.main_dungeon_lowest_floor,
+                    'loot_tier': settings.loot_tier,
+                    'monster_tier': settings.monster_tier,
+                }
+                strg = json.dump(save, open('save.json', mode='w'))
+                print(strg)
             elif event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 target_position = (x, y-1)
                 has_acted = True
