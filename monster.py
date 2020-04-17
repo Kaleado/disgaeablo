@@ -37,6 +37,28 @@ def Player(position):
         'EquipmentSlots': EquipmentSlots(['Weapon', 'Armour', 'Armour', 'Armour']),
     }, ttype='Player')
 
+def NetworkAdminNPC(position):
+    x, y = position
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.yellow),
+        'Combat': Combat(),
+        'NPC': NPC('Sophie, network admin'),
+        'AI': NetworkAdmin()
+    }, ttype='NetworkAdminNPC')
+
 def ItemWorldClerkNPC(position):
     x, y = position
     return Entity(str(uuid.uuid4()), components={

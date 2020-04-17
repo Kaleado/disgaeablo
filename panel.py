@@ -209,9 +209,10 @@ class TextPanel(Panel):
         self._text = text
         self._colour = colour
 
-    def set_text(self, text, colour=tcod.white):
+    def set_text(self, text, colour=None):
         self._text = text
-        self._colour = colour
+        if colour is not None:
+            self._colour = colour
 
     def _render(self, console, origin):
         x, y = origin
@@ -849,3 +850,21 @@ class EntityStatsPanel(StatsPanel):
 
     def _get_entity(self):
         return self._entity
+
+class TextInputPanel(TextPanel):
+    def handle_event(self, event, menu):
+        if not self._has_focus:
+            return False
+        event_type, event_data = event
+        if event_type == 'TCOD' and event_data.type == 'KEYDOWN' and event_data.sym in [tcod.event.K_ESCAPE]:
+            menu.resolve(None)
+            return True
+        if event_type == 'TCOD' and event_data.type == 'KEYDOWN' and event_data.sym in [tcod.event.K_RETURN]:
+            menu.resolve(self._text)
+            return True
+        if event_type == 'TCOD' and event_data.type == 'KEYDOWN' and event_data.sym in [tcod.event.K_BACKSPACE]:
+            self._text = self._text[:-1]
+            return True
+        if event_type == 'TCOD' and event_data.type == 'TEXTINPUT':
+            self._text += event_data.text
+            return True

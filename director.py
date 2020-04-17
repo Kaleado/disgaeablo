@@ -2,6 +2,7 @@
 import loot
 import monster
 import settings
+import socket
 from map import *
 
 class MapDirector:
@@ -59,7 +60,7 @@ class MapDirector:
         mapp = Grid(30,30)
         w,h=30,30
         if self._current_floor == 0:
-            mapp = Town(30, 30, [monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC, monster.UptierShopNPC])
+            mapp = Town(30, 30, [monster.NetworkAdminNPC, monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC, monster.UptierShopNPC])
             w,h=30,30
         elif self._current_floor == 10:
             mapp = TheSneakArena(30, 30)
@@ -378,3 +379,71 @@ class LootDirector:
         return random.choice(list(LootDirector.items))
 
 loot_director = LootDirector()
+
+class NetDirector:
+    TRANSMISSION_BYTES = 8192
+
+    def __init__(self, host, port):
+        self._host = host
+        self._port = port
+        self._queued_events = []
+        with open('config.json', mode='r') as f:
+            self._config = json.load(f)
+            network_disabled = False
+            if self._config['net_name'] == 'CHANGE_ME':
+                settings.message_panel.info('WARNING: your net_name is not set!', tcod.red)
+                network_disabled = True
+            if self._config['net_key'] == 'CHANGE_ME':
+                settings.message_panel.info('WARNING: your net_key is not set!', tcod.red)
+                network_disabled = True
+            if network_disabled:
+                settings.message_panel.info('WARNING: network features will be disabled!', tcod.red)
+
+    def net_name(self):
+        return self._config['net_name']
+
+    def net_key(self):
+        return self._config['net_key']
+
+    def propagate_events(self):
+        events = self.recv_events()
+        for event in events:
+            print(event)
+            event = event[0]
+            event = (event[0], event[1])
+            settings.current_map.entities()\
+                                .transform(lambda ent: ent.handle_event(event, settings.current_map))
+
+    def queue_events(self, events: [(str, object)]):
+        self._queued_events.append(events)
+
+    def recv_events(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((self._host, self._port))
+            msg_object = {
+                'command': 'recv_events',
+                'net_key': self.net_key(),
+            }
+            s.sendall(json.dumps(msg_object).encode('utf-8'))
+            data = s.recv(NetDirector.TRANSMISSION_BYTES)
+            print(data)
+        return json.loads(data)
+
+    def send_events(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((self._host, self._port))
+            msg_object = {
+                'command': 'send_events',
+                'events': self._queued_events[:5],
+                'net_key': self.net_key(),
+            }
+            s.sendall(json.dumps(msg_object).encode('utf-8'))
+            self._queued_events = self._queued_events[5:]
+            data = s.recv(NetDirector.TRANSMISSION_BYTES)
+        print(data)
+
+    def send_remaining_events(self):
+        while len(self._queued_events) > 0:
+            self.send_events()
+
+net_director = NetDirector('localhost', 50007)

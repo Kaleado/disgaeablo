@@ -10,9 +10,10 @@ from console import *
 from formation import *
 import damage
 import math
+import uuid
 import pickle
 
-SERIALIZED_COMPONENTS = ['Stats', 'Inventory', 'Position', 'EquipmentSlots']
+SERIALIZED_COMPONENTS = ['Stats', 'Inventory', 'Position', 'EquipmentSlots', 'Equipment']
 
 class Component:
     def handle_event(self, entity, event, resident_map):
@@ -64,6 +65,10 @@ class Entity:
         return self.component('NPC').name() if self.component('NPC') is not None else \
             'Player' if self.component('PlayerLogic') is not None else \
             self.component('Item').name() if self.component('Item') is not None else 'Unknown object'
+
+    def generate_new_ident(self):
+        self._ident = str(uuid.uuid4())
+        return self._ident
 
     def ident(self):
         return self._ident
@@ -563,6 +568,14 @@ class Item(Component):
 class Equipment(Component):
     def __init__(self, mod_slots=[]):
         self._mod_slots = mod_slots
+
+    def save_subtype_string(self):
+        return 'EQUIPMENT'
+
+    def save(self):
+        obj = super().save()
+        obj['mod_slots'] = [i.save() if i is not None else 'None' for i in self._mod_slots]
+        return obj
 
     def handle_event(self, entity, event, resident_map):
         for mod in self._mod_slots:
@@ -1394,6 +1407,49 @@ class UptierShopkeeper(Neutral):
         settings.main_dungeon_lowest_floor = 1
         settings.message_panel.info("\"Good luck, traveller...\"", tcod.green)
 
+class NetworkAdmin(Neutral):
+    def __init__(self):
+        super().__init__(on_chat=NetworkAdmin.on_chat, on_attacked=NetworkAdmin.on_attacked)
+        self._times_attacked = 0
+
+    def Apocalypse():
+        return SkillSpell(formation=Formation(origin=(10,10), formation=[
+            ['x' for _ in range(20)] for __ in range(20)
+        ]))
+
+    def on_attacked(self, entity, event, resident_map):
+        self._times_attacked += 1
+        if self._times_attacked >= 3:
+            settings.message_panel.info('\"You\'ve REALLY done it now...\"', tcod.green)
+            entity.set_component('AI', Hostile(primary_skill=NetworkAdmin.Apocalypse(), primary_skill_range=9999))
+        else:
+            settings.message_panel.info(random.choice(['\"Ouch!\"', '\"Stop it!\"', '\"Hey!\"']), tcod.green)
+
+    def _handle_event(self, entity, event, resident_map):
+        import load
+        super()._handle_event(entity, event, resident_map)
+        event_type, event_data = event
+        if event_type == 'NET_RECEIVED_MESSAGE':
+            settings.message_panel.info('{} says: {}'.format(event_data['sender'], event_data['message']), tcod.cyan)
+            return False
+        elif event_type == 'NET_RECEIVED_ITEM':
+            settings.message_panel.info('{} sent you an item!'.format(event_data['sender']), tcod.cyan)
+            item_obj = event_data['item']
+            item_ent = load.load_entity(item_obj)
+            px, py = resident_map.entity('PLAYER').component('Position').get()
+            item_ent.component('Position').set(px, py)
+            # item_ent.generate_new_ident() # this might not work if we have mods, etc.
+            resident_map.add_entity(item_ent)
+            return False
+
+    def on_chat(self, entity, event, resident_map):
+        import director
+        player = resident_map.entity('PLAYER')
+        settings.message_panel.info('\"Let me try checking the network for you...\"', tcod.green)
+        # Receive and handle network-sourced events
+        director.net_director.propagate_events()
+        settings.message_panel.info('\"And... done!\"', tcod.green)
+
 class ItemWorldClerk(Neutral):
     def __init__(self):
         super().__init__(on_chat=ItemWorldClerk.on_chat, on_attacked=ItemWorldClerk.on_attacked)
@@ -1493,6 +1549,36 @@ class Hostile(AI):
 class PlayerLogic(Component):
     def __init__(self):
         self._chat_mode = False
+        self._sending_to_net_name = None
+
+    def _prompt_for_net_name(self):
+        text_input_menu = Menu({
+            'TextInputPanel': ((0,0), TextInputPanel("Net name of receiver:"))
+        }, ['TextInputPanel'])
+        net_name = text_input_menu.run(settings.root_console)
+        if net_name is not None:
+            self._sending_to_net_name = net_name
+            return True
+        return False
+
+    def _prompt_for_message(self):
+        import director
+        if self._sending_to_net_name is None and not self._prompt_for_net_name():
+            return False
+       
+        text_input_menu = Menu({
+            'TextInputPanel': ((0,0), TextInputPanel("To {}:".format(self._sending_to_net_name)))
+        }, ['TextInputPanel'])
+        message = text_input_menu.run(settings.root_console)
+        if message is not None:
+            director.net_director.queue_events([('NET_RECEIVED_MESSAGE', {
+                'sender': director.net_director.net_name(),
+                'message': message,
+            })])
+            director.net_director.send_events()
+            message_panel.info("Message sent!", tcod.cyan)
+            return True
+        return False
 
     def handle_event(self, entity, event, resident_map):
         import director
@@ -1508,12 +1594,25 @@ class PlayerLogic(Component):
             if event_data.sym == tcod.event.K_c:
                 self._chat_mode = not self._chat_mode
                 return True
+            elif event_data.sym in [tcod.event.K_m]:
+                return self._prompt_for_message()
             elif event_data.sym in [tcod.event.K_t]:
+                inventory = entity.component('Inventory')
+                item = inventory.items().as_list()[0].save()
+                print(item)
+                director.net_director.queue_events([('NET_RECEIVED_ITEM', {
+                    'sender': director.net_director.net_name(),
+                    'item': item,
+                })])
+                inventory.remove(inventory.items().as_list()[0])
+                director.net_director.send_events()
+                message_panel.info("Item sent!", tcod.cyan)
+            elif event_data.sym in [tcod.event.K_o]:
                 import load
                 m = load.load_save_file('save.json')
                 settings.current_map = None
                 settings.set_current_map(m)
-            elif event_data.sym in [tcod.event.K_y]:
+            elif event_data.sym in [tcod.event.K_s]:
                 if not settings.current_map.can_save():
                     message_panel.info("You can only save in town", tcod.red)
                     return False

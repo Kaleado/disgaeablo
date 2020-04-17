@@ -21,6 +21,8 @@ def load_component(obj):
         comp = entity.Inventory(items)
     elif (obj['SUBTYPE'] == 'POSITION'):
         comp = entity.Position(int(obj['x']), int(obj['y']))
+    elif (obj['SUBTYPE'] == 'EQUIPMENT'):
+        comp = entity.Equipment([load_entity(i) for i in obj['mod_slots']])
     elif (obj['SUBTYPE'] == 'EQUIPMENTSLOTS'):
         comp = entity.EquipmentSlots([])
         for k, v in obj['slots'].items():
