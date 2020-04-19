@@ -1446,6 +1446,7 @@ class Mailman(Neutral):
             item.component('Position').set(px, py)
             # item.generate_new_ident() # this might not work if we have mods, etc.
             resident_map.add_entity(item)
+        settings.pending_items_received = []
 
 class ItemWorldClerk(Neutral):
     def __init__(self):
