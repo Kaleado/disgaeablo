@@ -383,12 +383,12 @@ loot_director = LootDirector()
 class NetDirector:
     TRANSMISSION_BYTES = 512
 
-    def __init__(self, host, port):
-        self._host = host
-        self._port = port
+    def __init__(self):
         self._queued_events = []
         with open('config.json', mode='r') as f:
             self._config = json.load(f)
+            self._host = self._config['server_host']
+            self._port = self._config['server_port']
             self._network_disabled = False
             if self._config['net_name'] == 'CHANGE_ME':
                 settings.message_panel.info('WARNING: your net_name is not set in config.json!', tcod.red)
@@ -486,4 +486,4 @@ class NetDirector:
         while len(self._queued_events) > 0:
             self.send_events()
 
-net_director = NetDirector('localhost', 50007)
+net_director = NetDirector()
