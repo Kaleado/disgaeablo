@@ -1,4 +1,6 @@
 {
     "net_name": "CHANGE_ME",
-    "net_key": "CHANGE_ME"
+    "net_key": "CHANGE_ME",
+    "server_host": "localhost",
+    "server_port": 50007
 }
