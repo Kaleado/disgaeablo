@@ -1556,15 +1556,14 @@ class PlayerLogic(Component):
             'TextInputPanel': ((0,0), TextInputPanel("Net name of receiver:"))
         }, ['TextInputPanel'])
         net_name = text_input_menu.run(settings.root_console)
-        if net_name is not None:
-            self._sending_to_net_name = net_name
-            return True
-        return False
+        return net_name
 
     def _prompt_for_message(self):
         import director
-        if self._sending_to_net_name is None and not self._prompt_for_net_name():
-            return False
+        if self._sending_to_net_name is None:
+            self._sending_to_net_name = self._prompt_for_net_name()
+            if self._sending_to_net_name is None:
+                return False
        
         text_input_menu = Menu({
             'TextInputPanel': ((0,0), TextInputPanel("To {}:".format(self._sending_to_net_name)))
@@ -1578,7 +1577,7 @@ class PlayerLogic(Component):
             director.net_director.send_events()
             message_panel.info("Message sent!", tcod.cyan)
             return True
-        return False
+        return None
 
     def handle_event(self, entity, event, resident_map):
         import director
@@ -1600,7 +1599,10 @@ class PlayerLogic(Component):
                 inventory = entity.component('Inventory')
                 item = inventory.items().as_list()[0].save()
                 print(item)
+                receiver = self._prompt_for_net_name()
+                print(receiver)
                 director.net_director.queue_events([('NET_RECEIVED_ITEM', {
+                    'receiver': receiver,
                     'sender': director.net_director.net_name(),
                     'item': item,
                 })])

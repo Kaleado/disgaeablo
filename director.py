@@ -381,7 +381,7 @@ class LootDirector:
 loot_director = LootDirector()
 
 class NetDirector:
-    TRANSMISSION_BYTES = 8192
+    TRANSMISSION_BYTES = 512
 
     def __init__(self, host, port):
         self._host = host
@@ -389,14 +389,14 @@ class NetDirector:
         self._queued_events = []
         with open('config.json', mode='r') as f:
             self._config = json.load(f)
-            network_disabled = False
+            self._network_disabled = False
             if self._config['net_name'] == 'CHANGE_ME':
-                settings.message_panel.info('WARNING: your net_name is not set!', tcod.red)
-                network_disabled = True
+                settings.message_panel.info('WARNING: your net_name is not set in config.json!', tcod.red)
+                self._network_disabled = True
             if self._config['net_key'] == 'CHANGE_ME':
-                settings.message_panel.info('WARNING: your net_key is not set!', tcod.red)
-                network_disabled = True
-            if network_disabled:
+                settings.message_panel.info('WARNING: your net_key is not set in config.json!', tcod.red)
+                self._network_disabled = True
+            if self._network_disabled:
                 settings.message_panel.info('WARNING: network features will be disabled!', tcod.red)
 
     def net_name(self):
@@ -418,6 +418,8 @@ class NetDirector:
         self._queued_events.append(events)
 
     def recv_events(self):
+        if self._network_disabled:
+            return []
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self._host, self._port))
             msg_object = {
@@ -425,11 +427,20 @@ class NetDirector:
                 'net_key': self.net_key(),
             }
             s.sendall(json.dumps(msg_object).encode('utf-8'))
-            data = s.recv(NetDirector.TRANSMISSION_BYTES)
-            print(data)
+            s.sendall('END_MESSAGE'.encode('utf-8'))
+            data_chunk = s.recv(NetDirector.TRANSMISSION_BYTES)
+            data = data_chunk
+            print("DATA:", data_chunk)
+            while b'END_MESSAGE' not in data:
+                data_chunk = s.recv(NetDirector.TRANSMISSION_BYTES)
+                data += data_chunk
+                print("DATA:", data_chunk)
+            data = data[:-11]
         return json.loads(data)
 
     def send_events(self):
+        if self._network_disabled:
+            return
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.connect((self._host, self._port))
             msg_object = {
@@ -438,11 +449,21 @@ class NetDirector:
                 'net_key': self.net_key(),
             }
             s.sendall(json.dumps(msg_object).encode('utf-8'))
+            s.sendall('END_MESSAGE'.encode('utf-8'))
             self._queued_events = self._queued_events[5:]
-            data = s.recv(NetDirector.TRANSMISSION_BYTES)
+            data_chunk = s.recv(NetDirector.TRANSMISSION_BYTES)
+            data = data_chunk
+            print("DATA:", data_chunk)
+            while b'END_MESSAGE' not in data:
+                data_chunk = s.recv(NetDirector.TRANSMISSION_BYTES)
+                data += data_chunk
+                print("DATA:", data_chunk)
+            data = data[:-11]
         print(data)
 
     def send_remaining_events(self):
+        if self._network_disabled:
+            return
         while len(self._queued_events) > 0:
             self.send_events()
 
