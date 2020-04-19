@@ -27,4 +27,17 @@ settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.WillpowerMod((0,0)))
 
-settings.root_menu.run(settings.root_console)
+try:
+    settings.root_menu.run(settings.root_console)
+except GameplayException:
+    pass
+except:
+    print("Exception occurred, saving game file to save_error.json")
+    save = {
+        'current_map': settings.current_map.save(),
+        'main_dungeon_lowest_floor': settings.main_dungeon_lowest_floor,
+        'loot_tier': settings.loot_tier,
+        'monster_tier': settings.monster_tier,
+    }
+    strg = json.dump(save, open('save_error.json', mode='w'))
+    raise

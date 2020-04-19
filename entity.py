@@ -15,6 +15,9 @@ import pickle
 
 SERIALIZED_COMPONENTS = ['Stats', 'Inventory', 'Position', 'EquipmentSlots', 'Equipment']
 
+class GameplayException(Exception):
+    pass
+
 class Component:
     def handle_event(self, entity, event, resident_map):
         return False
@@ -932,8 +935,8 @@ class Stats(Component):
 
     def deal_damage(self, entity, resident_map, damage):
         resident_map.entities().transform(lambda ent: ent.handle_event(("DEALT_DAMAGE", (entity, damage)), resident_map))
+        player = resident_map.entity('PLAYER')
         if self.sub_base('cur_hp', damage) <= 0:
-            player = resident_map.entity('PLAYER')
             player.component('Stats').grant_exp(self.exp_yield())
             resident_map.entities().transform(lambda ent: ent.handle_event(("ENTITY_KILLED", entity), resident_map))
             resident_map.remove_entity(entity.ident())
@@ -1407,9 +1410,9 @@ class UptierShopkeeper(Neutral):
         settings.main_dungeon_lowest_floor = 1
         settings.message_panel.info("\"Good luck, traveller...\"", tcod.green)
 
-class NetworkAdmin(Neutral):
+class Mailman(Neutral):
     def __init__(self):
-        super().__init__(on_chat=NetworkAdmin.on_chat, on_attacked=NetworkAdmin.on_attacked)
+        super().__init__(on_chat=Mailman.on_chat, on_attacked=Mailman.on_attacked)
         self._times_attacked = 0
 
     def Apocalypse():
@@ -1421,34 +1424,28 @@ class NetworkAdmin(Neutral):
         self._times_attacked += 1
         if self._times_attacked >= 3:
             settings.message_panel.info('\"You\'ve REALLY done it now...\"', tcod.green)
-            entity.set_component('AI', Hostile(primary_skill=NetworkAdmin.Apocalypse(), primary_skill_range=9999))
+            entity.set_component('AI', Hostile(primary_skill=Mailman.Apocalypse(), primary_skill_range=9999))
         else:
             settings.message_panel.info(random.choice(['\"Ouch!\"', '\"Stop it!\"', '\"Hey!\"']), tcod.green)
 
     def _handle_event(self, entity, event, resident_map):
         import load
         super()._handle_event(entity, event, resident_map)
-        event_type, event_data = event
-        if event_type == 'NET_RECEIVED_MESSAGE':
-            settings.message_panel.info('{} says: {}'.format(event_data['sender'], event_data['message']), tcod.cyan)
-            return False
-        elif event_type == 'NET_RECEIVED_ITEM':
-            settings.message_panel.info('{} sent you an item!'.format(event_data['sender']), tcod.cyan)
-            item_obj = event_data['item']
-            item_ent = load.load_entity(item_obj)
-            px, py = resident_map.entity('PLAYER').component('Position').get()
-            item_ent.component('Position').set(px, py)
-            # item_ent.generate_new_ident() # this might not work if we have mods, etc.
-            resident_map.add_entity(item_ent)
-            return False
 
     def on_chat(self, entity, event, resident_map):
         import director
         player = resident_map.entity('PLAYER')
-        settings.message_panel.info('\"Let me try checking the network for you...\"', tcod.green)
+        settings.message_panel.info('\"Let me see if there are any deliveries for you...\"', tcod.green)
+        if settings.pending_items_received == []:
+            settings.message_panel.info('\"Nope, nothing for you at the moment\"', tcod.green)
+        else:
+            settings.message_panel.info('\"Here you go!\"', tcod.green)
         # Receive and handle network-sourced events
-        director.net_director.propagate_events()
-        settings.message_panel.info('\"And... done!\"', tcod.green)
+        for item in settings.pending_items_received:
+            px, py = resident_map.entity('PLAYER').component('Position').get()
+            item.component('Position').set(px, py)
+            # item.generate_new_ident() # this might not work if we have mods, etc.
+            resident_map.add_entity(item)
 
 class ItemWorldClerk(Neutral):
     def __init__(self):
@@ -1572,17 +1569,30 @@ class PlayerLogic(Component):
         if message is not None:
             director.net_director.queue_events([('NET_RECEIVED_MESSAGE', {
                 'sender': director.net_director.net_name(),
+                'receiver': self._sending_to_net_name,
                 'message': message,
             })])
             director.net_director.send_events()
-            message_panel.info("Message sent!", tcod.cyan)
+            message_panel.info("To {}: {}".format(self._sending_to_net_name, message), tcod.cyan)
             return True
         return None
 
     def handle_event(self, entity, event, resident_map):
-        import director
+        import director, load
         event_type, event_data = event
-        if event_type == 'TCOD' and event_data.type == 'KEYDOWN':
+        if event_type == 'NET_RECEIVED_MESSAGE':
+            settings.message_panel.info('From {}: {}'.format(event_data['sender'], event_data['message']), tcod.cyan)
+            return False
+        elif event_type == 'NET_RECEIVED_ITEM':
+            settings.message_panel.info('{} sent you an item!'.format(event_data['sender']), tcod.cyan)
+            item_obj = event_data['item']
+            item_ent = load.load_entity(item_obj)
+            settings.pending_items_received.append(item_ent)
+            return False
+        elif event_type == 'ENTITY_KILLED' and event_data == entity:
+            print("Player was killed!")
+            raise GameplayException("Player died")
+        elif event_type == 'TCOD' and event_data.type == 'KEYDOWN':
             position = entity.component('Position')
             combat = entity.component('Combat')
             is_paralyzed = entity.component('Stats').has_status('PARALYZE')
@@ -1592,6 +1602,9 @@ class PlayerLogic(Component):
             has_acted = False
             if event_data.sym == tcod.event.K_c:
                 self._chat_mode = not self._chat_mode
+                return True
+            elif event_data.sym in [tcod.event.K_n]:
+                self._sending_to_net_name = self._prompt_for_net_name()
                 return True
             elif event_data.sym in [tcod.event.K_m]:
                 return self._prompt_for_message()

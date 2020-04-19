@@ -37,7 +37,7 @@ def Player(position):
         'EquipmentSlots': EquipmentSlots(['Weapon', 'Armour', 'Armour', 'Armour']),
     }, ttype='Player')
 
-def NetworkAdminNPC(position):
+def MailmanNPC(position):
     x, y = position
     return Entity(str(uuid.uuid4()), components={
         'Stats': Stats({
@@ -55,9 +55,9 @@ def NetworkAdminNPC(position):
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.yellow),
         'Combat': Combat(),
-        'NPC': NPC('Sophie, network admin'),
-        'AI': NetworkAdmin()
-    }, ttype='NetworkAdminNPC')
+        'NPC': NPC('Jack, mailman'),
+        'AI': Mailman()
+    }, ttype='MailmanNPC')
 
 def ItemWorldClerkNPC(position):
     x, y = position

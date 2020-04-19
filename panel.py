@@ -44,6 +44,8 @@ class Menu:
         self._has_resolved = False
 
     def run(self, console):
+        import director, entity
+        render_tick = 0
         while not self._has_resolved:
             console.clear()
             for origin, panel in self._panels.values():
@@ -62,7 +64,7 @@ class Menu:
                     key = self._focus_list[self._focus_index]
                     self._panels[key][1].focus()
                 if event.type == "QUIT":
-                    raise SystemExit()
+                    raise entity.GameplayException("User quit")
                 if not self._repositioning_panels:
                     for _, panel in self._panels.values():
                         panel.handle_event(("TCOD", event), self)
@@ -79,7 +81,10 @@ class Menu:
                         if event.sym in [tcod.event.K_l, tcod.event.K_KP_6]:
                             pos = (pos[0]+step, pos[1])
                     self._panels[self._focus_list[self._focus_index]] = (pos, pan)
+            render_tick = (render_tick + 1) % 100
             settings.current_map.commit()
+            if render_tick % 3 == 0:
+                director.net_director.propagate_events()
         return self._resolution_value
 
 class Panel:
