@@ -466,3 +466,60 @@ class TheSneakArena(Map):
         while self._terrain[stairs_y][stairs_x] == '#':
             stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
         self._terrain[stairs_y][stairs_x] = '>'
+
+class Rivers(Map):
+    def _fill(self, w, h, tile):
+        self._terrain = [[tile for x in range(w)] for y in range(h)]
+
+    def _in_bounds(self, p, w, h):
+        x, y = p
+        return x >= 0 and y >= 0 and x < w and y < h
+
+    def _place_stairs(self, width, height):
+        stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        while self._terrain[stairs_y][stairs_x] == '#':
+            stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        self._terrain[stairs_y][stairs_x] = '>'
+
+    def _apply_brush(self, brush, position, w, h):
+        import util
+        x, y = util.vec_round(position)
+        for xx in range(len(brush[0])):
+            for yy in range(len(brush)):
+                if not self._in_bounds((x+xx, y+yy), w, h):
+                    continue
+                self._terrain[y+yy][x+xx] = brush[yy][xx]
+
+    def __init__(self, width, height, n_rivers=3, thickness=2, inverted=False, map_group=None, turn_limit=None):
+        import util
+        super().__init__(map_group, turn_limit)
+        brush = [
+            ['#' if inverted else '.'] * thickness
+        ] * thickness
+        self._fill(width, height, '.' if inverted else '#')
+        for _i in range(n_rivers):
+            roll = random.randint(0,3)
+            if roll == 0:
+                point = (0, random.randint(0, height-1))
+            elif roll == 1:
+                point = (width-1, random.randint(0, height-1))
+            elif roll == 2:
+                point = (random.randint(0, width-1), 0)
+            elif roll == 3:
+                point = (random.randint(0, width-1), height-1)
+            center = (width/2, height/2)
+            delta = util.normalize(util.difference(point, center))
+            orig_delta = delta
+            print(delta)
+            turn_l = util.rot_ccw_90(orig_delta)
+            turn_r = util.rot_cw_90(orig_delta)
+            iterations = 0
+            while self._in_bounds(point, width, height):
+                self._apply_brush(brush, point, width, height)
+                if iterations > width / 3:
+                    pert = util.normalize(
+                        util.add(delta, util.scalar_mult(random.choice([turn_l, turn_r]), 0.7 + 0.3*random.random())))
+                    delta = util.normalize(util.add(delta, pert))
+                point = util.add(point, delta)
+                iterations += 1
+        self._place_stairs(width, height)

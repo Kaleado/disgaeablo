@@ -725,7 +725,7 @@ class Stats(Component):
     ])
 
     REGEN_FREQUENCY = 6
-    EXP_YIELD_SCALE = 1.0
+    EXP_YIELD_SCALE = 5.0
 
     """
     There is no need to initialise all the base_stats -- any ones left out will
@@ -919,11 +919,11 @@ class Stats(Component):
             self.add_multiplicative_modifier('dfn', 3)
 
     def apply_healing(self, entity, resident_map, amount):
-        amount = min(amount, self.get_value('max_hp') - self.get_value('cur_hp'))
+        amount = min(math.floor(amount), self.get_value('max_hp') - self.get_value('cur_hp'))
         self.add_base('cur_hp', amount)
 
     def apply_refreshing(self, entity, resident_map, amount):
-        amount = min(amount, self.get_value('max_sp') - self.get_value('cur_sp'))
+        amount = min(math.floor(amount), self.get_value('max_sp') - self.get_value('cur_sp'))
         self.add_base('cur_sp', amount)
 
     def consume_sp(self, entity, resident_map, amount):

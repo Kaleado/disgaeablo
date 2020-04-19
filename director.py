@@ -72,7 +72,8 @@ class MapDirector:
             mapp = TwoRooms(30, 30, room_size=9, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         elif self._current_floor in range(0, 10):
-            mapp = Cave(30, 30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
+            # mapp = Cave(30, 30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
+            mapp = Rivers(30, 30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         elif self._current_floor % 10 == 1:
             mapp = Corridors(30, 30, room_size=5, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)

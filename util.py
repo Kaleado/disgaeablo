@@ -5,6 +5,34 @@ import random
 def distance(p1, p2):
     return math.sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
 
+def normalize(p):
+    d = distance((0,0), p)
+    return (p[0]/d, p[1]/d)
+
+def difference(p1, p2):
+    return (p2[0] - p1[0], p2[1] - p1[1])
+
+def add(p1, p2):
+    return (p2[0] + p1[0], p2[1] + p1[1])
+
+def rot_cw_90(p):
+    return (p[1], -p[0])
+
+def rot_ccw_90(p):
+    return (-p[1], p[0])
+
+def scalar_mult(p, m):
+    return (p[0] * m, p[1] * m)
+
+def vec_floor(p):
+    return (math.floor(p[0]), math.floor(p[1]))
+
+def vec_ceil(p):
+    return (math.ceil(p[0]), math.ceil(p[1]))
+
+def vec_round(p):
+    return (round(p[0]), round(p[1]))
+
 def random_permutation(lst):
     res = []
     while len(lst):
