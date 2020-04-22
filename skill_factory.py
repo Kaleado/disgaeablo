@@ -147,7 +147,14 @@ class Skill(Usable):
                     if has_assault:
                         user_entity.component('Stats').inflict_status('ASSAULT', strength=1, duration=3)
             return use_on_targets(self, entity, user_entity, mapp, targets, menu)
+        def add_deathblow(d,s,t,i):
+            chance = s.stat('deathblow')/100
+            chance *= 1 + (s.stat('deathblow_multiplier_vs_paralyze') if t.component('Stats').has_status('PARALYZE') else 0)
+            return damage.Chance(chance, damage.WithDeathblow(damage=d), d)
         self._use_on_targets = f
+        self.change_damage(lambda d, s, t, i : damage.WithLifeDrain(heal_proportion=s.stat('lifedrain')/100, damage=d),
+                           lambda s, s_e, t_e, i_e : s_e.stat('lifedrain') > 0)
+        self.change_damage(add_deathblow)
         return self
 
     def apply_status_to_user(self, status, duration, predicate=None):

@@ -17,12 +17,17 @@ class MapDirector:
         self._item_world = item
 
     def _item_world_map(self, level):
+        w,h=30,30
         if self._current_floor == 10:
-            mapp = TheTowerArena(30, 30)
-            w,h=30,30
+            mapp = TheTowerArena(w, h)
         else:
-            mapp = Grid(30,30,turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
-            w,h=30,30
+            roll = random.randint(0,2)
+            if roll in range(0, 1):
+                mapp = Ring(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
+            elif roll in range(1, 2):
+                mapp = Rooms(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
+            else:
+                mapp = Grid(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
         return mapp, w, h
 
     def _spawn_the_tower(self, level, mapp):
@@ -71,15 +76,14 @@ class MapDirector:
         elif self._current_floor % 5 == 0:
             mapp = TwoRooms(30, 30, room_size=9, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
-        elif self._current_floor in range(0, 10):
-            # mapp = Cave(30, 30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
-            mapp = Rivers(30, 30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
+        elif self._current_floor in range(0, 5):
+            mapp = Cave(30, 30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         elif self._current_floor % 10 == 1:
             mapp = Corridors(30, 30, room_size=5, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
-        elif self._current_floor in range(10, 20):
-            mapp = Rooms(30,30, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
+        elif self._current_floor in range(5, 10):
+            mapp = Rivers(w, h, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
             w,h=30,30
         return mapp, w, h
 
@@ -315,8 +319,6 @@ class LootDirector:
         loot.SPRegenMod,
         loot.HPRegenMod,
         loot.SpellSoulDrainMod,
-        loot.ToxicForceMod,
-        loot.ToxicPowerMod,
         loot.PoisonHealMod,
         loot.SoulConversionMod,
         loot.LightningDamageMod,
@@ -329,7 +331,6 @@ class LootDirector:
         loot.EnergisingColdMod,
         loot.InvigoratingPowerMod,
         loot.EmpoweringFlameMod,
-        loot.RampageMod,
         loot.EnvenomedBladeMod,
         loot.LightningResistanceMod,
         loot.FireResistanceMod,
@@ -345,6 +346,9 @@ class LootDirector:
 
     rare = set([
         loot.CharredSkull,
+        loot.ToxicForceMod,
+        loot.ToxicPowerMod,
+        loot.RampageMod,
     ])
 
     def __init__(self):
@@ -361,7 +365,7 @@ class LootDirector:
 
     def ground_loot(self, level):
         roll = random.randint(0,500)
-        if roll < 3:
+        if roll < 5:
             return random.choice(list(LootDirector.rare))
         elif roll < 50:
             return loot.Healing.generator(tier=settings.loot_tier)

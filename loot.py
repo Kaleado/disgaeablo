@@ -239,11 +239,11 @@ def Cleave(position):
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Cleave', 'Deals high physical damage in an area in front'),
         'Usable': skill_factory.Skill(tags=['skill_cleave', 'attack', 'offensive'])\
-        .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s cleave hits {}! ({} HP)")\
         .with_sp_cost(3)\
         .with_damage(damage.AttackDamage(1, 'phys'))
+        .melee_skill()\
         .change_damage(lambda d, s, t, i : damage.WithStatusEffect('POISON', strength=1, duration=4, damage=d),
                        lambda s, s_e, t_e, i_e : s_e.component('Stats').get('cleave_poison') > 0)
     }, ttype='Cleave')
@@ -261,11 +261,11 @@ def Pierce(position):
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Pierce', 'Deals high physical damage in a line'),
         'Usable': skill_factory.Skill(tags=['skill_pierce', 'attack', 'offensive'])\
-        .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s pierce hits {}! ({} HP)")\
         .with_sp_cost(3)\
-        .with_damage(damage.AttackDamage(1, 'phys'))
+        .with_damage(damage.AttackDamage(1, 'phys'))\
+        .melee_skill()
     }, ttype='Pierce')
 
 def Bypass(position):
@@ -280,11 +280,11 @@ def Bypass(position):
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Bypass', 'Attack in a line whilst moving diagonally forwards'),
         'Usable': skill_factory.Skill(tags=['skill_bypass', 'attack', 'movement', 'offensive'])\
-        .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s bypass hits {}! ({} HP)")\
         .with_sp_cost(3)\
-        .with_damage(damage.AttackDamage(1, 'phys'))
+        .with_damage(damage.AttackDamage(1, 'phys'))\
+        .melee_skill()
     }, ttype='Bypass')
 
 def WhipSlash(position):
@@ -298,11 +298,11 @@ def WhipSlash(position):
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Crescent slash', 'Deal damage in an arc whilst sidestepping danger'),
         'Usable': skill_factory.Skill(tags=['skill_whip_slash', 'attack', 'movement', 'offensive'])\
-        .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{}'s crescent slash hits {}! ({} HP)")\
         .with_sp_cost(3)\
-        .with_damage(damage.AttackDamage(1, 'phys'))
+        .with_damage(damage.AttackDamage(1, 'phys'))\
+        .melee_skill()
     }, ttype='WhipSlash')
 
 def Dash(position):
@@ -340,11 +340,11 @@ def RollingStab(position):
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Rolling stab', 'Good for rolling out of the way of incoming attacks'),
         'Usable': skill_factory.Skill(tags=['skill_rolling_stab', 'attack', 'movement', 'offensive'])\
-        .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
         .damage_targets("{} deftly rolls whilst piercing {}! ({} HP)")\
         .with_sp_cost(7)\
-        .with_damage(damage.AttackDamage(1, 'phys'))
+        .with_damage(damage.AttackDamage(1, 'phys'))\
+        .melee_skill()
     }, ttype='RollingStab')
 
 def AerialDrop(position):
@@ -358,11 +358,11 @@ def AerialDrop(position):
         'Render': entity.Render(character='&', colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Aerial drop', 'Pierce your foes from the sky!'),
         'Usable': skill_factory.Skill(tags=['skill_aerial_drop', 'attack', 'movement', 'offensive'])\
-        .melee_skill()\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=5)))\
         .damage_targets("{} plunges down on to {}! ({} HP)")\
         .with_sp_cost(15)\
         .with_damage(damage.AttackDamage(1, 'phys'))\
+        .melee_skill()
     }, ttype='AerialDrop')
 
 def Combustion(position):
@@ -638,7 +638,7 @@ def Unstoppable(position):
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='&', colour=tcod.purple),
-        'Item': entity.Item('Spell: Invincible', 'Boosts DFN by 300% for 4 turns'),
+        'Item': entity.Item('Spell: Unstoppable', 'Boosts DFN by 300% for 4 turns'),
         'Usable': skill_factory.Skill(tags=['spell_unstoppable', 'spell', 'buff', 'status'])\
         .with_target_mode(entity.TargetUser())\
         .damage_targets("{} becomes unstoppable!")\
@@ -744,10 +744,10 @@ def MeleeLifeDrainMod(position):
 def MeleeDeathblowMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'deathblow': 2}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Stats': entity.Stats({'deathblow': 3}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_crimson),
-        'Item': entity.Item('Melee Deathblow', 'Grants a 2% chance to deal a deathblow on melee attacks'),
+        'Item': entity.Item('Melee Deathblow', 'Grants a 3% chance to deal a deathblow on melee attacks'),
         'Mod': entity.Mod(),
     }, ttype='MeleeDeathblowMod')
 
@@ -1037,6 +1037,16 @@ def BrutalStrengthMod(position):
         'Stats': entity.Stats({'itl_becomes_atk': 1}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.yellow),
-        'Item': entity.Item('Brutal Strength', 'Your ITL is set to your ATK'),
+        'Item': entity.Item('Brutal strength', 'Your ITL is set to your ATK'),
         'Mod': entity.Mod(),
     }, ttype='BrutalStrengthMod')
+
+def CoupDeGraceMod(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({'deathblow_multiplier_vs_paralyze': 3}),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='*', colour=tcod.orange),
+        'Item': entity.Item('Coup de Grace', 'Your deathblow is tripled against paralysed enemies'),
+        'Mod': entity.Mod(),
+    }, ttype='CoupDeGraceMod')

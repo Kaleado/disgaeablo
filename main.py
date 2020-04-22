@@ -19,13 +19,15 @@ settings.current_map._entities = {
     'PLAYER': monster.Player((15, 15))
 }
 
-# settings.current_map.add_entity(monster.Beehive.generator()((10,10)))
+settings.current_map.add_entity(monster.Lavamoeba.generator()((10,10)))
 
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.WillpowerMod((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.Cleave((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.MeleeDeathblowMod((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.MeleeLifeDrainMod((0,0)))
 
 try:
     settings.root_menu.run(settings.root_console)

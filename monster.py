@@ -234,7 +234,7 @@ class Slime:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'MonWave'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Slime')
+            }, ttype='Slime_'+str(tier))
         return gen
 
 class Mage:
@@ -285,7 +285,7 @@ class Mage:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Lightning'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Mage')
+            }, ttype='Mage_'+str(tier))
         return gen
 
 class Golem:
@@ -338,7 +338,7 @@ class Golem:
                             .every_n_turns(2, lambda e, ai, ev_d : False)\
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Stone'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Golem')
+            }, ttype='Golem_'+str(tier))
         return gen
 
 class Scorpion:
@@ -388,7 +388,7 @@ class Scorpion:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(1.9, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Scorpion')
+            }, ttype='Scorpion_'+str(tier))
         return gen
 
 class Spider:
@@ -416,7 +416,7 @@ class Spider:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=5))))\
                             .damage_targets("{} spins web at {}!")\
-                            .with_damage(damage.SpellDamage(0))\
+                            .with_damage(damage.MonsterSpellDamage(0))\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 2, d))
 
     def generator(tier=settings.monster_tier, level=1):
@@ -443,7 +443,7 @@ class Spider:
                             .when_player_within_distance(3, lambda e, ai, ev_d : ai.step_away_from_player(e))\
                             .when_player_within_distance(6, lambda e, ai, ev_d : ai.use_skill(e, 'Web'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Spider')
+            }, ttype='Spider_'+str(tier))
         return gen
 
 class Eye:
@@ -488,7 +488,7 @@ class Eye:
                 .add_skill('Gaze', Eye.Gaze(), delay=1)\
                 .with_state('IDLE', ai.AIState()\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Gaze')))\
-            }, ttype='Eye')
+            }, ttype='Eye_'+str(tier))
         return gen
 
 class Wyvern:
@@ -542,7 +542,7 @@ class Wyvern:
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.step_away_from_player(e))\
                             .when_player_within_distance(7, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Wyvern')
+            }, ttype='Wyvern_'+str(tier))
         return gen
 
 class Beholder:
@@ -597,7 +597,7 @@ class Beholder:
                             .when_player_within_distance(4, lambda e, ai, ev_d : ai.step_away_from_player(e))\
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.use_skill(e, 'Ray'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Beholder')
+            }, ttype='Beholder_'+str(tier))
         return gen
 
 class Giant:
@@ -649,7 +649,7 @@ class Giant:
                 .with_state('AGGRO', ai.AIState()\
                             .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Smash'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Giant')
+            }, ttype='Giant_'+str(tier))
         return gen
 
 # Bosses
@@ -728,7 +728,7 @@ class BossTheSneak:
                             .when_player_beyond_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'BigFire'))\
                             .on_turn_randomly(0.1, lambda e, ai, ev_d : ai.use_skill(e, 'Escape'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_away_from_player(e)))\
-            }, ttype='BossTheSneak')
+            }, ttype='BossTheSneak_'+str(tier))
         return gen
 
 class BossUltimateBeholder:
@@ -797,7 +797,7 @@ class BossUltimateBeholder:
                             .on_turn_randomly(0.2, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportAdds'))\
                             .when_player_within_distance(25, lambda e, ai, ev_d : ai.use_skill(e, 'Laser'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='BossUltimateBeholder')
+            }, ttype='BossUltimateBeholder_'+str(tier))
         return gen
 
 class BossTheTower:
@@ -922,7 +922,7 @@ class BossTheTower:
                             .after_n_turns(1, lambda e, ai, ev_d : ai.use_skill('Deadline'))\
                             .when_player_within_distance(4, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportPlayer'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Smite3')))\
-            }, ttype='BossTheTower')
+            }, ttype='BossTheTower_'+str(tier))
         return gen
 
 class BossTheTowerMinion:
@@ -999,7 +999,7 @@ class BossTheTowerMinion:
                             .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'Smite1'))\
                             .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'HorLaser'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : None))\
-            }, ttype='BossTheTowerMinion')
+            }, ttype='BossTheTowerMinion_'+str(tier))
         return gen
 
 class Gremlin:
@@ -1027,7 +1027,7 @@ class Gremlin:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
                             .damage_targets("{} points and laughs {}'s pathetic DFN!")\
-                            .with_damage(damage.SpellDamage(0))\
+                            .with_damage(damage.MonsterSpellDamage(0))\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 25, d))
 
     def MindBreak():
@@ -1038,7 +1038,7 @@ class Gremlin:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
                             .damage_targets("{} keels over laughing at {}'s pathetic RES!")\
-                            .with_damage(damage.SpellDamage(0))\
+                            .with_damage(damage.MonsterSpellDamage(0))\
                             .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
 
     def generator(tier=settings.monster_tier, level=1):
@@ -1068,7 +1068,7 @@ class Gremlin:
                 .with_state('GET_CLOSER', ai.AIState()\
                             .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Gremlin')
+            }, ttype='Gremlin_'+str(tier))
         return gen
 
 class Inferno:
@@ -1095,13 +1095,13 @@ class Inferno:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
                             .damage_targets("{} causes a fiery explosion on top of {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(90, 'fire'))\
+                            .with_damage(damage.MonsterSpellDamage(90, 'fire'))\
 
     def Firestorm():
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(7, passable_only=True, within_distance=2))))\
                             .damage_targets("{} singes {} with fire! ({} HP)")\
-                            .with_damage(damage.SpellDamage(60, 'fire'))\
+                            .with_damage(damage.MonsterSpellDamage(60, 'fire'))\
 
     def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Inferno.base_stats)
@@ -1128,7 +1128,7 @@ class Inferno:
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
                             .when_player_beyond_distance(6, lambda e, ai, ev_d : ai.step_towards_player(e))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Explosion')))\
-            }, ttype='Inferno')
+            }, ttype='Inferno_'+str(tier))
         return gen
 
 class Bee:
@@ -1154,7 +1154,7 @@ class Bee:
         return skill_factory.Skill()\
                             .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
                             .damage_targets("{} stings {}! ({} HP)")\
-                            .with_damage(damage.SpellDamage(60, 'phys'))\
+                            .with_damage(damage.MonsterSpellDamage(60, 'phys'))\
 
     def generator(tier=settings.monster_tier, level=1):
         actual_stats = util.copy_dict(Bee.base_stats)
@@ -1178,7 +1178,7 @@ class Bee:
                 .with_state('USE_SPELLS', ai.AIState()\
                             .when_player_within_distance(1, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'), False)\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Bee')
+            }, ttype='Bee_'+str(tier))
         return gen
 
 class Beehive:
@@ -1222,5 +1222,59 @@ class Beehive:
                 .with_state('IDLE', ai.AIState()\
                             .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'SummonBees'), False)\
                             .on_turn_otherwise(lambda e, ai, ev_d : False))\
-            }, ttype='Beehive')
+            }, ttype='Beehive_'+str(tier))
+        return gen
+
+class Lavamoeba:
+    base_stats = {
+        'max_hp': 50,
+        'cur_hp': 50,
+        'max_sp': 40,
+        'cur_sp': 40,
+        'atk': 20,
+        'dfn': 10,
+        'itl': 25,
+        'res': 10,
+        'spd': 6,
+        'hit': 6,
+        'fire_res': 50,
+    }
+
+    names = ['Lavamoeba1', 'Lavamoeba2', 'Lavamoeba3', 'Lavamoeba4', 'Lavamoeba5']
+    colours = [tcod.dark_red, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def Scorch():
+        formation = Formation(origin=(1,1), formation=util.rectangle(3,3))
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=0))))\
+                            .damage_targets("{} hits {} with its fiery body! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(45, 'fire'))\
+
+    def Spread():
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(1, passable_only=True, within_distance=1))))\
+                            .summon_monsters([Lavamoeba])\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Lavamoeba.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Lavamoeba.base_stats[stat] + Lavamoeba.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='s', colour=Lavamoeba.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Lavamoeba.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Spread', Lavamoeba.Spread(), delay=0, is_passive=True)\
+                .add_skill('Scorch', Lavamoeba.Scorch(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'Spread'), False)\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Scorch')))\
+            }, ttype='Lavamoeba_'+str(tier))
         return gen

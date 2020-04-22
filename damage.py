@@ -93,11 +93,12 @@ class WithDeathblow(DamageDecorator):
     def inflict(self, destination_entity, mapp):
         inflicted = self._damage.inflict(destination_entity, mapp)
         stats = destination_entity.component('Stats')
-        if stats is not None and inflicted > 0:
+        if stats is not None and inflicted > 0 and stats.get_value('cur_hp') > 0:
             cur_hp = stats.get_value('cur_hp')
             stats.deal_damage(destination_entity, mapp, cur_hp)
             settings.message_panel.info("DEATHBLOW!", tcod.magenta)
             return cur_hp
+        return inflicted
 
 class WithLifeDrain(DamageDecorator):
     def __init__(self, damage, heal_proportion=1.0):

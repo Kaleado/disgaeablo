@@ -244,13 +244,25 @@ class Rooms(Map):
 
 
 class Grid(Map):
+    def _get_door_pos(self, direction, xx, yy, room_size):
+        floor = math.floor
+        if direction == 'N':
+            door_x, door_y = floor((xx + 0.5) * room_size), yy * room_size
+        elif direction == 'E':
+            door_x, door_y = (xx + 1) * room_size, floor((yy + 0.5) * room_size)
+        elif direction == 'S':
+            door_x, door_y = floor((xx + 0.5) * room_size), (yy + 1) * room_size
+        elif direction == 'W':
+            door_x, door_y = xx * room_size, floor((yy + 0.5) * room_size)
+        return (door_x, door_y)
+
     def __init__(self, width, height, map_group=None, turn_limit=None):
         super().__init__(map_group, turn_limit)
         floor = math.floor
         room_size = 6
         rooms_w = width // room_size
         rooms_h = height // room_size
-        rooms_grid = [[random.choice(['N', 'E', 'S', 'W', '#']) for x in range(rooms_w)] for y in range(rooms_h)]
+        rooms_grid = [[random.choice(['N', 'E', 'S', 'W'] * 3 + ['#', '#', '#', 'C']) for x in range(rooms_w)] for y in range(rooms_h)]
         self._terrain = [['#' if (x % room_size) * (y % room_size) == 0 or \
                           rooms_grid[y//room_size][x//room_size] == '#' \
                           else '.' for x in range(width)] for y in range(height)]
@@ -264,7 +276,7 @@ class Grid(Map):
                     if dy * dx != 0 or (dx == 0 and dy == 0):
                         continue
                     in_bounds = x + dx >= 0 and y + dy >= 0 and x + dx < rooms_w and y + dy < rooms_h
-                    if in_bounds and (x+dx, y+dy) not in seen and rooms_grid[y+dy][x+dx] != '#':
+                    if in_bounds and (x+dx, y+dy) not in seen and rooms_grid[y+dy][x+dx] not in ['#', 'C']:
                         seen = seen | set([(x+dx, y+dy)])
                         rooms_grid[y+dy][x+dx] = 'W' if dx == 1 else 'E' if dx == -1 else 'N' if dy == 1 else 'S'
                         if random.randint(0,1) == 1:
@@ -273,14 +285,16 @@ class Grid(Map):
                             q = [(x+dx, y+dy)] + q
         for xx in range(rooms_w):
             for yy in range(rooms_h):
-                if rooms_grid[yy][xx] == 'N':
-                    door_x, door_y = floor((xx + 0.5) * room_size), yy * room_size
-                elif rooms_grid[yy][xx] == 'E':
-                    door_x, door_y = (xx + 1) * room_size, floor((yy + 0.5) * room_size)
-                elif rooms_grid[yy][xx] == 'S':
-                    door_x, door_y = floor((xx + 0.5) * room_size), (yy + 1) * room_size
-                elif rooms_grid[yy][xx] == 'W':
-                    door_x, door_y = xx * room_size, floor((yy + 0.5) * room_size)
+                if rooms_grid[yy][xx] in ['N', 'E', 'S', 'W']:
+                    door_x, door_y = self._get_door_pos(rooms_grid[yy][xx], xx, yy, room_size)
+                elif rooms_grid[yy][xx] == 'C': # checkerboard pattern
+                    flag = False
+                    for x in range(0, room_size):
+                        for y in range(0, room_size):
+                            self._terrain[yy*room_size + y][xx*room_size + x] = '.' if flag else '#'
+                            flag = not flag
+                        flag = not flag
+                    door_x, door_y = self._get_door_pos(random.choice(['N', 'E', 'S', 'W']), xx, yy, room_size)
                 else:
                     continue
                 if door_x < width and door_y < height:
@@ -522,4 +536,72 @@ class Rivers(Map):
                     delta = util.normalize(util.add(delta, pert))
                 point = util.add(point, delta)
                 iterations += 1
+        self._place_stairs(width, height)
+
+class Ring(Map):
+    def _fill(self, w, h, tile):
+        self._terrain = [[tile for x in range(w)] for y in range(h)]
+
+    def _in_bounds(self, p, w, h):
+        x, y = p
+        return x >= 0 and y >= 0 and x < w and y < h
+
+    def _apply_brush(self, brush, position, w, h):
+        import util
+        x, y = util.vec_round(position)
+        for xx in range(len(brush[0])):
+            for yy in range(len(brush)):
+                if not self._in_bounds((x+xx, y+yy), w, h):
+                    continue
+                self._terrain[y+yy][x+xx] = brush[yy][xx]
+
+    def _place_stairs(self, width, height):
+        stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        while self._terrain[stairs_y][stairs_x] == '#':
+            stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        self._terrain[stairs_y][stairs_x] = '>'
+
+    def _draw_ring(self, width, height, ring_thickness, ring_offset):
+        brush = [
+            ['#' if self._inverted else '.'] * ring_thickness
+        ] * ring_thickness
+        # Top & bottom
+        for x in range(ring_offset, width - ring_thickness):
+            self._apply_brush(brush, (x, ring_offset), width, height)
+            self._apply_brush(brush, (x, height - ring_thickness - 1), width, height)
+        # Left & right
+        for y in range(ring_offset, height - ring_thickness - 1):
+            self._apply_brush(brush, (ring_offset, y), width, height)
+            self._apply_brush(brush, (width - ring_thickness - 1, y), width, height)
+
+    def _draw_room(self, width, height, room_size):
+        x_min = math.floor(width/2) - math.floor(room_size/2)
+        x_max = math.floor(width/2) + math.floor(room_size/2)
+        y_min = math.floor(height/2) - math.floor(room_size/2)
+        y_max = math.floor(height/2) + math.floor(room_size/2)
+        for x in range(x_min, x_max):
+            for y in range(y_min, y_max):
+                self._terrain[y][x] = '#' if self._inverted else '.'
+
+    def _draw_corridor(self, width, height, room_size, ring_offset, ring_thickness):
+        x = math.floor(width/2)
+        y_max = math.floor(height/2) - math.floor(room_size/2)
+        flag = False
+        for y in range(ring_offset+ring_thickness, y_max):
+            if flag:
+                self._terrain[y][x-1] = '#' if self._inverted else '.'
+                self._terrain[y][x] = '.' if self._inverted else '#'
+            else:
+                self._terrain[y][x-1] = '.' if self._inverted else '#'
+                self._terrain[y][x] = '#' if self._inverted else '.'
+            flag = not flag
+
+    def __init__(self, width, height, room_size=8, ring_thickness=3, ring_offset=1, inverted=False, map_group=None, turn_limit=None):
+        import util
+        self._inverted = inverted
+        super().__init__(map_group, turn_limit)
+        self._fill(width, height, '.' if self._inverted else '#')
+        self._draw_ring(width, height, ring_thickness, ring_offset)
+        self._draw_room(width, height, room_size)
+        self._draw_corridor(width, height, room_size, ring_offset, ring_thickness)
         self._place_stairs(width, height)

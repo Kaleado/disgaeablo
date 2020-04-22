@@ -40,6 +40,9 @@ class Entity:
        self._tags = tags
        self._type = ttype
 
+    def stat(self, name):
+        return self.component('Stats').get(name)
+
     def save(self):
         def save_components():
             cmps = {}
@@ -258,22 +261,32 @@ class TargetRandomPositions(TargetMode):
             return None, None
         return self._targets[group]
 
-    def choose_targets(self, user_entity, used_entity, mapp, menu):
+    def _random_point_within_distance(self, pos, dim):
         import util
+        x, y = pos
+        w, h = dim
+        dist = random.uniform(1, self._within_distance)
+        angl = random.uniform(0, 2 * math.pi)
+        dx, dy = round(math.sin(angl) * dist), round(math.cos(angl) * dist)
+        p = (math.floor(util.clamp(x + dx, 0, w)),\
+             math.floor(util.clamp(y + dy, 0, h)))
+        return p
+
+    def choose_targets(self, user_entity, used_entity, mapp, menu):
         random_positions = []
         w, h = mapp.dimensions()
         x, y = user_entity.component('Position').get()
         for _ in range(self._num_positions):
-            if not self._within_distance:
+            if self._within_distance is None:
                 p = (random.randint(0, w), random.randint(0, h))
             else:
-                dist = random.uniform(1, self._within_distance)
-                angl = random.uniform(0, 2 * math.pi)
-                p = (math.floor(util.clamp(x + math.sin(angl) * dist, 0, w)), math.floor(util.clamp(y + math.cos(angl) * dist, 0, h)))
+                p = self._random_point_within_distance((x, y), (w, h))
             tries = 0
             while tries < 3 and self._passable_only and not mapp.is_passable_for(user_entity, p):
-                p = (random.randint(0, w-1), random.randint(0, h-1))
+                p = self._random_point_within_distance((x, y), (w, h))
                 tries += 1
+            if self._passable_only and not mapp.is_passable_for(user_entity, p):
+                continue
             random_positions.append(p)
         self._targets[self._group] = EntityListView([]), random_positions
         return self._targets['x']
@@ -722,6 +735,7 @@ class Stats(Component):
         'itl_becomes_atk',
         'atk_becomes_itl',
         'max_hp_pc_penalty',
+        'deathblow_multiplier_vs_paralyze',
     ])
 
     REGEN_FREQUENCY = 6
@@ -736,7 +750,7 @@ class Stats(Component):
         self._regen_counter = 0
         self._stats = {}
         if stats_gained_on_level is None:
-            stats_gained_on_level = list(Stats.primary_stats | Stats.resistance_stats | Stats.damage_stats)
+            stats_gained_on_level = list((Stats.primary_stats - set(['max_sp'])) | Stats.resistance_stats | Stats.damage_stats)
         self._stats_gained_on_level = list(stats_gained_on_level)
         self._modifiers = {}
         for stat in Stats.all_stats:
@@ -766,6 +780,9 @@ class Stats(Component):
     def apply_melee_damage_decorators(self, entity, target, dam):
         lifedrain = self.get_value('lifedrain')
         deathblow = self.get_value('deathblow')
+        target_paralysed = target.component('Stats').has_status('PARALYZE')
+        if target_paralysed:
+            deathblow *= (1 if self.get('deathblow_multiplier_vs_paralyze') == 0 else self.get('deathblow_multiplier_vs_paralyze'))
         if deathblow > 0:
             dam = damage.Chance(deathblow / 100, damage.WithDeathblow(dam), dam)
         if lifedrain > 0:
@@ -962,7 +979,7 @@ class Stats(Component):
         boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333
         if stat == 'spd' and self.has_status('PARALYZE'):
             return 0
-        deathblow_mult = 1 if stat != 'deathblow' else self.get('deathblow_multiplier')
+        deathblow_mult = 1 if stat != 'deathblow' else 1 + self.get('deathblow_multiplier')
         max_hp_mult = 1 if stat != 'max_hp' else (100 - self.get('max_hp_pc_penalty'))/100
         return int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive'])
                    * self._modifiers[stat]['multiplicative'] * deathblow_mult * max_hp_mult)

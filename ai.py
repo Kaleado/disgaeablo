@@ -172,7 +172,8 @@ class AI(entity.Component):
             if delay == 0:
                 targeted_positions = passive_targets[1]
                 # TODO: make this work with / without friendly fire
-                targets = resident_map.entities().without_components(['Item', 'NPC'])\
+                excluded_components = ['Item'] + [] if entity.ident == 'PLAYER' else ['NPC']
+                targets = resident_map.entities().without_components(excluded_components)\
                                                  .with_component('Position')\
                                                  .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
                 passive_attack.use_on_targets(entity, entity, resident_map, targets, None)
@@ -187,7 +188,8 @@ class AI(entity.Component):
             return False
         targeted_positions = self._delayed_targets[1]
         # TODO: make this work with / without friendly fire
-        targets = resident_map.entities().without_components(['Item', 'NPC'])\
+        excluded_components = ['Item'] + [] if entity.ident == 'PLAYER' else ['NPC']
+        targets = resident_map.entities().without_components(excluded_components)\
                                          .with_component('Position')\
                                          .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
         self._delayed_attack.use_on_targets(entity, entity, resident_map, targets, None)
