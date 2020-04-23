@@ -8,10 +8,11 @@ import json
 from entitylistview import EntityListView
 
 class Map:
-    def __init__(self, map_group=None, turn_limit=None):
+    def __init__(self, map_group=None, turn_limit=None, can_escape=True):
         self._turn_limit = turn_limit
         self._map_group = map_group
         self._can_save = False
+        self._can_escape = can_escape
         self._entities = {}
         self._terrain = []
         self._entities_updates = {
@@ -20,6 +21,9 @@ class Map:
         }
         # dict<position -> ident -> delay[]>
         self._threatened_positions = {}
+
+    def can_escape(self):
+        return self._can_escape
 
     def can_save(self):
         return self._can_save
@@ -37,6 +41,7 @@ class Map:
             'entities': save_entities(),
             'terrain': self._terrain,
             'can_save': self._can_save,
+            'can_escape': self._can_escape,
         }
         return obj
 
@@ -176,8 +181,8 @@ class Map:
                 return
 
 class Cave(Map):
-    def __init__(self, width, height, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._terrain = [['.' if random.randint(0, 2) == 0 else '#' for x in range(width)] for y in range(height)]
         s_x, s_y = random.randint(0, width-1), random.randint(0, height-1)
         while self._terrain[s_y][s_x] == '#':
@@ -208,8 +213,8 @@ class Cave(Map):
                                           '.' if self._terrain[y][x] == '#_' else self._terrain[y][x]
 
 class Rooms(Map):
-    def __init__(self, width, height, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._terrain = [['#' for x in range(width)] for y in range(height)]
         max_w = 8
         max_h = 8
@@ -256,8 +261,8 @@ class Grid(Map):
             door_x, door_y = xx * room_size, floor((yy + 0.5) * room_size)
         return (door_x, door_y)
 
-    def __init__(self, width, height, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         floor = math.floor
         room_size = 6
         rooms_w = width // room_size
@@ -309,8 +314,8 @@ class TwoRooms(Map):
         x, y = self._width // 2 - self._room_size // 2 - self._corridor_len // 2, self._height // 2 - self._room_size // 2 - 1
         return (x, y)
 
-    def __init__(self, width, height, room_size=5, corridor_len=9, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, room_size=5, corridor_len=9, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._width = width
         self._height = height
         self._room_size = room_size
@@ -333,8 +338,8 @@ class TwoRooms(Map):
         self._terrain[y][x] = '>'
 
 class Corridors(Map):
-    def __init__(self, width, height, room_size=5, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, room_size=5, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._width = width
         self._height = height
         self._room_size = room_size
@@ -369,8 +374,8 @@ class Town(Map):
             for yy in range(y, y+h):
                 self._terrain[yy][xx] = '#'
 
-    def __init__(self, width, height, residents, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, residents, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._can_save = True
         self._terrain = [['.' for x in range(width)] for y in range(height)]
         x, y = width // 2, height // 2
@@ -399,8 +404,8 @@ class TheTowerArena(Map):
             for yy in range(y, y+h):
                 self._terrain[yy][xx] = '.'
 
-    def __init__(self, width, height, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._width = width
         self._height = height
         self._terrain = [['#' for x in range(width)] for y in range(height)]
@@ -409,8 +414,8 @@ class TheTowerArena(Map):
         self._terrain[5][width // 2] = '>'
 
 class BeholderArena(Map):
-    def __init__(self, width, height, room_size=5, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, room_size=5, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._width = width
         self._height = height
         self._room_size = room_size
@@ -440,8 +445,8 @@ class BeholderArena(Map):
         self._terrain[ry + room_size//2][rx + room_size//2] = '>'
 
 class TheSneakArena(Map):
-    def __init__(self, width, height, map_group=None, turn_limit=None):
-        super().__init__(map_group, turn_limit)
+    def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         floor = math.floor
         room_size = 6
         rooms_w = width // room_size
@@ -504,9 +509,9 @@ class Rivers(Map):
                     continue
                 self._terrain[y+yy][x+xx] = brush[yy][xx]
 
-    def __init__(self, width, height, n_rivers=3, thickness=2, inverted=False, map_group=None, turn_limit=None):
+    def __init__(self, width, height, n_rivers=3, thickness=2, inverted=False, map_group=None, turn_limit=None, can_escape=True):
         import util
-        super().__init__(map_group, turn_limit)
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         brush = [
             ['#' if inverted else '.'] * thickness
         ] * thickness
@@ -596,10 +601,10 @@ class Ring(Map):
                 self._terrain[y][x] = '#' if self._inverted else '.'
             flag = not flag
 
-    def __init__(self, width, height, room_size=8, ring_thickness=3, ring_offset=1, inverted=False, map_group=None, turn_limit=None):
+    def __init__(self, width, height, room_size=8, ring_thickness=3, ring_offset=1, inverted=False, map_group=None, turn_limit=None, can_escape=True):
         import util
         self._inverted = inverted
-        super().__init__(map_group, turn_limit)
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
         self._fill(width, height, '.' if self._inverted else '#')
         self._draw_ring(width, height, ring_thickness, ring_offset)
         self._draw_room(width, height, room_size)

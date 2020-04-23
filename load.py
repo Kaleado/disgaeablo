@@ -38,6 +38,7 @@ def load_entity(obj):
 
     if obj == 'None':
         return None
+    print(obj)
     generator_type = obj['generator_type']
     try:
         underscore = generator_type.index('_')
@@ -68,6 +69,7 @@ def load_map(obj):
     mapp._turn_limit = None if obj['turn_limit'] == 'None' else obj['turn_limit']
     mapp._terrain = obj['terrain']
     mapp._can_save = obj['can_save']
+    mapp._can_escape = obj['can_escape']
     mapp._entities = {}
     for (k, v) in obj['entities'].items():
         mapp._entities[k] = load_entity(v)

@@ -442,7 +442,11 @@ class ReturnToTown(Usable):
 
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
         import director
-        director.map_director.return_to_town()
+        print(mapp.can_escape())
+        if mapp.can_escape():
+            director.map_director.return_to_town()
+        else:
+            message_panel.info("You cannot escape!", tcod.red)
         return False
 
 class Heal(Usable):
@@ -1594,24 +1598,15 @@ class PlayerLogic(Component):
         self._chat_mode = False
         self._sending_to_net_name = None
 
-    def _prompt_for_net_name(self):
-        text_input_menu = Menu({
-            'TextInputPanel': ((0,0), TextInputPanel("Net name of receiver:"))
-        }, ['TextInputPanel'])
-        net_name = text_input_menu.run(settings.root_console)
-        return net_name
-
     def _prompt_for_message(self):
-        import director
+        import director, panel
+
         if self._sending_to_net_name is None:
-            self._sending_to_net_name = self._prompt_for_net_name()
+            self._sending_to_net_name = panel.text_prompt("Enter net name for recipient:")
             if self._sending_to_net_name is None:
                 return False
-       
-        text_input_menu = Menu({
-            'TextInputPanel': ((0,0), TextInputPanel("To {}:".format(self._sending_to_net_name)))
-        }, ['TextInputPanel'])
-        message = text_input_menu.run(settings.root_console)
+
+        message = panel.text_prompt("To {}:".format(self._sending_to_net_name))
         if message is not None:
             director.net_director.queue_events([('NET_RECEIVED_MESSAGE', {
                 'sender': director.net_director.net_name(),
@@ -1624,11 +1619,16 @@ class PlayerLogic(Component):
         return None
 
     def handle_event(self, entity, event, resident_map):
-        import director, load
+        import director, load, panel
         event_type, event_data = event
         if event_type == 'NET_RECEIVED_MESSAGE':
             settings.message_panel.info('From {}: {}'.format(event_data['sender'], event_data['message']), tcod.cyan)
             return False
+        elif event_type == 'NET_RECEIVED_CURSE':
+            settings.message_panel.info('{} sent you a curse!'.format(event_data['sender']), tcod.cyan)
+            map_data = event_data['curse_map']
+            curse_map = load.load_map(map_data)
+            settings.pending_curses_received.append((curse_map, event_data['sender'], event_data['message']))
         elif event_type == 'NET_RECEIVED_ITEM':
             settings.message_panel.info('{} sent you an item!'.format(event_data['sender']), tcod.cyan)
             item_obj = event_data['item']
@@ -1650,7 +1650,7 @@ class PlayerLogic(Component):
                 self._chat_mode = not self._chat_mode
                 return True
             elif event_data.sym in [tcod.event.K_n]:
-                self._sending_to_net_name = self._prompt_for_net_name()
+                self._sending_to_net_name = panel.text_prompt("Enter net name for recipient:")
                 return True
             elif event_data.sym in [tcod.event.K_m]:
                 return self._prompt_for_message()

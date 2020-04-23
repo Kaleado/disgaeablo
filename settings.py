@@ -12,6 +12,7 @@ main_dungeon_lowest_floor = 1
 loot_tier = 1
 monster_tier = 1
 pending_items_received = []
+pending_curses_received = []
 
 message_panel = MessagePanel(14)
 

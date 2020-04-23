@@ -203,7 +203,7 @@ class Slime:
     names = ['Slime', 'Viscous slime', 'Honey slime', 'Mercury slime', 'Emerald slime']
     colours = [tcod.cyan, tcod.blue, tcod.gold, tcod.silver, tcod.green]
 
-    def MonWave():
+    def Smash():
         formation = Formation(origin=(1,1), formation=[['x','x','x'],
                                                        ['x','.','x'],
                                                        ['x','x','x']])
@@ -227,12 +227,12 @@ class Slime:
                 'Combat': Combat(),
                 'NPC': NPC(Slime.names[tier-1]),
                 'AI': ai.AI()\
-                .add_skill('MonWave', Slime.MonWave(), delay=1)\
+                .add_skill('Smash', Slime.Smash(), delay=1)\
                 .with_state('IDLE', ai.AIState()\
                             .when_player_within_distance(5, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
                 .with_state('AGGRO', ai.AIState()\
-                            .when_player_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'MonWave'))\
+                            .when_player_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'Smash'))\
                             .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
             }, ttype='Slime_'+str(tier))
         return gen
@@ -1146,7 +1146,7 @@ class Bee:
         'hit': 6,
     }
 
-    names = ['Beehive', 'Wasp hive', 'Hornet hive', 'Spiderhawk hive', 'Apisterax hive']
+    names = ['Bee', 'Wasp', 'Hornet', 'Spiderhawk', 'Apisterax']
     colours = [tcod.light_yellow, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
 
     def Sting():

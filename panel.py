@@ -884,3 +884,10 @@ class TextInputPanel(TextPanel):
         if event_type == 'TCOD' and event_data.type == 'TEXTINPUT':
             self._text += event_data.text
             return True
+
+def text_prompt(prompt):
+    text_input_menu = Menu({
+        'TextInputPanel': ((0,0), TextInputPanel(prompt))
+    }, ['TextInputPanel'])
+    result = text_input_menu.run(settings.root_console)
+    return result

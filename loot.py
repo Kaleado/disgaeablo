@@ -10,6 +10,8 @@ import random
 import skill_factory
 import damage
 import ally
+import map
+from curse import *
 
 LEVEL_PC_STAT_INC = 0.4
 TIER_PC_STAT_INC = 10
@@ -21,7 +23,7 @@ def CharredSkull(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='+', colour=tcod.red),
+        'Render': entity.Render(character='$', colour=tcod.red),
         'Item': entity.Item("Charred skull", 'Someone strange might want this...'),
         'CharredSkull': entity.Component()
     }, ttype='CharredSkull')
@@ -31,7 +33,7 @@ def TownPortal(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='+', colour=tcod.lighter_blue),
+        'Render': entity.Render(character='$', colour=tcod.lighter_blue),
         'Item': entity.Item("Town portal", 'Takes you back to town, fully healing your HP and SP'),
         'Usable': entity.ConsumeAfter(entity.ReturnToTown()),
         'TownPortal': entity.Component()

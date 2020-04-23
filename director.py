@@ -145,7 +145,14 @@ class MapDirector:
         if self._item_world is None:
             settings.main_dungeon_lowest_floor = max(settings.main_dungeon_lowest_floor, self._current_floor)
         player = settings.current_map.entity('PLAYER')
-        settings.set_current_map(self.map(self.difficulty()))
+        if len(settings.pending_curses_received) > 0:
+            curse_map, sender, message = settings.pending_curses_received[0]
+            settings.pending_curses_received = settings.pending_curses_received[1:]
+            settings.message_panel.info("Oh no! This floor has been cursed by {}!".format(sender), tcod.cyan)
+            settings.message_panel.info("{} says, \"{}\"".format(sender, message), tcod.cyan)
+            settings.set_current_map(curse_map)
+        else:
+            settings.set_current_map(self.map(self.difficulty()))
         x, y = settings.current_map.player_start_position(player)
         player.component('Position').set(x, y)
 
@@ -483,7 +490,7 @@ class NetDirector:
             s.sendall('END_MESSAGE'.encode('utf-8'))
             self._queued_events = self._queued_events[5:]
             data = self._recv_from_server(s)
-        print(data)
+        #print(data)
 
     def send_remaining_events(self):
         if self._network_disabled:
