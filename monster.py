@@ -51,7 +51,7 @@ def MailmanNPC(position):
             'spd': 9 * 10 ** 9,
             'hit': 9 * 10 ** 9,
         }),
-
+        'Neutral': Combat(),
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.yellow),
         'Combat': Combat(),
@@ -73,7 +73,7 @@ def ItemWorldClerkNPC(position):
             'spd': 9 * 10 ** 9,
             'hit': 9 * 10 ** 9,
         }),
-
+        'Neutral': Combat(),
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.magenta),
         'Combat': Combat(),
@@ -95,7 +95,7 @@ def UptierShopNPC(position):
             'spd': 9 * 10 ** 9,
             'hit': 9 * 10 ** 9,
         }),
-
+        'Neutral': Combat(),
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.light_gray),
         'Combat': Combat(),
@@ -121,7 +121,7 @@ def ModShopNPC(position):
             'spd': 9 * 10 ** 9,
             'hit': 9 * 10 ** 9,
         }),
-
+        'Neutral': Combat(),
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.green),
         'Combat': Combat(),
@@ -148,7 +148,7 @@ def EquipmentShopNPC(position):
             'spd': 9 * 10 ** 9,
             'hit': 9 * 10 ** 9,
         }),
-
+        'Neutral': Combat(),
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.blue),
         'Combat': Combat(),
@@ -176,7 +176,7 @@ def SkillShopNPC(position):
             'spd': 9 * 10 ** 9,
             'hit': 9 * 10 ** 9,
         }),
-
+        'Neutral': Combat(),
         'Position': Position(x, y),
         'Render': Render(character='@', colour=tcod.lighter_blue),
         'Combat': Combat(),
@@ -698,6 +698,7 @@ class BossTheSneak:
                             .print_message("Jerome laughs as he disappears into thin air!")
 
     def generator(tier=settings.monster_tier, level=1):
+        print("The sneak tier:", tier)
         actual_stats = util.copy_dict(BossTheSneak.base_stats)
         actual_stats['level'] = level
         for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):

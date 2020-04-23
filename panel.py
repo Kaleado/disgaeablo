@@ -229,12 +229,18 @@ class TextPanel(Panel):
         console.default_fg = old_fg
 
 class PlaceFormationOnMapPanel(MapPanel):
+    _last_position = None
     _cursor_rotation = 0
    
     def __init__(self, mapp, formation, cursor_position, directional=False, max_range=None, user_position=None):
+        import util
         super().__init__(mapp)
         self._formation = formation
-        self._cursor_position = cursor_position
+        self._cursor_position = cursor_position if directional or user_position is None or \
+            PlaceFormationOnMapPanel._last_position is None or \
+            (max_range is not None and \
+             util.distance(PlaceFormationOnMapPanel._last_position, user_position) > max_range) \
+             else PlaceFormationOnMapPanel._last_position
         self._directional = directional
         self._max_range = max_range
         self._user_position = user_position
@@ -326,6 +332,10 @@ class PlaceFormationOnMapPanel(MapPanel):
                 new_cursor_position = min(cx + step, w - step), min(cy + step, h - step)
             elif event_data.sym == tcod.event.K_r:
                 PlaceFormationOnMapPanel._cursor_rotation = (PlaceFormationOnMapPanel._cursor_rotation - (1 if lshift_held else -1)) % 4
+            elif event_data.sym == tcod.event.K_ESCAPE:
+                self._cursor_position = None
+                self._cursor_rotation = None
+                self._done(menu)
             elif event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_r:
                 self._cursor_rotation = (PlaceFormationOnMapPanel._cursor_rotation - \
                                         (1 if lshift_held else -1)) % 4
@@ -335,6 +345,7 @@ class PlaceFormationOnMapPanel(MapPanel):
                 return True
             if self._max_range is None or self._user_position is None or distance(self._user_position, new_cursor_position) <= self._max_range:
                 self._cursor_position = new_cursor_position
+                PlaceFormationOnMapPanel._last_position = new_cursor_position
             return True
         return False
 

@@ -72,6 +72,9 @@ class Entity:
             'Player' if self.component('PlayerLogic') is not None else \
             self.component('Item').name() if self.component('Item') is not None else 'Unknown object'
 
+    def position(self):
+        return self.component('Position')
+
     def generate_new_ident(self):
         self._ident = str(uuid.uuid4())
         return self._ident
@@ -309,6 +312,8 @@ class TargetFormation(TargetMode):
             return self._choose_targets_positioned_randomly(user_entity, used_entity, mapp, menu)
         if user_entity == mapp.entity('PLAYER'):
             return self._choose_targets_player(user_entity, used_entity, mapp, menu)
+        if user_entity.has_component('Ally'):
+            return self._choose_targets_ally(user_entity, used_entity, mapp, menu)
         return self._choose_targets_monster(user_entity, used_entity, mapp, menu)
 
     def _choose_targets_positioned_randomly(self, user_entity, used_entity, mapp, menu):
@@ -324,8 +329,29 @@ class TargetFormation(TargetMode):
             self._targets[group] = mapp.entities().in_formation(self._formation, formation_position, formation_rotation, group=group), self._formation.positions_in_formation(formation_position, formation_rotation, group)
         return self._targets['x']
 
+    def _choose_targets_ally(self, user_entity, used_entity, mapp, menu):
+        # If the target is nearby, try to hit them, otherwise, just target randomly
+        target = user_entity.component('AI').get_target()
+        if target is None:
+            return None, None
+        user_pos = user_entity.component('Position').get()
+        target_pos = mapp.entity(target).component('Position').get()
+        formation_position = user_pos
+        formation_rotation = random.randint(0,4)
+        if not self._directional:
+            if self._max_range is None or distance(user_pos, target_pos) <= self._max_range:
+                formation_position = target_pos
+        else:
+            for rot in range(4):
+                if self._formation.in_formation(formation_position, target_pos, rot):
+                    formation_rotation = rot
+                    break
+        for group in self._formation.groups():
+            self._targets[group] = mapp.entities().in_formation(self._formation, formation_position, formation_rotation, group=group), self._formation.positions_in_formation(formation_position, formation_rotation, group)
+        return self._targets['x']
+
     def _choose_targets_monster(self, user_entity, used_entity, mapp, menu):
-        # If the player is nearby, try to hit them, otherwise, just target north
+        # If the player is nearby, try to hit them, otherwise, just target randomly
         user_pos = user_entity.component('Position').get()
         player_pos = mapp.entity('PLAYER').component('Position').get()
         formation_position = user_pos
@@ -736,10 +762,11 @@ class Stats(Component):
         'atk_becomes_itl',
         'max_hp_pc_penalty',
         'deathblow_multiplier_vs_paralyze',
+        'exp_granted_bonus_multiplier',
     ])
 
     REGEN_FREQUENCY = 6
-    EXP_YIELD_SCALE = 5.0
+    EXP_YIELD_SCALE = 2.0
 
     """
     There is no need to initialise all the base_stats -- any ones left out will
@@ -796,7 +823,8 @@ class Stats(Component):
         return dam
 
     def exp_yield(self):
-        return math.floor(Stats.EXP_YIELD_SCALE * sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])]))
+        multi = 1 + self.get('exp_granted_bonus_multiplier')
+        return multi * math.floor(Stats.EXP_YIELD_SCALE * sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])]))
 
     def increase_level(self, num):
         self.add_base('max_exp', num * 90)
@@ -1629,9 +1657,7 @@ class PlayerLogic(Component):
             elif event_data.sym in [tcod.event.K_t]:
                 inventory = entity.component('Inventory')
                 item = inventory.items().as_list()[0].save()
-                print(item)
                 receiver = self._prompt_for_net_name()
-                print(receiver)
                 director.net_director.queue_events([('NET_RECEIVED_ITEM', {
                     'receiver': receiver,
                     'sender': director.net_director.net_name(),
@@ -1647,7 +1673,7 @@ class PlayerLogic(Component):
                 settings.set_current_map(m)
             elif event_data.sym in [tcod.event.K_s]:
                 if not settings.current_map.can_save():
-                    message_panel.info("You can only save in town", tcod.red)
+                    message_panel.info("You can only save in town", tcod.cyan)
                     return False
                 save = {
                     'current_map': settings.current_map.save(),
@@ -1656,7 +1682,7 @@ class PlayerLogic(Component):
                     'monster_tier': settings.monster_tier,
                 }
                 strg = json.dump(save, open('save.json', mode='w'))
-                print(strg)
+                message_panel.info("Game saved to save.json", tcod.cyan)
             elif event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 target_position = (x, y-1)
                 has_acted = True

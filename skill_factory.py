@@ -175,7 +175,7 @@ class Skill(Usable):
         def f(self, entity, user_entity, mapp, targets, menu):
             lev = level
             if lev is None:
-                lev = director.map_director.difficulty()
+                lev = min(user_entity.stat('level'), director.map_director.difficulty())
             res = use_on_targets(self, entity, user_entity, mapp, targets, menu)
             if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
                 _, positions = self._target_mode.targets(group='x')

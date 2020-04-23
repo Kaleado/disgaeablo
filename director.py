@@ -33,22 +33,22 @@ class MapDirector:
     def _spawn_the_tower(self, level, mapp):
         import entity
         width, height = mapp.dimensions()
-        the_tower = monster.BossTheTower.generator(level=level)((width // 2, 5))
+        the_tower = monster.BossTheTower.generator(tier=settings.monster_tier, level=level)((width // 2, 5))
         mapp.add_entity(the_tower)
         for _ in range(10):
-            the_tower_minion = monster.BossTheTowerMinion.generator(level=level)((12, 12))
+            the_tower_minion = monster.BossTheTowerMinion.generator(tier=settings.monster_tier, level=level)((12, 12))
             x, y = mapp.random_passable_position_for(the_tower_minion)
             the_tower_minion.component('Position').set(x, y)
             mapp.add_entity(the_tower_minion)
 
     def _spawn_ultimate_beholder(self, level, mapp):
         import entity
-        beholder_boss = monster.BossUltimateBeholder.generator(level=level)((15,15))
+        beholder_boss = monster.BossUltimateBeholder.generator(tier=settings.monster_tier, level=level)((15,15))
         x, y = mapp.random_passable_position_for(beholder_boss)
         beholder_boss.component('Position').set(x, y)
         mapp.add_entity(beholder_boss)
         for _ in range(6):
-            bhld = monster.Eye.generator(level=level)((3,3))
+            bhld = monster.Eye.generator(tier=settings.monster_tier, level=level)((3,3))
             x, y = mapp.random_passable_position_for(bhld)
             bhld.component('Position').set(x, y)
             bhld.set_component('UltimateBeholderAdd', entity.Combat())
@@ -56,7 +56,7 @@ class MapDirector:
 
     def _spawn_the_sneak(self, level, mapp):
         import entity
-        the_sneak_boss = monster.BossTheSneak.generator(level=level)((15,15))
+        the_sneak_boss = monster.BossTheSneak.generator(tier=settings.monster_tier, level=level)((15,15))
         x, y = mapp.random_passable_position_for(the_sneak_boss)
         the_sneak_boss.component('Position').set(x, y)
         mapp.add_entity(the_sneak_boss)
@@ -235,7 +235,7 @@ class MonsterDirector:
         tier = settings.monster_tier
         if random.randint(0, 100) <= 1:
             tier += 1
-            level = math.floor(level * 0.1)
+            # level = math.floor(level * 0.1)
         return random.choice(monster_set).generator(tier=tier, level=level)
 
     def monster(self, difficulty, level):
@@ -243,7 +243,7 @@ class MonsterDirector:
         tier = settings.monster_tier
         if random.randint(0, 100) == 1:
             tier += 1
-            level = math.floor(level * 0.1)
+            # level = math.floor(level * 0.1)
         return random.choice(available_set).generator(tier=tier, level=level)
 
 monster_director = MonsterDirector()

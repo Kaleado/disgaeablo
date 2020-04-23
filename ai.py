@@ -60,6 +60,16 @@ class AIState:
         self._add_handler('NPC_TURN', f)
         return self
 
+    def when_target_within_distance(self, distance, handler, should_stop=True):
+        def f(self, entity, ai, event_data):
+            target_distance = ai.distance_to_target(entity)
+            if target_distance is not None and target_distance <= distance:
+                handler(entity, ai, event_data)
+                return should_stop
+            return False
+        self._add_handler('NPC_TURN', f)
+        return self
+
     def when_player_within_distance(self, distance, handler, should_stop=True):
         def f(self, entity, ai, event_data):
             if ai.distance_to_player(entity) <= distance:
@@ -122,6 +132,7 @@ class AI(entity.Component):
         self._states = {}
         self._skills = {}
         self._blackboard = {}
+        self._target = None
         self._delayed_attack = None
         self._delay = None
         self._delayed_targets = None
@@ -151,6 +162,10 @@ class AI(entity.Component):
             resident_map.remove_threatened_positions(entity.ident())
             return False
 
+        # Rest the target to None if the target died
+        if event_type == 'ENTITY_KILLED' and event_data.ident() == self._target:
+            self._target = None
+
         if event_type == 'NPC_TURN':
             self._handle_passive_attacks(entity, resident_map)
             if is_paralyzed:
@@ -172,7 +187,9 @@ class AI(entity.Component):
             if delay == 0:
                 targeted_positions = passive_targets[1]
                 # TODO: make this work with / without friendly fire
-                excluded_components = ['Item'] + [] if entity.ident == 'PLAYER' else ['NPC']
+                excluded_components = ['Item'] + (['Ally', 'Player', 'Neutral'] if entity.ident() == 'PLAYER' or \
+                                                  entity.has_component('Ally') else ['NPC'])
+                excluded_components += ([] if not entity.has_component('Ally') else ['PlayerLogic'])
                 targets = resident_map.entities().without_components(excluded_components)\
                                                  .with_component('Position')\
                                                  .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
@@ -188,7 +205,9 @@ class AI(entity.Component):
             return False
         targeted_positions = self._delayed_targets[1]
         # TODO: make this work with / without friendly fire
-        excluded_components = ['Item'] + [] if entity.ident == 'PLAYER' else ['NPC']
+        excluded_components = ['Item'] + (['Ally', 'Player', 'Neutral'] if entity.ident() == 'PLAYER' or \
+                                            entity.has_component('Ally') else ['NPC'])
+        excluded_components += ([] if not entity.has_component('Ally') else ['PlayerLogic'])
         targets = resident_map.entities().without_components(excluded_components)\
                                          .with_component('Position')\
                                          .where(lambda ent: ent.component('Position').get() in targeted_positions), targeted_positions
@@ -197,7 +216,48 @@ class AI(entity.Component):
         self._delayed_attack = None
         return False
 
+    def _find_target_ally(self, entity):
+        import settings, util
+        # find the nearest monster
+        SEEK_DISTANCE = 8
+        current_map = settings.current_map
+        pos = entity.position().get()
+        monsters = current_map.entities()\
+                              .with_component('NPC')\
+                              .without_components(['Neutral', 'PlayerLogic', 'Ally'])\
+                              .where(lambda e : util.distance(e.position().get(), pos) <= SEEK_DISTANCE)\
+                              .as_list()
+        monsters.sort(key=lambda e : util.distance(e.position().get(), pos))
+        if len(monsters) == 0:
+            return None
+        return monsters[0].ident()
+
+    def _find_target_monster(self, entity):
+        return 'PLAYER'
+
     # Helpers
+
+    def get_target(self):
+        return self._target
+
+    def find_target(self, entity):
+        if entity.has_component('Ally'):
+            target = self._find_target_ally(entity)
+        elif entity.has_component('PlayerLogic'):
+            target = None
+        else:
+            target = self._find_target_monster(entity)
+        self._target = target
+
+    def step_towards_target(self, entity):
+        import settings
+        passmap = settings.current_map.passability_map_for(entity)
+        target = settings.current_map.entity(self._target)
+        target_pos = target.component('Position').get()
+        ent_pos = entity.component('Position').get()
+        path = find_path(passmap, ent_pos, target_pos)
+        if len(path) > 1 and not target_pos == path[1]:
+            entity.component('Position').set(path[1][0], path[1][1])
 
     def step_towards_player(self, entity):
         import settings
@@ -236,6 +296,15 @@ class AI(entity.Component):
         my_position = entity.component('Position').get()
         player_position = player.component('Position').get()
         return distance(player_position, my_position)
+
+    def distance_to_target(self, entity):
+        import settings
+        if self._target is None:
+            return None
+        target = settings.current_map.entity(self._target)
+        my_position = entity.component('Position').get()
+        target_position = target.component('Position').get()
+        return distance(target_position, my_position)
 
     def perform_attack_against(self, entity, target):
         import settings
