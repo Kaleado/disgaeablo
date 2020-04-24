@@ -42,13 +42,16 @@ def random_permutation(lst):
     return res
 
 def find_path(passability_map, source, dest):
-    q = [source]
+    import heapq
+    def heur(pt):
+        return abs(dest[0] - pt[0]) + abs(dest[1] - pt[1])
+    q = [(heur(source), source)]
     w = len(passability_map[0])
     h = len(passability_map)
     path_map = [[None for x in range(w)] for y in range(h)]
     seen = set()
     while len(q) > 0:
-        (x, y) = q.pop()
+        (_, (x, y)) = heapq.heappop(q)
         for dx in random_permutation([-1, 0, 1]):
             for dy in random_permutation([-1, 0, 1]):
                 if (dx == 0 and dy == 0) or \
@@ -57,7 +60,8 @@ def find_path(passability_map, source, dest):
                     continue
                 path_map[y+dy][x+dx] = (x, y)
                 seen = seen | set([(x+dx, y+dy)])
-                q = [(x+dx, y+dy)] + q
+                pt = (x+dx, y+dy)
+                heapq.heappush(q, (heur(pt), pt))
         if (x, y) == dest:
             break
     path_map[source[1]][source[0]] = None
@@ -92,3 +96,12 @@ def clamp(n, smallest, largest):
 
 def rectangle(w, h, group='x'):
     return [[group] * w] * h
+
+def circle(radius, group='x', excluded_group='.'):
+    tiles = rectangle(2*radius+1, 2*radius+1, excluded_group)
+    c = (radius, radius)
+    for x in range(2*radius+1):
+        for y in range(2*radius+1):
+            if distance(c, (x, y)) <= radius:
+                tiles[y][x] = group
+    return tiles

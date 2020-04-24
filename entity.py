@@ -11,7 +11,7 @@ from formation import *
 import damage
 import math
 import uuid
-import pickle
+import balance
 
 SERIALIZED_COMPONENTS = ['Stats', 'Inventory', 'Position', 'EquipmentSlots', 'Equipment']
 
@@ -442,12 +442,50 @@ class ReturnToTown(Usable):
 
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
         import director
-        print(mapp.can_escape())
         if mapp.can_escape():
             director.map_director.return_to_town()
         else:
             message_panel.info("You cannot escape!", tcod.red)
         return False
+
+class ReturnToGrimmsville(Usable):
+    def __init__(self):
+        super().__init__(targeting_mode=TargetNobody())
+
+    def use_on_targets(self, entity, user_entity, mapp, targets, menu):
+        import director
+        if mapp.can_escape():
+            message_panel.info('A portal to Grimmsville opens', tcod.white)
+            message_panel.info('Don\'t feed the skeletons!', tcod.white)
+            director.map_director.return_to_grimmsville()
+        else:
+            message_panel.info('A crowd of skeletons laughs at you', tcod.red)
+            message_panel.info('You cannot escape!', tcod.red)
+        return False
+
+class LevelItem(Usable):
+    def __init__(self, levels):
+        super().__init__(targeting_mode=TargetNobody())
+        self._levels = levels
+
+    def _choose_item(self, entity):
+        if self._levels == 1:
+            title = 'Choose an item to level'
+        else:
+            title = 'Choose an item to level {} times'.format(self._levels)
+        choose_item_menu = Menu({
+            'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, [], title=title))
+        }, ['ChooseItemPanel'])
+        chosen_item = choose_item_menu.run(settings.root_console)
+        return chosen_item
+
+    def use_on_targets(self, entity, user_entity, mapp, targets, menu):
+        item = self._choose_item(user_entity)
+        if item is None:
+            return False
+        item.component('Stats').increase_level(self._levels)
+        message_panel.info('Your {} glows softly'.format(item.component('Item').name()))
+        return True
 
 class Heal(Usable):
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
@@ -767,16 +805,61 @@ class Stats(Component):
         'max_hp_pc_penalty',
         'deathblow_multiplier_vs_paralyze',
         'exp_granted_bonus_multiplier',
+        'res_per_debuff_pc_penalty',
+        'dfn_per_debuff_pc_penalty',
+        'atk_per_debuff_pc_penalty',
+        'itl_per_debuff_pc_penalty',
+        'spd_per_debuff_pc_penalty',
+        'hit_per_debuff_pc_penalty',
+        'max_hp_per_debuff_pc_penalty',
+        'max_sp_per_debuff_pc_penalty',
+        'res_per_debuff_pc_bonus',
+        'dfn_per_debuff_pc_bonus',
+        'atk_per_debuff_pc_bonus',
+        'itl_per_debuff_pc_bonus',
+        'spd_per_debuff_pc_bonus',
+        'hit_per_debuff_pc_bonus',
+        'max_hp_per_debuff_pc_bonus',
+        'max_sp_per_debuff_pc_bonus',
+        'res_per_buff_pc_penalty',
+        'dfn_per_buff_pc_penalty',
+        'atk_per_buff_pc_penalty',
+        'itl_per_buff_pc_penalty',
+        'spd_per_buff_pc_penalty',
+        'hit_per_buff_pc_penalty',
+        'max_hp_per_buff_pc_penalty',
+        'max_sp_per_buff_pc_penalty',
+        'res_per_buff_pc_bonus',
+        'dfn_per_buff_pc_bonus',
+        'atk_per_buff_pc_bonus',
+        'itl_per_buff_pc_bonus',
+        'spd_per_buff_pc_bonus',
+        'hit_per_buff_pc_bonus',
+        'max_hp_per_buff_pc_bonus',
+        'max_sp_per_buff_pc_bonus',
+    ])
+
+    debuffs = set([
+        'POISON',
+        'PARALYZE',
+        'MIND_BREAK',
+        'GUARD_BREAK',
+    ])
+
+    buffs = set([
+        'ASSAULT',
+        'STONESKIN',
+        'REGEN',
     ])
 
     REGEN_FREQUENCY = 6
-    EXP_YIELD_SCALE = 2.0
+    EXP_YIELD_SCALE = balance.exp_yield_scale
 
     """
     There is no need to initialise all the base_stats -- any ones left out will
     be zero by default
     """
-    def __init__(self, base_stats, stats_gained_on_level=None, stat_inc_per_level=0.2):
+    def __init__(self, base_stats, stats_gained_on_level=None, stat_inc_per_level=balance.stat_inc_per_level):
         self._stat_inc_per_level = stat_inc_per_level
         self._regen_counter = 0
         self._stats = {}
@@ -1011,10 +1094,19 @@ class Stats(Component):
         boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333
         if stat == 'spd' and self.has_status('PARALYZE'):
             return 0
+        n_debuffs = len([debuff for debuff in Stats.debuffs if self.has_status(debuff)])
+        n_buffs = len([buff for buff in Stats.buffs if self.has_status(buff)])
+        debuff_mult = 1 if stat not in Stats.primary_stats else \
+            1 + n_debuffs * (self.get(stat+'_per_debuff_pc_bonus') - self.get(stat+'_per_debuff_pc_penalty'))/100
+        buff_mult = 1 if stat not in Stats.primary_stats else \
+            1 + n_buffs * (self.get(stat+'_per_buff_pc_bonus') - self.get(stat+'_per_buff_pc_penalty'))/100
         deathblow_mult = 1 if stat != 'deathblow' else 1 + self.get('deathblow_multiplier')
         max_hp_mult = 1 if stat != 'max_hp' else (100 - self.get('max_hp_pc_penalty'))/100
-        return int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive'])
-                   * self._modifiers[stat]['multiplicative'] * deathblow_mult * max_hp_mult)
+        value = int((self.get_base(stat) * (1 + boost_factor) + self._modifiers[stat]['additive'])
+                    * self._modifiers[stat]['multiplicative'] * deathblow_mult * max_hp_mult * buff_mult * debuff_mult)
+        if stat in balance.stat_cap:
+            return min(value, balance.stat_cap[stat])
+        return value
 
     def get_additive_modifier(self, stat):
         return self._modifiers[stat]['additive']
@@ -1370,6 +1462,19 @@ class Neutral(AI):
             self._on_attacked(self, entity, event, resident_map)
             return False
 
+class GVilleTownsperson(Neutral):
+    def __init__(self):
+        super().__init__(on_chat=GVilleTownsperson.on_chat, on_attacked=GVilleTownsperson.on_attacked)
+
+    def on_chat(self, entity, event, resident_map):
+        settings.message_panel.info(random.choice(['\"Hello there, human\"',
+                                                   'The skeleton dances a jig for you',
+                                                   '\"Being a skeleton isn\'t so bad\'\"',
+                                                   '\"Welcome to Grimmsville\"']), tcod.green)
+
+    def on_attacked(self, entity, event, resident_map):
+        settings.message_panel.info(random.choice(['\"Ow\"', '\"Oof\"', '\"Owie\"', '\"My bones\"']), tcod.green)
+
 class Shopkeeper(Neutral):
     def __init__(self):
         super().__init__(on_chat=Shopkeeper.on_chat, on_attacked=Shopkeeper.on_attacked)
@@ -1390,14 +1495,14 @@ class Shopkeeper(Neutral):
 
     def _choose_item_to_buy(self, entity):
         choose_item_menu = Menu({
-            'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, [], title="\"What'll it be today?\" (Each item costs 1 town portal)"))
+            'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, [], title="\"What'll it be today?\" (Each item costs 1 town portal)"))
         }, ['ChooseItemPanel'])
         chosen_item = choose_item_menu.run(settings.root_console)
         return chosen_item
 
     def _choose_town_portal(self, entity):
         choose_item_menu = Menu({
-            'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, ["TownPortal"], title="\"That'll be one town portal\""))
+            'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, ["TownPortal"], title="\"That'll be one town portal\""))
         }, ['ChooseItemPanel'])
         chosen_item = choose_item_menu.run(settings.root_console)
         return chosen_item
@@ -1416,6 +1521,56 @@ class Shopkeeper(Neutral):
         item_name = bought_item.component('Item').name()
         entity.component('Inventory').remove(bought_item)
         player.component('Inventory').remove(town_portal)
+        player.component('Inventory').add(bought_item)
+        settings.message_panel.info("\"Thank you for your patronage!\"", tcod.green)
+        settings.message_panel.info("\"...sucker.\"", tcod.green)
+
+class SkullShopkeeper(Neutral):
+    def __init__(self):
+        super().__init__(on_chat=SkullShopkeeper.on_chat, on_attacked=SkullShopkeeper.on_attacked)
+        self._times_attacked = 0
+
+    def Apocalypse():
+        return SkillSpell(formation=Formation(origin=(10,10), formation=[
+            ['x' for _ in range(20)] for __ in range(20)
+        ]))
+
+    def on_attacked(self, entity, event, resident_map):
+        self._times_attacked += 1
+        if self._times_attacked >= 3:
+            settings.message_panel.info('\"You\'ve REALLY done it now...\"', tcod.green)
+            entity.set_component('AI', Hostile(primary_skill=SkullShopkeeper.Apocalypse(), primary_skill_range=9999))
+        else:
+            settings.message_panel.info(random.choice(['\"Ouch!\"', '\"Stop it!\"', '\"Hey!\"']), tcod.green)
+
+    def _choose_item_to_buy(self, entity):
+        choose_item_menu = Menu({
+            'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, [], title="\"What'll it be today?\" (Each item costs 1 charred skull)"))
+        }, ['ChooseItemPanel'])
+        chosen_item = choose_item_menu.run(settings.root_console)
+        return chosen_item
+
+    def _choose_charred_skull(self, entity):
+        choose_item_menu = Menu({
+            'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, ["CharredSkull"], title="\"That'll be one charred skull\""))
+        }, ['ChooseItemPanel'])
+        chosen_item = choose_item_menu.run(settings.root_console)
+        return chosen_item
+
+    def on_chat(self, entity, event, resident_map):
+        import director
+        player = resident_map.entity('PLAYER')
+        bought_item = self._choose_item_to_buy(entity)
+        if bought_item is None:
+            settings.message_panel.info("\"Aww, gimme a break...\"", tcod.green)
+            return
+        charred_skull = self._choose_charred_skull(player)
+        if charred_skull is None:
+            settings.message_panel.info("\"Aww, gimme a break...\"", tcod.green)
+            return
+        item_name = bought_item.component('Item').name()
+        entity.component('Inventory').remove(bought_item)
+        player.component('Inventory').remove(charred_skull)
         player.component('Inventory').add(bought_item)
         settings.message_panel.info("\"Thank you for your patronage!\"", tcod.green)
         settings.message_panel.info("\"...sucker.\"", tcod.green)
@@ -1441,7 +1596,7 @@ class UptierShopkeeper(Neutral):
     def _choose_charred_skull(self, entity):
         title = "Give a charred skull to:\n - Reset your dungeon progression, and\n - Uptier all loot and enemies\n\"Your charred skull, please... hehehe...\""
         choose_item_menu = Menu({
-            'ChooseItemPanel': ((0,0), ChooseItemPanel(entity, ["CharredSkull"], title=title))
+            'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, ["CharredSkull"], title=title))
         }, ['ChooseItemPanel'])
         chosen_item = choose_item_menu.run(settings.root_console)
         return chosen_item
@@ -1519,7 +1674,7 @@ class ItemWorldClerk(Neutral):
         import director
         player = resident_map.entity('PLAYER')
         choose_item_menu = Menu({
-            'ChooseItemPanel': ((0,0), ChooseItemPanel(player, []))
+            'ChooseItemPanel': ((1,1), ChooseItemPanel(player, []))
         }, ['ChooseItemPanel'])
         chosen_item = choose_item_menu.run(settings.root_console)
         if chosen_item is None:

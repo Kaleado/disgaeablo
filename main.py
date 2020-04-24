@@ -20,14 +20,17 @@ settings.current_map._entities = {
     'PLAYER': monster.Player((15, 15))
 }
 
-settings.current_map.add_entity(monster.Lavamoeba.generator()((10,10)))
-settings.current_map.add_entity(ally.Allyslime.generator()((10,10)))
+# settings.current_map.add_entity(monster.Witchdoctor.generator()((10,10)))
+# settings.current_map.add_entity(monster.Beehive.generator()((10,10)))
+# settings.current_map.add_entity(ally.Allyslime.generator()((10,10)))
 
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.SummonThunderTotem((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.GrimmsvillePortal((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.ItemLeveler10((0,0)))
+settings.current_map.entity('PLAYER').component('Inventory').add(loot.ItemLeveler25((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.CurseBees((0,0)))
 
 try:

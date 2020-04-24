@@ -8,26 +8,13 @@ import loot
 import ai
 import skill_factory
 
-LEVEL_PC_STAT_INC = 0.4
-TIER_PC_STAT_INC = 30
+LEVEL_PC_STAT_INC = balance.monster_level_stat_inc
+TIER_PC_STAT_INC = balance.monster_tier_stat_inc
 
 def Player(position):
     x, y = position
     return Entity('PLAYER', components={
-        'Stats': Stats({
-            'level': 1,
-            'max_hp': 200,
-            'cur_hp': 200,
-            'max_sp': 25,
-            'cur_sp': 25,
-            'atk': 45,
-            'dfn': 15,
-            'itl': 45,
-            'res': 15,
-            'spd': 15,
-            'hit': 15,
-            'max_exp': 50
-        }),
+        'Stats': Stats(balance.player_initial_stats),
         'Combat': Combat(),
         'Position': Position(x, y),
         'Render': Render(character="@", colour=tcod.red),
@@ -185,19 +172,103 @@ def SkillShopNPC(position):
         'AI': Shopkeeper()
     }, ttype='SkillShopNPC')
 
+def GrimmsvilleSkeleton(position):
+    import director
+    x, y = position
+    items = []
+    for _ in range(8):
+        items += [director.loot_director
+                  .loot_from_set(1, director.LootDirector.attack_skills | director.LootDirector.support_skills)((0,0))]
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 1,
+            'max_hp': 1,
+            'cur_hp': 1,
+            'atk': 1,
+            'dfn': 1,
+            'itl': 1,
+            'res': 1,
+            'spd': 1,
+            'hit': 1,
+            'exp_granted_bonus_multiplier': -1, #dont kill the skeletons
+        }),
+        'Neutral': Combat(),
+        'Position': Position(x, y),
+        'Render': Render(character='s', colour=tcod.gray),
+        'Combat': Combat(),
+        'NPC': NPC('Skeleton'),
+        'Inventory': Inventory(items),
+        'AI': GVilleTownsperson()
+    }, ttype='GrimmsvilleSkeleton')
+
+def ItemEnhancerNPC(position):
+    import director
+    x, y = position
+    items = []
+    for _ in range(8):
+        items += [loot.ItemLeveler25((0,0))]
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+        'Neutral': Combat(),
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.peach),
+        'Combat': Combat(),
+        'NPC': NPC('Diego, item enhancer'),
+        'Inventory': Inventory(items),
+        'AI': SkullShopkeeper()
+    }, ttype='ItemEnhancerNPC')
+
+def MultiplayerItemNPC(position):
+    import director
+    x, y = position
+    items = []
+    for _ in range(8):
+        items += [director.loot_director
+                  .loot_from_set(1, director.LootDirector.multiplayer)((0,0))]
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+        'Neutral': Combat(),
+        'Position': Position(x, y),
+        'Render': Render(character='@', colour=tcod.lighter_green),
+        'Combat': Combat(),
+        'NPC': NPC('Kasia, multiplayer item peddler'),
+        'Inventory': Inventory(items),
+        'AI': Shopkeeper()
+    }, ttype='MultiplayerItemNPC')
+
 
 class Slime:
     base_stats = {
-        'max_hp': 80,
-        'cur_hp': 80,
-        'max_sp': 10,
-        'cur_sp': 10,
-        'atk': 30,
-        'dfn': 10,
-        'itl': 12,
-        'res': 10,
-        'spd': 12,
-        'hit': 12
+        'max_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(10 * balance.monster_stat_scale['dfn']),
+        'itl': round(12 * balance.monster_stat_scale['itl']),
+        'res': round(10 * balance.monster_stat_scale['res']),
+        'spd': round(12 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Slime', 'Viscous slime', 'Honey slime', 'Mercury slime', 'Emerald slime']
@@ -239,16 +310,16 @@ class Slime:
 
 class Mage:
     base_stats = {
-        'max_hp': 50,
-        'cur_hp': 50,
-        'max_sp': 50,
-        'cur_sp': 50,
-        'atk': 8,
-        'dfn': 12,
-        'itl': 37,
-        'res': 18,
-        'spd': 12,
-        'hit': 12
+        'max_hp': round(50 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(50 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(50 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(50 * balance.monster_stat_scale['max_sp']),
+        'atk': round(8 * balance.monster_stat_scale['atk']),
+        'dfn': round(12 * balance.monster_stat_scale['dfn']),
+        'itl': round(37 * balance.monster_stat_scale['itl']),
+        'res': round(18 * balance.monster_stat_scale['res']),
+        'spd': round(12 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Apprentice', 'Mage', 'Wizard', 'Warlock', 'Master']
@@ -290,16 +361,16 @@ class Mage:
 
 class Golem:
     base_stats = {
-        'max_hp': 100,
-        'cur_hp': 100,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 30,
-        'dfn': 12,
-        'itl': 30,
-        'res': 9,
-        'spd': 8,
-        'hit': 12
+        'max_hp': round(100 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(100 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(12 * balance.monster_stat_scale['dfn']),
+        'itl': round(30 * balance.monster_stat_scale['itl']),
+        'res': round(9 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Mud golem', 'Stone golem', 'Iron golem', 'Magma golem', 'Mithril golem']
@@ -343,16 +414,16 @@ class Golem:
 
 class Scorpion:
     base_stats = {
-        'max_hp': 90,
-        'cur_hp': 90,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 45,
-        'dfn': 11,
-        'itl': 10,
-        'res': 8,
-        'spd': 8,
-        'hit': 12
+        'max_hp': round(90 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(90 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(45 * balance.monster_stat_scale['atk']),
+        'dfn': round(11 * balance.monster_stat_scale['dfn']),
+        'itl': round(10 * balance.monster_stat_scale['itl']),
+        'res': round(8 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Chittering scorpion', 'Hunter scorpion', 'Reaper scorpion', 'Predator scorpion', 'Death scorpion']
@@ -393,16 +464,16 @@ class Scorpion:
 
 class Spider:
     base_stats = {
-        'max_hp': 90,
-        'cur_hp': 90,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 15,
-        'dfn': 13,
-        'itl': 24,
-        'res': 8,
-        'spd': 8,
-        'hit': 12
+        'max_hp': round(90 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(90 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(15 * balance.monster_stat_scale['atk']),
+        'dfn': round(13 * balance.monster_stat_scale['dfn']),
+        'itl': round(24 * balance.monster_stat_scale['itl']),
+        'res': round(8 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Catchfoot spider', 'Webspitter spider', 'Shadelurk spider', 'Fearspinner spider', 'Deathtrap spider']
@@ -448,16 +519,16 @@ class Spider:
 
 class Eye:
     base_stats = {
-        'max_hp': 80,
-        'cur_hp': 80,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 30,
-        'dfn': 10,
-        'itl': 30,
-        'res': 18,
-        'spd': 8,
-        'hit': 12
+        'max_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(10 * balance.monster_stat_scale['dfn']),
+        'itl': round(30 * balance.monster_stat_scale['itl']),
+        'res': round(18 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Gaze eye', 'All-seeing eye', 'Chaos eye', 'Pandemonium eye', 'Omniscient eye']
@@ -493,16 +564,16 @@ class Eye:
 
 class Wyvern:
     base_stats = {
-        'max_hp': 80,
-        'cur_hp': 80,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 30,
-        'dfn': 12,
-        'itl': 30,
-        'res': 12,
-        'spd': 8,
-        'hit': 12
+        'max_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(12 * balance.monster_stat_scale['dfn']),
+        'itl': round(30 * balance.monster_stat_scale['itl']),
+        'res': round(12 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Scorch wyvern', 'Blaze wyvern', 'Crash wyvern', 'Storm wyvern', 'Eclipse wyvern']
@@ -547,16 +618,16 @@ class Wyvern:
 
 class Beholder:
     base_stats = {
-        'max_hp': 70,
-        'cur_hp': 70,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 18,
-        'dfn': 14,
-        'itl': 37,
-        'res': 8,
-        'spd': 8,
-        'hit': 12
+        'max_hp': round(70 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(70 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(18 * balance.monster_stat_scale['atk']),
+        'dfn': round(14 * balance.monster_stat_scale['dfn']),
+        'itl': round(37 * balance.monster_stat_scale['itl']),
+        'res': round(8 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Lesser beholder', 'Beholder', 'Greater beholder', 'Beholder lord', 'Omniscient beholder']
@@ -602,16 +673,16 @@ class Beholder:
 
 class Giant:
     base_stats = {
-        'max_hp': 170,
-        'cur_hp': 170,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 37,
-        'dfn': 14,
-        'itl': 18,
-        'res': 8,
-        'spd': 8,
-        'hit': 12
+        'max_hp': round(170 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(170 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(37 * balance.monster_stat_scale['atk']),
+        'dfn': round(14 * balance.monster_stat_scale['dfn']),
+        'itl': round(18 * balance.monster_stat_scale['itl']),
+        'res': round(8 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Hill giant', 'Moss giant', 'Stone giant', 'Iron giant', 'Fire giant']
@@ -652,20 +723,406 @@ class Giant:
             }, ttype='Giant_'+str(tier))
         return gen
 
+class Gremlin:
+    base_stats = {
+        'max_hp': round(60 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(60 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(9 * balance.monster_stat_scale['atk']),
+        'dfn': round(6 * balance.monster_stat_scale['dfn']),
+        'itl': round(9 * balance.monster_stat_scale['itl']),
+        'res': round(6 * balance.monster_stat_scale['res']),
+        'spd': round(6 * balance.monster_stat_scale['spd']),
+        'hit': 6 * balance.monster_stat_scale['hit']
+    }
+
+    names = ['Snickering gremlin', 'Giggling gremlin', 'Laughing gremlin', 'Shrieking gremlin', 'Howling gremlin']
+    colours = [tcod.darker_purple, tcod.darker_green, tcod.darker_yellow, tcod.darker_red, tcod.darker_blue]
+
+    def GuardBreak():
+        formation = Formation(origin=(1,1), formation=[['x','.','x'],
+                                                       ['.','x','.'],
+                                                       ['x','.','x']])
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
+                            .damage_targets("{} points and laughs {}'s pathetic DFN!")\
+                            .with_damage(damage.MonsterSpellDamage(0))\
+                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 25, d))
+
+    def MindBreak():
+        formation = Formation(origin=(1,1), formation=[['.','x','.'],
+                                                       ['x','x','x'],
+                                                       ['.','x','.']])
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
+                            .damage_targets("{} keels over laughing at {}'s pathetic RES!")\
+                            .with_damage(damage.MonsterSpellDamage(0))\
+                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Gremlin.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Gremlin.base_stats[stat] + Gremlin.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='g', colour=Gremlin.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Gremlin.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('GuardBreak', Gremlin.GuardBreak(), delay=1)\
+                .add_skill('MindBreak', Gremlin.MindBreak(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('USE_SPELLS', ai.AIState()\
+                            .when_player_beyond_distance(7, lambda e, ai, ev_d : ai.change_state('GET_CLOSER'))\
+                            .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'GuardBreak'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'MindBreak')))\
+                .with_state('GET_CLOSER', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+            }, ttype='Gremlin_'+str(tier))
+        return gen
+
+class Inferno:
+    base_stats = {
+        'max_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(80 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(10 * balance.monster_stat_scale['dfn']),
+        'itl': round(35 * balance.monster_stat_scale['itl']),
+        'res': round(10 * balance.monster_stat_scale['res']),
+        'spd': round(6 * balance.monster_stat_scale['spd']),
+        'hit': round(6 * balance.monster_stat_scale['hit']),
+        'fire_res': 100,
+    }
+
+    names = ['Flame', 'Blaze', 'Firestorm', 'Inferno', 'Hellfire']
+    colours = [tcod.dark_red, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def Explosion():
+        formation = Formation(origin=(2,2), formation=util.rectangle(5,5))
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
+                            .damage_targets("{} causes a fiery explosion on top of {}! ({} HP)")\
+                            .with_damage(damage.MonsterSpellDamage(90, 'fire'))\
+
+    def Firestorm():
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(7, passable_only=True, within_distance=2))))\
+                            .damage_targets("{} singes {} with fire! ({} HP)")\
+                            .with_damage(damage.MonsterSpellDamage(60, 'fire'))\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Inferno.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Inferno.base_stats[stat] + Inferno.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='I', colour=Inferno.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Inferno.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Firestorm', Inferno.Firestorm(), delay=1, is_passive=True)\
+                .add_skill('Explosion', Inferno.Explosion(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('USE_SPELLS', ai.AIState()\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
+                            .when_player_beyond_distance(6, lambda e, ai, ev_d : ai.step_towards_player(e))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Explosion')))\
+            }, ttype='Inferno_'+str(tier))
+        return gen
+
+class Bee:
+    base_stats = {
+        'max_hp': round(20 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(20 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(20 * balance.monster_stat_scale['atk']),
+        'dfn': round(8 * balance.monster_stat_scale['dfn']),
+        'itl': round(20 * balance.monster_stat_scale['itl']),
+        'res': round(8 * balance.monster_stat_scale['res']),
+        'spd': round(6 * balance.monster_stat_scale['spd']),
+        'hit': round(6 * balance.monster_stat_scale['hit']),
+    }
+
+    names = ['Bee', 'Wasp', 'Hornet', 'Spiderhawk', 'Apisterax']
+    colours = [tcod.light_yellow, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def Sting():
+        formation = Formation(origin=(0,0), formation=['.','x','x'])
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} stings {}! ({} HP)")\
+                            .with_damage(damage.MonsterSpellDamage(60, 'phys'))\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Bee.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Bee.base_stats[stat] + Bee.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='b', colour=Bee.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Bee.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Sting', Bee.Sting(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(14, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('USE_SPELLS', ai.AIState()\
+                            .when_player_within_distance(1, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'), False)\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+            }, ttype='Bee_'+str(tier))
+        return gen
+
+class Beehive:
+    base_stats = {
+        'max_hp': round(150 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(150 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(1 * balance.monster_stat_scale['atk']),
+        'dfn': round(12 * balance.monster_stat_scale['dfn']),
+        'itl': round(1 * balance.monster_stat_scale['itl']),
+        'res': round(12 * balance.monster_stat_scale['res']),
+        'spd': round(6 * balance.monster_stat_scale['spd']),
+        'hit': round(6 * balance.monster_stat_scale['hit']),
+    }
+
+    names = ['Beehive', 'Wasp hive', 'Hornet hive', 'Spiderhawk hive', 'Apisterax hive']
+    colours = [tcod.light_yellow, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def SummonBees():
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(1, passable_only=True, within_distance=2))))\
+                            .summon_monsters([Bee])\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Beehive.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Beehive.base_stats[stat] + Beehive.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='B', colour=Beehive.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Beehive.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('SummonBees', Beehive.SummonBees(), delay=0, is_passive=True)\
+                .with_state('IDLE', ai.AIState()\
+                            .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'SummonBees'), False)\
+                            .on_turn_otherwise(lambda e, ai, ev_d : False))\
+            }, ttype='Beehive_'+str(tier))
+        return gen
+
+class Lavamoeba:
+    base_stats = {
+        'max_hp': round(50 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(50 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(20 * balance.monster_stat_scale['atk']),
+        'dfn': round(10 * balance.monster_stat_scale['dfn']),
+        'itl': round(25 * balance.monster_stat_scale['itl']),
+        'res': round(10 * balance.monster_stat_scale['res']),
+        'spd': round(6 * balance.monster_stat_scale['spd']),
+        'hit': round(6 * balance.monster_stat_scale['hit']),
+        'fire_res': 50,
+    }
+
+    names = ['Lavamoeba1', 'Lavamoeba2', 'Lavamoeba3', 'Lavamoeba4', 'Lavamoeba5']
+    colours = [tcod.dark_red, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def Scorch():
+        formation = Formation(origin=(1,1), formation=util.rectangle(3,3))
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=0))))\
+                            .damage_targets("{} hits {} with its fiery body! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(45, 'fire'))\
+
+    def Spread():
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(1, passable_only=True, within_distance=1))))\
+                            .summon_monsters([Lavamoeba])\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Lavamoeba.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Lavamoeba.base_stats[stat] + Lavamoeba.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='s', colour=Lavamoeba.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Lavamoeba.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Spread', Lavamoeba.Spread(), delay=0, is_passive=True)\
+                .add_skill('Scorch', Lavamoeba.Scorch(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'Spread'), False)\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Scorch')))\
+            }, ttype='Lavamoeba_'+str(tier))
+        return gen
+
+class HostileThunderTotem:
+    base_stats = {
+        'max_hp': round(10 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(10 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(10 * balance.monster_stat_scale['dfn']),
+        'itl': round(30 * balance.monster_stat_scale['itl']),
+        'res': round(10 * balance.monster_stat_scale['res']),
+        'spd': round(12 * balance.monster_stat_scale['spd']),
+        'hit': round(12 * balance.monster_stat_scale['hit']),
+    }
+
+    names = ['Thunder totem', 'Thunder totem', 'Thunder totem', 'Thunder totem', 'Thunder totem']
+    colours = [tcod.yellow, tcod.yellow, tcod.yellow, tcod.yellow, tcod.yellow]
+
+    def Shockwave():
+        formation = Formation(origin=(1,1), formation=[['x','x','x'],
+                                                       ['x','.','x'],
+                                                       ['x','x','x']])
+        return skill_factory.Skill()\
+                            .with_target_mode(ExcludeItems(TargetFormation(formation, directional=True)))\
+                            .damage_targets("{} hits {} with a shockwave! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(60, 'lght'))
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(HostileThunderTotem.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (HostileThunderTotem.base_stats[stat] + HostileThunderTotem.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='t', colour=HostileThunderTotem.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(HostileThunderTotem.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Shockwave', HostileThunderTotem.Shockwave(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.find_target(e), False)\
+                            .when_target_within_distance(1.5, lambda e, ai, ev_d : ai.use_skill(e, 'Shockwave')))\
+            }, ttype='HostileThunderTotem_'+str(tier))
+        return gen
+
+class Witchdoctor:
+    base_stats = {
+        'max_hp': round(50 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(50 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(20 * balance.monster_stat_scale['atk']),
+        'dfn': round(10 * balance.monster_stat_scale['dfn']),
+        'itl': round(25 * balance.monster_stat_scale['itl']),
+        'res': round(10 * balance.monster_stat_scale['res']),
+        'spd': round(6 * balance.monster_stat_scale['spd']),
+        'hit': round(6 * balance.monster_stat_scale['hit']),
+        'fire_res': 50,
+    }
+
+    names = ['Witchdoctor1', 'Witchdoctor2', 'Witchdoctor3', 'Witchdoctor4', 'Witchdoctor5']
+    colours = [tcod.dark_red, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
+
+    def Hex():
+        formation = Formation(origin=(1,1), formation=util.circle(1))
+
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} is paralyzed and poisoned by {}'s hex!")\
+                            .with_damage(damage.MonsterSpellDamage(0))\
+                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('PARALYZE', 1, 2, d))\
+                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('POISON', 1, 2, d))
+
+    def ThunderTotem():
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(1, passable_only=True, within_distance=1))))\
+                            .summon_monsters([HostileThunderTotem])\
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(Witchdoctor.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (Witchdoctor.base_stats[stat] + Witchdoctor.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='w', colour=Witchdoctor.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(Witchdoctor.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Hex', Witchdoctor.Hex(), delay=1, is_passive=True)\
+                .add_skill('ThunderTotem', Witchdoctor.ThunderTotem(), delay=0)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('AGGRO'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
+                .with_state('AGGRO', ai.AIState()\
+                            .every_n_turns(1, lambda e, ai, ev_d : ai.use_skill(e, 'Hex'), False)\
+                            .when_player_beyond_distance(3, lambda e, ai, ev_d : ai.step_towards_player(e))\
+                            .every_n_turns(2, lambda e, ai, ev_d : ai.use_skill(e, 'ThunderTotem'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : False))\
+            }, ttype='Witchdoctor_'+str(tier))
+        return gen
+
 # Bosses
 
 class BossTheSneak:
     base_stats = {
-        'max_hp': 200,
-        'cur_hp': 200,
-        'max_sp': 10,
-        'cur_sp': 10,
-        'atk': 30,
-        'dfn': 15,
-        'itl': 45,
-        'res': 15,
-        'spd': 12,
-        'hit': 12
+        'max_hp': round(200 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(200 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(15 * balance.monster_stat_scale['dfn']),
+        'itl': round(45 * balance.monster_stat_scale['itl']),
+        'res': round(15 * balance.monster_stat_scale['res']),
+        'spd': round(12 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Jerome, the sneak'] * 5
@@ -734,16 +1191,16 @@ class BossTheSneak:
 
 class BossUltimateBeholder:
     base_stats = {
-        'max_hp': 200,
-        'cur_hp': 200,
-        'max_sp': 10,
-        'cur_sp': 10,
-        'atk': 30,
-        'dfn': 15,
-        'itl': 50,
-        'res': 15,
-        'spd': 12,
-        'hit': 12
+        'max_hp': round(200 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(200 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(15 * balance.monster_stat_scale['dfn']),
+        'itl': round(50 * balance.monster_stat_scale['itl']),
+        'res': round(15 * balance.monster_stat_scale['res']),
+        'spd': round(12 * balance.monster_stat_scale['spd']),
+        'hit': 12 * balance.monster_stat_scale['hit']
     }
 
     names = ['Azxtryzxtaz, King of beholders'] * 5
@@ -803,16 +1260,16 @@ class BossUltimateBeholder:
 
 class BossTheTower:
     base_stats = {
-        'max_hp': 220,
-        'cur_hp': 220,
-        'max_sp': 10,
-        'cur_sp': 10,
-        'atk': 30,
-        'dfn': 17,
-        'itl': 50,
-        'res': 17,
-        'spd': 12,
-        'hit': 12,
+        'max_hp': round(220 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(220 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(17 * balance.monster_stat_scale['dfn']),
+        'itl': round(50 * balance.monster_stat_scale['itl']),
+        'res': round(17 * balance.monster_stat_scale['res']),
+        'spd': round(12 * balance.monster_stat_scale['spd']),
+        'hit': round(12 * balance.monster_stat_scale['hit']),
     }
 
     names = ['XVI - The Tower'] * 5
@@ -928,16 +1385,16 @@ class BossTheTower:
 
 class BossTheTowerMinion:
     base_stats = {
-        'max_hp': 60,
-        'cur_hp': 60,
-        'max_sp': 10,
-        'cur_sp': 10,
-        'atk': 30,
-        'dfn': 20,
-        'itl': 45,
-        'res': 20,
-        'spd': 12,
-        'hit': 12,
+        'max_hp': round(60 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(60 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(10 * balance.monster_stat_scale['max_sp']),
+        'atk': round(30 * balance.monster_stat_scale['atk']),
+        'dfn': round(20 * balance.monster_stat_scale['dfn']),
+        'itl': round(45 * balance.monster_stat_scale['itl']),
+        'res': round(20 * balance.monster_stat_scale['res']),
+        'spd': round(12 * balance.monster_stat_scale['spd']),
+        'hit': round(12 * balance.monster_stat_scale['hit']),
     }
 
     names = ['Grim Watcher'] * 5
@@ -1003,279 +1460,3 @@ class BossTheTowerMinion:
             }, ttype='BossTheTowerMinion_'+str(tier))
         return gen
 
-class Gremlin:
-    base_stats = {
-        'max_hp': 60,
-        'cur_hp': 60,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 9,
-        'dfn': 6,
-        'itl': 9,
-        'res': 6,
-        'spd': 6,
-        'hit': 6
-    }
-
-    names = ['Snickering gremlin', 'Giggling gremlin', 'Laughing gremlin', 'Shrieking gremlin', 'Howling gremlin']
-    colours = [tcod.darker_purple, tcod.darker_green, tcod.darker_yellow, tcod.darker_red, tcod.darker_blue]
-
-    def GuardBreak():
-        formation = Formation(origin=(1,1), formation=[['x','.','x'],
-                                                       ['.','x','.'],
-                                                       ['x','.','x']])
-
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
-                            .damage_targets("{} points and laughs {}'s pathetic DFN!")\
-                            .with_damage(damage.MonsterSpellDamage(0))\
-                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('GUARD_BREAK', 1, 25, d))
-
-    def MindBreak():
-        formation = Formation(origin=(1,1), formation=[['.','x','.'],
-                                                       ['x','x','x'],
-                                                       ['.','x','.']])
-
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
-                            .damage_targets("{} keels over laughing at {}'s pathetic RES!")\
-                            .with_damage(damage.MonsterSpellDamage(0))\
-                            .change_damage(lambda d, s, t, i : damage.WithStatusEffect('MIND_BREAK', 1, 25, d))
-
-    def generator(tier=settings.monster_tier, level=1):
-        actual_stats = util.copy_dict(Gremlin.base_stats)
-        actual_stats['level'] = level
-        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Gremlin.base_stats[stat] + Gremlin.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
-            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
-        def gen(position):
-            x, y = position
-            return Entity(str(uuid.uuid4()), components={
-                'Stats': Stats(actual_stats),
-                'Position': Position(x, y),
-                'Render': Render(character='g', colour=Gremlin.colours[tier-1]),
-                'Combat': Combat(),
-                'NPC': NPC(Gremlin.names[tier-1]),
-                'AI': ai.AI()\
-                .add_skill('GuardBreak', Gremlin.GuardBreak(), delay=1)\
-                .add_skill('MindBreak', Gremlin.MindBreak(), delay=1)\
-                .with_state('IDLE', ai.AIState()\
-                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
-                .with_state('USE_SPELLS', ai.AIState()\
-                            .when_player_beyond_distance(7, lambda e, ai, ev_d : ai.change_state('GET_CLOSER'))\
-                            .on_turn_randomly(0.5, lambda e, ai, ev_d : ai.use_skill(e, 'GuardBreak'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'MindBreak')))\
-                .with_state('GET_CLOSER', ai.AIState()\
-                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Gremlin_'+str(tier))
-        return gen
-
-class Inferno:
-    base_stats = {
-        'max_hp': 80,
-        'cur_hp': 80,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 30,
-        'dfn': 10,
-        'itl': 35,
-        'res': 10,
-        'spd': 6,
-        'hit': 6,
-        'fire_res': 100,
-    }
-
-    names = ['Flame', 'Blaze', 'Firestorm', 'Inferno', 'Hellfire']
-    colours = [tcod.dark_red, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
-
-    def Explosion():
-        formation = Formation(origin=(2,2), formation=util.rectangle(5,5))
-
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=7))))\
-                            .damage_targets("{} causes a fiery explosion on top of {}! ({} HP)")\
-                            .with_damage(damage.MonsterSpellDamage(90, 'fire'))\
-
-    def Firestorm():
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(7, passable_only=True, within_distance=2))))\
-                            .damage_targets("{} singes {} with fire! ({} HP)")\
-                            .with_damage(damage.MonsterSpellDamage(60, 'fire'))\
-
-    def generator(tier=settings.monster_tier, level=1):
-        actual_stats = util.copy_dict(Inferno.base_stats)
-        actual_stats['level'] = level
-        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Inferno.base_stats[stat] + Inferno.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
-            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
-        def gen(position):
-            x, y = position
-            return Entity(str(uuid.uuid4()), components={
-                'Stats': Stats(actual_stats),
-                'Position': Position(x, y),
-                'Render': Render(character='I', colour=Inferno.colours[tier-1]),
-                'Combat': Combat(),
-                'NPC': NPC(Inferno.names[tier-1]),
-                'AI': ai.AI()\
-                .add_skill('Firestorm', Inferno.Firestorm(), delay=1, is_passive=True)\
-                .add_skill('Explosion', Inferno.Explosion(), delay=1)\
-                .with_state('IDLE', ai.AIState()\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
-                            .when_player_within_distance(7, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
-                .with_state('USE_SPELLS', ai.AIState()\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Firestorm'), False)\
-                            .when_player_beyond_distance(6, lambda e, ai, ev_d : ai.step_towards_player(e))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Explosion')))\
-            }, ttype='Inferno_'+str(tier))
-        return gen
-
-class Bee:
-    base_stats = {
-        'max_hp': 20,
-        'cur_hp': 20,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 20,
-        'dfn': 8,
-        'itl': 20,
-        'res': 8,
-        'spd': 6,
-        'hit': 6,
-    }
-
-    names = ['Bee', 'Wasp', 'Hornet', 'Spiderhawk', 'Apisterax']
-    colours = [tcod.light_yellow, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
-
-    def Sting():
-        formation = Formation(origin=(0,0), formation=['.','x','x'])
-
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
-                            .damage_targets("{} stings {}! ({} HP)")\
-                            .with_damage(damage.MonsterSpellDamage(60, 'phys'))\
-
-    def generator(tier=settings.monster_tier, level=1):
-        actual_stats = util.copy_dict(Bee.base_stats)
-        actual_stats['level'] = level
-        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Bee.base_stats[stat] + Bee.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
-            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
-        def gen(position):
-            x, y = position
-            return Entity(str(uuid.uuid4()), components={
-                'Stats': Stats(actual_stats),
-                'Position': Position(x, y),
-                'Render': Render(character='b', colour=Bee.colours[tier-1]),
-                'Combat': Combat(),
-                'NPC': NPC(Bee.names[tier-1]),
-                'AI': ai.AI()\
-                .add_skill('Sting', Bee.Sting(), delay=1)\
-                .with_state('IDLE', ai.AIState()\
-                            .when_player_within_distance(14, lambda e, ai, ev_d : ai.change_state('USE_SPELLS'))\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_randomly(e)))\
-                .with_state('USE_SPELLS', ai.AIState()\
-                            .when_player_within_distance(1, lambda e, ai, ev_d : ai.use_skill(e, 'Sting'), False)\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
-            }, ttype='Bee_'+str(tier))
-        return gen
-
-class Beehive:
-    base_stats = {
-        'max_hp': 150,
-        'cur_hp': 150,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 1,
-        'dfn': 12,
-        'itl': 1,
-        'res': 12,
-        'spd': 6,
-        'hit': 6,
-    }
-
-    names = ['Beehive', 'Wasp hive', 'Hornet hive', 'Spiderhawk hive', 'Apisterax hive']
-    colours = [tcod.light_yellow, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
-
-    def SummonBees():
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(1, passable_only=True, within_distance=2))))\
-                            .summon_monsters([Bee])\
-
-    def generator(tier=settings.monster_tier, level=1):
-        actual_stats = util.copy_dict(Beehive.base_stats)
-        actual_stats['level'] = level
-        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Beehive.base_stats[stat] + Beehive.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
-            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
-        def gen(position):
-            x, y = position
-            return Entity(str(uuid.uuid4()), components={
-                'Stats': Stats(actual_stats),
-                'Position': Position(x, y),
-                'Render': Render(character='B', colour=Beehive.colours[tier-1]),
-                'Combat': Combat(),
-                'NPC': NPC(Beehive.names[tier-1]),
-                'AI': ai.AI()\
-                .add_skill('SummonBees', Beehive.SummonBees(), delay=0, is_passive=True)\
-                .with_state('IDLE', ai.AIState()\
-                            .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'SummonBees'), False)\
-                            .on_turn_otherwise(lambda e, ai, ev_d : False))\
-            }, ttype='Beehive_'+str(tier))
-        return gen
-
-class Lavamoeba:
-    base_stats = {
-        'max_hp': 50,
-        'cur_hp': 50,
-        'max_sp': 40,
-        'cur_sp': 40,
-        'atk': 20,
-        'dfn': 10,
-        'itl': 25,
-        'res': 10,
-        'spd': 6,
-        'hit': 6,
-        'fire_res': 50,
-    }
-
-    names = ['Lavamoeba1', 'Lavamoeba2', 'Lavamoeba3', 'Lavamoeba4', 'Lavamoeba5']
-    colours = [tcod.dark_red, tcod.orange, tcod.dark_yellow, tcod.darker_red, tcod.crimson]
-
-    def Scorch():
-        formation = Formation(origin=(1,1), formation=util.rectangle(3,3))
-
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, max_range=0))))\
-                            .damage_targets("{} hits {} with its fiery body! ({} HP)")\
-                            .with_damage(damage.MonsterAttackDamage(45, 'fire'))\
-
-    def Spread():
-        return skill_factory.Skill()\
-                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetRandomPositions(1, passable_only=True, within_distance=1))))\
-                            .summon_monsters([Lavamoeba])\
-
-    def generator(tier=settings.monster_tier, level=1):
-        actual_stats = util.copy_dict(Lavamoeba.base_stats)
-        actual_stats['level'] = level
-        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
-            actual_stats[stat] = (Lavamoeba.base_stats[stat] + Lavamoeba.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
-            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
-        def gen(position):
-            x, y = position
-            return Entity(str(uuid.uuid4()), components={
-                'Stats': Stats(actual_stats),
-                'Position': Position(x, y),
-                'Render': Render(character='s', colour=Lavamoeba.colours[tier-1]),
-                'Combat': Combat(),
-                'NPC': NPC(Lavamoeba.names[tier-1]),
-                'AI': ai.AI()\
-                .add_skill('Spread', Lavamoeba.Spread(), delay=0, is_passive=True)\
-                .add_skill('Scorch', Lavamoeba.Scorch(), delay=1)\
-                .with_state('IDLE', ai.AIState()\
-                            .every_n_turns(10, lambda e, ai, ev_d : ai.use_skill(e, 'Spread'), False)\
-                            .on_turn_otherwise(lambda e, ai, ev_d : ai.use_skill(e, 'Scorch')))\
-            }, ttype='Lavamoeba_'+str(tier))
-        return gen

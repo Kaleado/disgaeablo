@@ -64,8 +64,11 @@ class MapDirector:
     def _main_dungeon_map(self, level):
         mapp = Grid(30,30)
         w,h=30,30
-        if self._current_floor == 0:
-            mapp = Town(30, 30, [monster.MailmanNPC, monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC, monster.UptierShopNPC])
+        if self._current_floor == -1:
+            mapp = Grimmsville(30, 30, [monster.UptierShopNPC, monster.MultiplayerItemNPC, monster.ItemEnhancerNPC] + [monster.GrimmsvilleSkeleton] * 12)
+            w,h=30,30
+        elif self._current_floor == 0:
+            mapp = Town(30, 30, [monster.MailmanNPC, monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC])
             w,h=30,30
         elif self._current_floor == 10:
             mapp = TheSneakArena(30, 30)
@@ -93,7 +96,7 @@ class MapDirector:
         else:
             mapp, w, h = self._main_dungeon_map(level)
 
-        if self._current_floor == 0 and self._item_world is None:
+        if self._current_floor <= 0 and self._item_world is None:
             return mapp
 
         difficulty = self.difficulty()
@@ -167,8 +170,20 @@ class MapDirector:
         settings.set_item_world(None)
         self.move_to_floor(0)
 
+    def return_to_grimmsville(self):
+        # Replenish HP and SP
+        player = settings.current_map.entity('PLAYER')
+        max_hp = player.component('Stats').get_value('max_hp')
+        max_sp = player.component('Stats').get_value('max_sp')
+        player.component('Stats').set_base('cur_hp', max_hp)
+        player.component('Stats').set_base('cur_sp', max_sp)
+        # Return to town
+        settings.set_item_world(None)
+        self.move_to_floor(-1)
+
     def move_to_floor(self, floor):
-        settings.message_panel.info("You move to floor {}".format(floor))
+        if floor > 0:
+            settings.message_panel.info("You move to floor {}".format(floor))
         self._current_floor = floor
         self._change_floor()
 
@@ -211,6 +226,8 @@ class MonsterDirector:
         55: [
             monster.Inferno,
             monster.Beehive,
+            monster.Lavamoeba,
+            monster.Witchdoctor,
         ],
     }
 
@@ -319,6 +336,8 @@ class LootDirector:
         loot.AtkMod,
         loot.DfnMod,
         loot.ItlMod,
+        loot.MaxHPMod,
+        loot.MaxSPMod,
         # loot.SpdMod,
         # loot.HitMod,
         loot.MeleeLifeDrainMod,
@@ -343,19 +362,32 @@ class LootDirector:
         loot.FireResistanceMod,
         loot.IceResistanceMod,
         loot.PhysicalResistanceMod,
-        loot.SuddenDeathMod,
         loot.MindchillMod,
         loot.StupefyMod,
         loot.StrideMod,
-        loot.WillpowerMod,
-        loot.BrutalStrengthMod,
+        loot.CoupDeGraceMod,
+        loot.SurvivalTechniquesMod,
+    ])
+
+    skull = set([
+        loot.CharredSkull,
+    ])
+
+    gville_portal = set([
+        loot.GrimmsvillePortal,
+    ])
+
+    multiplayer = set([
+        loot.CurseBees,
     ])
 
     rare = set([
-        loot.CharredSkull,
         loot.ToxicForceMod,
         loot.ToxicPowerMod,
         loot.RampageMod,
+        loot.SuddenDeathMod,
+        loot.WillpowerMod,
+        loot.BrutalStrengthMod,
     ])
 
     def __init__(self):
@@ -373,10 +405,14 @@ class LootDirector:
     def ground_loot(self, level):
         roll = random.randint(0,500)
         if roll < 5:
+            return random.choice(list(LootDirector.skull))
+        if roll < 8:
+            return random.choice(list(LootDirector.gville_portal))
+        if roll < 10:
             return random.choice(list(LootDirector.rare))
         elif roll < 50:
             return loot.Healing.generator(tier=settings.loot_tier)
-        elif roll < 100:
+        elif roll < 110:
             return loot.Refreshing.generator(tier=settings.loot_tier)
         elif roll < 150:
             return loot.TownPortal

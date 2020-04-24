@@ -8,7 +8,9 @@ import json
 from entitylistview import EntityListView
 
 class Map:
-    def __init__(self, map_group=None, turn_limit=None, can_escape=True):
+    def __init__(self, map_group=None, turn_limit=None, can_escape=True, floor_colour=tcod.gray, wall_colour=tcod.white):
+        self._floor_colour = floor_colour
+        self._wall_colour = wall_colour
         self._turn_limit = turn_limit
         self._map_group = map_group
         self._can_save = False
@@ -90,14 +92,17 @@ class Map:
         ents_at_pos = self.entities().at_position(pos).with_all_components('Descendable')
         return self._terrain[y][x] == '>' or (ents_at_pos.size() > 0 and ents_at_pos.where(lambda e : e.component('Descendable').can_descend()))
 
-    def render(self, console, origin=(0,0)):
+    def render(self, console, origin=(0,0), override_colour=None):
         x, y = origin
         for row in self._terrain:
             for tile in row:
                 fg_changed = False
                 old_fg = console.default_fg
                 if tile == '.':
-                    console.default_fg = tcod.gray
+                    console.default_fg = override_colour or self._floor_colour
+                    fg_changed = True
+                elif tile == '#':
+                    console.default_fg = override_colour or self._wall_colour
                     fg_changed = True
                 console.print_(x=x, y=y, string=tile)
                 if self._position_threatened((x - origin[0], y - origin[1])):
@@ -182,7 +187,7 @@ class Map:
 
 class Cave(Map):
     def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True):
-        super().__init__(map_group, turn_limit, can_escape=can_escape)
+        super().__init__(map_group, turn_limit, can_escape=can_escape, wall_colour=tcod.darker_orange)
         self._terrain = [['.' if random.randint(0, 2) == 0 else '#' for x in range(width)] for y in range(height)]
         s_x, s_y = random.randint(0, width-1), random.randint(0, height-1)
         while self._terrain[s_y][s_x] == '#':
@@ -246,7 +251,6 @@ class Rooms(Map):
 
         (s_x, s_y, s_w, s_h) = rooms[random.randint(0, len(rooms)-1)]
         self._terrain[random.randint(s_y, s_y+s_h)][random.randint(s_x, s_x+s_w)] = '>'
-
 
 class Grid(Map):
     def _get_door_pos(self, direction, xx, yy, room_size):
@@ -610,3 +614,73 @@ class Ring(Map):
         self._draw_room(width, height, room_size)
         self._draw_corridor(width, height, room_size, ring_offset, ring_thickness)
         self._place_stairs(width, height)
+
+class Checkerboard(Map):
+    def _place_stairs(self, width, height):
+        stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        while self._terrain[stairs_y][stairs_x] == '#':
+            stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        self._terrain[stairs_y][stairs_x] = '>'
+
+    def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True):
+        import util
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
+        self._terrain = [['.' if (x + y) % 2 == 0 else '#' for x in range(width)] for y in range(height)]
+        for x in range(0, width):
+            self._terrain[0][x] = '#'
+            self._terrain[height-1][x] = '#'
+        for y in range(0, width):
+            self._terrain[y][0] = '#'
+            self._terrain[y][width-1] = '#'
+        self._place_stairs(width, height)
+
+class Posts(Map):
+    def _place_stairs(self, width, height):
+        stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        while self._terrain[stairs_y][stairs_x] == '#':
+            stairs_x, stairs_y = random.randint(0, width-1), random.randint(0, height-1)
+        self._terrain[stairs_y][stairs_x] = '>'
+
+    def __init__(self, width, height, map_group=None, inverted=False, turn_limit=None, can_escape=True):
+        import util
+        super().__init__(map_group, turn_limit, can_escape=can_escape)
+        a = '.' if not inverted else '#'
+        b = '#' if not inverted else '.'
+        self._terrain = [[a if y % 2 == 0 else b if x % 2 == 0 else a for x in range(width)] for y in range(height)]
+        for x in range(0, width):
+            self._terrain[0][x] = b
+            self._terrain[height-1][x] = b
+        for y in range(0, width):
+            self._terrain[y][0] = b
+            self._terrain[y][width-1] = b
+        self._place_stairs(width, height)
+
+class Grimmsville(Map):
+    def _building(self, x, y, w, h):
+        for xx in range(x, x+w):
+            for yy in range(y, y+h):
+                self._terrain[yy][xx] = '#'
+
+    def __init__(self, width, height, residents, map_group=None, turn_limit=None, can_escape=True):
+        super().__init__(map_group, turn_limit, can_escape=can_escape, wall_colour=tcod.dark_red, floor_colour=tcod.darkest_orange)
+        self._can_save = True
+        self._terrain = [['.' for x in range(width)] for y in range(height)]
+        x, y = width // 2, height // 2
+        self._terrain[y][x] = '>'
+
+        buildings = [
+            (1, 1, 10, 4),
+            (width-12, height-5, 8, 4),
+            (width-5, height-9, 4, 8),
+            (1, 6, 4, 10),
+            (width-10, 6, 4, 8),
+            (1, height-7, 7, 6),
+        ]
+        for x, y, w, h in buildings:
+            self._building(x, y, w, h)
+
+        for generator in residents:
+            ent = generator((random.randint(3, width-3),random.randint(3, height-3)))
+            x, y = self.random_passable_position_for(ent)
+            ent.component('Position').set(x, y)
+            self.add_entity(ent)

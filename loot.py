@@ -39,6 +39,17 @@ def TownPortal(position):
         'TownPortal': entity.Component()
     }, ttype='TownPortal')
 
+def GrimmsvillePortal(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='$', colour=tcod.orange),
+        'Item': entity.Item("Grimmsville portal", 'Takes you to Grimmsville, city of skeletons'),
+        'Usable': entity.ConsumeAfter(entity.ReturnToGrimmsville()),
+        'TownPortal': entity.Component() # do we need this?
+    }, ttype='GrimmsvillePortal')
+
 class Healing:
     base_stats = {
         'max_hp': 175,
@@ -86,6 +97,26 @@ class Refreshing:
                 'Usable': entity.ConsumeAfter(entity.Refresh(entity.TargetUser()))
             }, ttype='Refreshing_'+str(tier))
         return gen
+
+def ItemLeveler10(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='+', colour=tcod.green),
+        'Item': entity.Item("Item leveler 10", 'Levels a target item 10 times'),
+        'Usable': entity.LevelItem(10),
+    }, ttype='ItemLeveler10')
+
+def ItemLeveler25(position):
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='+', colour=tcod.orange),
+        'Item': entity.Item("Item leveler 25", 'Levels a target item 25 times'),
+        'Usable': entity.LevelItem(25),
+    }, ttype='ItemLeveler25')
 
 ##################################################### EQUIPMENT
 
@@ -678,10 +709,11 @@ def SummonThunderTotem(position):
         .with_sp_cost(5)
     }, ttype='SummonThunderTotem')
 
+##################################################### MODS
 def AtkMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'atk': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Stats': entity.Stats({'atk': 75}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('ATK up', 'Provides a boost in ATK to the attached item'),
@@ -691,7 +723,7 @@ def AtkMod(position):
 def DfnMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'dfn': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Stats': entity.Stats({'dfn': 75}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('DFN up', 'Provides a boost in DFN to the attached item'),
@@ -701,7 +733,7 @@ def DfnMod(position):
 def ItlMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'itl': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Stats': entity.Stats({'itl': 75}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('ITL up', 'Provides a boost in ITL to the attached item'),
@@ -711,7 +743,7 @@ def ItlMod(position):
 def ResMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'res': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Stats': entity.Stats({'res': 75}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('RES up', 'Provides a boost in RES to the attached item'),
@@ -721,7 +753,7 @@ def ResMod(position):
 def SpdMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'spd': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Stats': entity.Stats({'spd': 75}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('SPD up', 'Provides a boost in SPD to the attached item'),
@@ -731,7 +763,7 @@ def SpdMod(position):
 def HitMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'hit': 12}, stat_inc_per_level=LEVEL_PC_STAT_INC),
+        'Stats': entity.Stats({'hit': 75}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('HIT up', 'Provides a boost in HIT to the attached item'),
@@ -1061,10 +1093,10 @@ def CoupDeGraceMod(position):
 def SurvivalTechniquesMod(position):
     x, y = position
     return entity.Entity(str(uuid.uuid4()), components={
-        'Stats': entity.Stats({'res_per_debuff_pc_penalty': 10, 'def_per_debuff_pc_penalty': 10}),
+        'Stats': entity.Stats({'res_per_debuff_pc_bonus': 15, 'dfn_per_debuff_pc_bonus': 15}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='*', colour=tcod.dark_green),
-        'Item': entity.Item('Survival techniques', 'Your RES and DEF increase by 10% per negative status on you'),
+        'Item': entity.Item('Survival techniques', 'Your RES and DEF increase by 15% per negative status on you'),
         'Mod': entity.Mod(),
     }, ttype='SurvivalTechniquesMod')
 
@@ -1073,7 +1105,7 @@ def MaxHPMod(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'max_hp': 100}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='*', colour=tcod.darker_peach),
+        'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('Max HP up', 'Provides a boost in max HP to the attached item'),
         'Mod': entity.Mod(),
     }, ttype='MaxHPMod')
@@ -1083,7 +1115,7 @@ def MaxSPMod(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'max_sp': 15}, stat_inc_per_level=0.05),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='*', colour=tcod.darker_peach),
+        'Render': entity.Render(character='*', colour=tcod.peach),
         'Item': entity.Item('Max SP up', 'Provides a boost in max SP to the attached item'),
         'Mod': entity.Mod(),
     }, ttype='MaxSPMod')

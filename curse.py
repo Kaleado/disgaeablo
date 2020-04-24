@@ -37,7 +37,6 @@ def CurseBees(position: entity.Position):
                 beehive.component('Position').set(x, y)
                 curse_map.add_entity(beehive)
             curse_map.commit()
-            print("entities", curse_map._can_escape)
             return curse_map
 
     import monster, uuid
@@ -47,5 +46,5 @@ def CurseBees(position: entity.Position):
         'Position': entity.Position(x, y),
         'Render': entity.Render(character='?', colour=tcod.yellow),
         'Usable': entity.ConsumeAfter(_CurseBees()),
-        'Item': entity.Item("Curse of bees", 'Network item; Force a player to encounter a floor full of bees'),
+        'Item': entity.Item("Curse of bees", 'Network item; force a player to encounter a floor full of bees'),
     }, ttype='CurseBees')

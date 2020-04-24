@@ -137,7 +137,7 @@ class MapPanel(Panel):
             xx, yy = ent.component('Position').get()
             ent_origin = (xx + x, yy + y)
             ent.component('Render').render(ent, console, ent_origin)
-        self._map.render(console, origin)
+        self._map.render(console, origin, None if self._has_focus else tcod.gray)
         self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
                             .transform(render_entity)
         self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
@@ -385,7 +385,6 @@ class MessagePanel(Panel):
            if event_data.type == "KEYDOWN" and event_data.sym == tcod.event.K_s:
                self._scroll_y = min(self._scroll_y + 1, self._max_scroll())
 
-
 class EquipmentSlotPanel(Panel):
     def __init__(self, entity_ident, mapp):
         super().__init__()
@@ -533,7 +532,6 @@ class ChooseModSlotPanel(ModSlotPanel):
                return
            elif event_data.sym == tcod.event.K_ESCAPE:
                self._cancel_selection(menu)
-
 
 class ChooseEquipmentSlotPanel(EquipmentSlotPanel):
     def _finalise_selection(self, menu):
@@ -799,6 +797,19 @@ class StatsPanel(Panel):
         super().__init__()
         self._mapp = mapp
         self._entity_ident = entity_ident
+        self._page = 0
+
+    def _keys(self, entity):
+        import entity as entity_module
+        stats = entity.component('Stats')
+        all_stats = entity_module.Stats.all_stats - \
+            entity_module.Stats.primary_stats - \
+            entity_module.Stats.cur_stats - \
+            entity_module.Stats.resistance_stats - \
+            set(['level', 'max_exp'])
+        resistances = entity_module.Stats.resistance_stats
+        shown_stats = all_stats - set([s for s in all_stats if stats.get(s) == 0])
+        return ['atk', 'dfn', 'itl', 'res', 'spd', 'hit'] + sorted(list(resistances)) + [None] * 2 + sorted(list(shown_stats))
 
     def set_map(self, mapp):
         self._mapp = mapp
@@ -819,6 +830,8 @@ class StatsPanel(Panel):
         return self._mapp.entity(self._entity_ident)
 
     def _render(self, console, origin):
+        import entity as entity_module
+        page = self._page
         x, y = origin
         console.print_(x=x, y=y, string="Statistics")
         y = y + 1
@@ -826,7 +839,7 @@ class StatsPanel(Panel):
         if entity is None:
             return
         stats = entity.component('Stats')
-        keys = ['atk', 'dfn', 'itl', 'res', 'spd', 'hit']
+        keys = self._keys(entity)
         console.print_(x=x, y=y, string=self._name(entity))
         y = y + 1
         console.print_(x=x, y=y, string="Level : " + abbrev(stats.get_value('level')))
@@ -850,11 +863,25 @@ class StatsPanel(Panel):
         console.print_(x=x, y=y, string="SP : " + abbrev(stats.get_value('cur_sp')) + " / " + abbrev(stats.get_value('max_sp')))
         console.default_fg = old_fg
         y = y + 1
-        for key in keys:
-            label = key.upper()
-            value = stats.get_value(key)
-            console.print_(x=x, y=y, string=label + ": " + abbrev(value))
+        for key in keys[(page*6):(page*6+6)]:
+            if key is not None:
+                label = key.upper()
+                value = stats.get_value(key)
+                console.print_(x=x, y=y, string=label + ": " + abbrev(value))
             y = y + 1
+
+    def handle_event(self, event, menu):
+        import entity as entity_module
+        if not self._has_focus:
+            return False
+        event_type, event_data = event
+        if event_type == 'TCOD' and event_data.type == 'KEYDOWN' and self._get_entity() is not None:
+            if event_data.sym in [tcod.event.K_KP_4, tcod.event.K_j]:
+                self._page = max(self._page-1, 0)
+            elif event_data.sym in [tcod.event.K_KP_6, tcod.event.K_l]:
+                self._page = min(self._page+1, math.ceil(len(self._keys(self._get_entity()))/6)-1)
+        return True
+
 
 class EntityStatsPanel(StatsPanel):
     def __init__(self, entity=None):
