@@ -28,11 +28,11 @@ settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
 settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.GrimmsvillePortal((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.AtkMod((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.ItemLeveler10((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.ItemLeveler25((0,0)))
-settings.current_map.entity('PLAYER').component('Inventory').add(loot.CurseBees((0,0)))
+# settings.current_map.entity('PLAYER').component('Inventory').add(loot.GrimmsvillePortal((0,0)))
+# settings.current_map.entity('PLAYER').component('Inventory').add(loot.AtkMod((0,0)))
+# settings.current_map.entity('PLAYER').component('Inventory').add(loot.ItemLeveler10((0,0)))
+# settings.current_map.entity('PLAYER').component('Inventory').add(loot.ItemLeveler25((0,0)))
+# settings.current_map.entity('PLAYER').component('Inventory').add(loot.CurseBees((0,0)))
 
 try:
     settings.root_menu.run(settings.root_console)
