@@ -52,6 +52,7 @@ def CurseBees(position: entity.Position):
 def CurseMages(position: entity.Position):
     class _CurseMages(Curse):
         def generate_map(self, entity: entity.Entity, user_entity: entity.Entity, mapp: map.Map, menu: panel.Menu):
+            import settings
             difficulty = user_entity.stat('level')
             curse_map = map.Posts(30, 30, can_escape=False)
             for _ in range(5):

@@ -341,6 +341,7 @@ class LootDirector:
         loot.LightningBreath,
         loot.StaticShock,
         loot.Combustion,
+        loot.SummonThunderTotem,
     ])
 
     support_skills = set([
@@ -375,7 +376,6 @@ class LootDirector:
         loot.FireDamageMod,
         loot.IceDamageMod,
         loot.PhysicalDamageMod,
-        loot.BloodMagicMod,
         loot.AssaultMod,
         loot.BlazeMod,
         loot.EnergisingColdMod,
@@ -403,6 +403,7 @@ class LootDirector:
 
     multiplayer = set([
         loot.CurseBees,
+        loot.CurseMages,
     ])
 
     rare = set([
@@ -412,6 +413,8 @@ class LootDirector:
         loot.SuddenDeathMod,
         loot.WillpowerMod,
         loot.BrutalStrengthMod,
+        loot.ItemLeveler10,
+        loot.BloodMagicMod,
     ])
 
     def __init__(self):
@@ -430,9 +433,9 @@ class LootDirector:
         roll = random.randint(0,500)
         if roll < 5:
             return random.choice(list(LootDirector.skull))
-        if roll < 8:
-            return random.choice(list(LootDirector.gville_portal))
         if roll < 10:
+            return random.choice(list(LootDirector.gville_portal))
+        if roll < 15:
             return random.choice(list(LootDirector.rare))
         elif roll < 50:
             return loot.Healing.generator(tier=settings.loot_tier)
