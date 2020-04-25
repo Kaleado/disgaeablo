@@ -479,6 +479,8 @@ class ModSlotPanel(Panel):
                 console.default_fg = tcod.orange
             if mod is not None:
                 mod.component('Render').render(mod, console, (x, yy+y))
+            else:
+                console.put_char(x=x, y=yy+y, ch=257)
             console.print_(x=x+2, y=yy+y, string="(Empty)" if mod is None else mod.component('Item').name())
             console.default_fg = old_fg
             yy += 1

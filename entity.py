@@ -1206,7 +1206,8 @@ class Render(Component):
         console.default_fg = self.colour()
         self._status_render_idx = -1 if self._status_render_idx >= len(self._status_chars(entity)) else self._status_render_idx
         if self._status_render_idx == -1:
-            console.print_(x=x, y=y, string=self.character())
+            ch = ord(self.character()) if type(self.character()) is str else self.character()
+            console.put_char(x=x, y=y, ch=ch)
         else:
             console.print_(x=x, y=y, string=self._status_chars(entity)[self._status_render_idx])
         self._status_render_idx += 1
