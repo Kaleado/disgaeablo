@@ -23,7 +23,7 @@ def CharredSkull(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='$', colour=tcod.red),
+        'Render': entity.Render(character=262, colour=tcod.red),
         'Item': entity.Item("Charred skull", 'Someone strange might want this...'),
         'CharredSkull': entity.Component()
     }, ttype='CharredSkull')
@@ -270,7 +270,7 @@ def Cleave(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_green),
+        'Render': entity.Render(character=261, colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Cleave', 'Deals high physical damage in an area in front'),
         'Usable': skill_factory.Skill(tags=['skill_cleave', 'attack', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -292,7 +292,7 @@ def Pierce(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_green),
+        'Render': entity.Render(character=261, colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Pierce', 'Deals high physical damage in a line'),
         'Usable': skill_factory.Skill(tags=['skill_pierce', 'attack', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -311,7 +311,7 @@ def Bypass(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 25}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_green),
+        'Render': entity.Render(character=261, colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Bypass', 'Attack in a line whilst moving diagonally forwards'),
         'Usable': skill_factory.Skill(tags=['skill_bypass', 'attack', 'movement', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -329,7 +329,7 @@ def WhipSlash(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 25}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_green),
+        'Render': entity.Render(character=261, colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Crescent slash', 'Deal damage in an arc whilst sidestepping danger'),
         'Usable': skill_factory.Skill(tags=['skill_whip_slash', 'attack', 'movement', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -352,7 +352,7 @@ def Dash(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.green),
+        'Render': entity.Render(character=261, colour=tcod.green),
         'Item': entity.Item('Skill: Dash', 'Cheap mobility skill, good for evading attacks'),
         'Usable': skill_factory.Skill(tags=['skill_dash', 'movement'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -371,7 +371,7 @@ def RollingStab(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_green),
+        'Render': entity.Render(character=261, colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Rolling stab', 'Good for rolling out of the way of incoming attacks'),
         'Usable': skill_factory.Skill(tags=['skill_rolling_stab', 'attack', 'movement', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -389,7 +389,7 @@ def AerialDrop(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'atk': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_green),
+        'Render': entity.Render(character=261, colour=tcod.lighter_green),
         'Item': entity.Item('Skill: Aerial drop', 'Pierce your foes from the sky!'),
         'Usable': skill_factory.Skill(tags=['skill_aerial_drop', 'attack', 'movement', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=5)))\
@@ -407,7 +407,7 @@ def Combustion(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 45}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
+        'Render': entity.Render(character=261, colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Combustion', 'Deals high fire damage in front'),
         'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -427,7 +427,7 @@ def Fire(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
+        'Render': entity.Render(character=261, colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Fire', 'Deals fire damage in a single tile'),
         'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -448,7 +448,7 @@ def PoisonDetonation(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
+        'Render': entity.Render(character=261, colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Poison Detonation', 'Deals a small amount of fire damage, or a massive amount of fire damage on poisoned targets'),
         'Usable': skill_factory.Skill(tags=['spell_fire', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -467,7 +467,7 @@ def Ice(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 27}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
+        'Render': entity.Render(character=261, colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Ice', 'Deals ice damage in a 5-tile line'),
         'Usable': skill_factory.Skill(tags=['spell_ice', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -488,7 +488,7 @@ def Lightning(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 27}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
+        'Render': entity.Render(character=261, colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Lightning', 'Deals lightning damage in a 3x3 area'),
         'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -509,7 +509,7 @@ def LightningBreath(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 35}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
+        'Render': entity.Render(character=261, colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Lightning Breath', 'Deals lightning damage in an area in front'),
         'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -530,7 +530,7 @@ def StaticShock(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 15}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.lighter_purple),
+        'Render': entity.Render(character=261, colour=tcod.lighter_purple),
         'Item': entity.Item('Spell: Static Shock', 'Deals lightning damage with a chance to paralyze for 3 turns'),
         'Usable': skill_factory.Skill(tags=['spell_lightning', 'spell', 'offensive', 'status', 'debuff'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, directional=True)))\
@@ -549,7 +549,7 @@ def Paralyze(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Paralyze', 'Prevents actions for 6 turns'),
         'Usable': skill_factory.Skill(tags=['spell_paralyze', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -568,7 +568,7 @@ def Poison(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Poison', 'Deals 5% of max HP as damage per turn, for 8 turns. Can\'t reduce HP below 5%'),
         'Usable': skill_factory.Skill(tags=['spell_poison', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -587,7 +587,7 @@ def GuardBreak(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Guard Break', 'Lowers DFN by 50% for 12 turns'),
         'Usable': skill_factory.Skill(tags=['spell_guard_break', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -606,7 +606,7 @@ def MindBreak(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Mind Break', 'Lowers RES by 50% for 12 turns'),
         'Usable': skill_factory.Skill(tags=['spell_mind_break', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -625,7 +625,7 @@ def Weaken(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Weaken', 'Lowers ATK by 50% for 12 turns'),
         'Usable': skill_factory.Skill(tags=['spell_weaken', 'spell', 'debuff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -641,7 +641,7 @@ def Stoneskin(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Stoneskin', 'Boosts DFN by 50% for 40 turns'),
         'Usable': skill_factory.Skill(tags=['spell_stoneskin', 'spell', 'buff', 'status'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=10)))\
@@ -656,7 +656,7 @@ def Invincible(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Invincible', 'Boosts RES by 300% for 4 turns'),
         'Usable': skill_factory.Skill(tags=['spell_invincible', 'spell', 'buff', 'status'])\
         .with_target_mode(entity.TargetUser())\
@@ -671,7 +671,7 @@ def Unstoppable(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Unstoppable', 'Boosts DFN by 300% for 4 turns'),
         'Usable': skill_factory.Skill(tags=['spell_unstoppable', 'spell', 'buff', 'status'])\
         .with_target_mode(entity.TargetUser())\
@@ -687,7 +687,7 @@ def Blink(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Blink', 'Performs a short-range, targeted teleport'),
         'Usable': skill_factory.Skill(tags=['spell_blink', 'spell', 'movement'])\
         .with_target_mode(entity.ExcludeItems(entity.TargetFormation(formation, max_range=5)))\
@@ -701,7 +701,7 @@ def SummonThunderTotem(position):
     return entity.Entity(str(uuid.uuid4()), components={
         'Stats': entity.Stats({'itl': 20}, stat_inc_per_level=LEVEL_PC_STAT_INC),
         'Position': entity.Position(x, y),
-        'Render': entity.Render(character='&', colour=tcod.purple),
+        'Render': entity.Render(character=261, colour=tcod.purple),
         'Item': entity.Item('Spell: Thunder totem', 'Summons a thunder totem to attack enemies in a ring'),
         'Usable': skill_factory.Skill(tags=['spell_summon_thunder_totem', 'spell', 'lightning'])\
         .with_target_mode(entity.TargetFormation(formation, max_range=5))\
