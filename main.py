@@ -20,6 +20,7 @@ settings.current_map._entities = {
     'PLAYER': monster.Player((15, 15))
 }
 
+
 # settings.current_map.add_entity(monster.Witchdoctor.generator()((10,10)))
 # settings.current_map.add_entity(monster.Beehive.generator()((10,10)))
 # settings.current_map.add_entity(ally.Allyslime.generator()((10,10)))

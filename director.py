@@ -21,13 +21,20 @@ class MapDirector:
         if self._current_floor == 10:
             mapp = TheTowerArena(w, h)
         else:
-            roll = random.randint(0,2)
+            mvd = None if random.randint(0, 6) < 4 else random.randint(3, 8)
+            roll = random.randint(0,8)
             if roll in range(0, 1):
-                mapp = Ring(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
+                mapp = Ring(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT, max_view_distance=mvd)
             elif roll in range(1, 2):
-                mapp = Rooms(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
+                mapp = Rooms(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT, max_view_distance=mvd)
+            elif roll in range(2, 3):
+                mapp = Checkerboard(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT, max_view_distance=mvd)
+            elif roll in range(3, 4):
+                mapp = Posts(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT, max_view_distance=mvd)
+            elif roll in range(5, 6):
+                mapp = TwoRooms(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT, max_view_distance=mvd)
             else:
-                mapp = Grid(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT)
+                mapp = Grid(w, h, turn_limit=MapDirector.ITEM_WORLD_TURN_LIMIT, max_view_distance=mvd)
         return mapp, w, h
 
     def _spawn_the_tower(self, level, mapp):
@@ -61,6 +68,17 @@ class MapDirector:
         the_sneak_boss.component('Position').set(x, y)
         mapp.add_entity(the_sneak_boss)
 
+    def _spawn_minotaur(self, level, mapp):
+        import entity
+        minotaur_boss = monster.BossMinotaur.generator(tier=settings.monster_tier, level=level)((15,15))
+        mapp.add_entity(minotaur_boss)
+        for _ in range(3):
+            fake_wall = monster.MinotaurWall((3,3))
+            x, y = mapp.random_passable_position_for(fake_wall)
+            fake_wall.component('Position').set(x, y)
+            fake_wall.set_component('MinotaurWall', entity.Combat())
+            mapp.add_entity(fake_wall)
+
     def _main_dungeon_map(self, level):
         mapp = Grid(30,30)
         w,h=30,30
@@ -75,6 +93,9 @@ class MapDirector:
             w,h=30,30
         elif self._current_floor == 20:
             mapp = BeholderArena(30, 30)
+            w,h=30,30
+        elif self._current_floor == 30:
+            mapp = Labyrinth(30, 30, max_view_distance=5)
             w,h=30,30
         elif self._current_floor % 5 == 0:
             mapp = TwoRooms(30, 30, room_size=9, turn_limit=MapDirector.MAIN_DUNGEON_TURN_LIMIT)
@@ -115,6 +136,9 @@ class MapDirector:
                 return mapp
             elif self._current_floor == 20:
                 self._spawn_ultimate_beholder(level, mapp)
+                return mapp
+            elif self._current_floor == 30:
+                self._spawn_minotaur(level, mapp)
                 return mapp
         else:
             if self._current_floor == 10:

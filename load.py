@@ -70,6 +70,7 @@ def load_map(obj):
     mapp._terrain = obj['terrain']
     mapp._can_save = obj['can_save']
     mapp._can_escape = obj['can_escape']
+    mapp._max_view_distance = obj['max_view_distance']
     mapp._entities = {}
     for (k, v) in obj['entities'].items():
         mapp._entities[k] = load_entity(v)

@@ -48,3 +48,26 @@ def CurseBees(position: entity.Position):
         'Usable': entity.ConsumeAfter(_CurseBees()),
         'Item': entity.Item("Curse of bees", 'Network item; force a player to encounter a floor full of bees'),
     }, ttype='CurseBees')
+
+def CurseMages(position: entity.Position):
+    class _CurseMages(Curse):
+        def generate_map(self, entity: entity.Entity, user_entity: entity.Entity, mapp: map.Map, menu: panel.Menu):
+            difficulty = user_entity.stat('level')
+            curse_map = map.Posts(30, 30, can_escape=False)
+            for _ in range(5):
+                mage = monster.Mage.generator(tier=min(5, settings.monster_tier+1), level=difficulty)((0,0))
+                x, y = curse_map.random_passable_position_for(mage)
+                mage.component('Position').set(x, y)
+                curse_map.add_entity(mage)
+            curse_map.commit()
+            return curse_map
+
+    import monster, uuid
+    x, y = position
+    return entity.Entity(str(uuid.uuid4()), components={
+        'Stats': entity.Stats({}, stat_inc_per_level=loot.LEVEL_PC_STAT_INC),
+        'Position': entity.Position(x, y),
+        'Render': entity.Render(character='?', colour=tcod.blue),
+        'Usable': entity.ConsumeAfter(_CurseMages()),
+        'Item': entity.Item("Curse of mages", 'Network item; force a player to encounter a floor with 5 uptiered mages'),
+    }, ttype='CurseMages')

@@ -48,6 +48,7 @@ class Menu:
         render_tick = 0
         while not self._has_resolved:
             console.clear()
+            handled = False
             for origin, panel in self._panels.values():
                 panel.render(console, origin)
             if self._repositioning_panels:
@@ -56,6 +57,15 @@ class Menu:
             for event in tcod.event.wait(timeout=0.2):
                 if event.type == "KEYDOWN" and event.sym == tcod.event.K_BACKQUOTE:
                     self._repositioning_panels = not self._repositioning_panels
+                if event.type == "KEYDOWN" and event.mod & tcod.event.KMOD_LALT and event.sym in range(tcod.event.K_1, tcod.event.K_9 + 1):
+                    new_index = event.sym - tcod.event.K_0 - 1
+                    if new_index in range(len(self._focus_list)):
+                        key = self._focus_list[self._focus_index]
+                        self._panels[key][1].unfocus()
+                        self._focus_index = new_index
+                        key = self._focus_list[self._focus_index]
+                        self._panels[key][1].focus()
+                        handled = True
                 if event.type == "KEYDOWN" and event.sym == tcod.event.K_TAB:
                     delta = -1 if event.mod & tcod.event.KMOD_LSHIFT else 1
                     key = self._focus_list[self._focus_index]
@@ -65,7 +75,7 @@ class Menu:
                     self._panels[key][1].focus()
                 if event.type == "QUIT":
                     raise entity.GameplayException("User quit")
-                if not self._repositioning_panels:
+                if not self._repositioning_panels and not handled:
                     for _, panel in self._panels.values():
                         panel.handle_event(("TCOD", event), self)
                 else:
@@ -138,10 +148,23 @@ class MapPanel(Panel):
             ent_origin = (xx + x, yy + y)
             ent.component('Render').render(ent, console, ent_origin)
         self._map.render(console, origin, None if self._has_focus else tcod.gray)
-        self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
-                            .transform(render_entity)
-        self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
-                            .transform(render_entity)
+        mvd = self._map.max_view_distance()
+        player = self._map.entity('PLAYER')
+        if mvd is None or player is None:
+            self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
+                                .transform(render_entity)
+            self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
+                                                             .transform(render_entity)
+        else:
+            import util
+            player_pos = player.position().get()
+            self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
+                                .where(lambda e : util.distance(player_pos, e.position().get()) <= mvd)\
+                                .transform(render_entity)
+            self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
+                                                             .where(lambda e : util.distance(player_pos, e.position().get()) <= mvd)\
+                                                             .transform(render_entity)
+            
 
     def _render_look_mode(self, console, origin):
         x, y = origin
@@ -150,10 +173,22 @@ class MapPanel(Panel):
             ent_origin = (xx + x, yy + y)
             ent.component('Render').render(ent, console, ent_origin)
         self._map.render(console, origin)
-        self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
-                            .transform(render_entity)
-        self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
-                            .transform(render_entity)
+        mvd = self._map.max_view_distance()
+        player = self._map.entity('PLAYER')
+        if mvd is None or player is None:
+            self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
+                                .transform(render_entity)
+            self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
+                                                             .transform(render_entity)
+        else:
+            import util
+            player_pos = player.position().get()
+            self._map.entities().with_all_components(['Render', 'Item', 'Position'])\
+                                .where(lambda e : util.distance(player_pos, e.position().get()) <= mvd)\
+                                .transform(render_entity)
+            self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
+                                                             .where(lambda e : util.distance(player_pos, e.position().get()) <= mvd)\
+                                                             .transform(render_entity)
         xx, yy = self._cursor_pos
         console.bg[x+xx][y+yy] = tcod.red
 

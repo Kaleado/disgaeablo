@@ -256,6 +256,23 @@ def MultiplayerItemNPC(position):
         'AI': Shopkeeper()
     }, ttype='MultiplayerItemNPC')
 
+def MinotaurWall(position):
+    x, y = position
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'dfn': 10 ** 9,
+            'res': 10 ** 9,
+            'exp_granted_bonus_multiplier': -1.0,
+        }),
+        'NPC': NPC("Wall"),
+        'Combat': Combat(),
+        'Position': Position(x, y),
+        'Render': Render(character="#", colour=tcod.white),
+        'AI': AI(),
+    }, ttype='MinotaurWall')
 
 class Slime:
     base_stats = {
@@ -294,7 +311,7 @@ class Slime:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='s', colour=Slime.colours[tier-1]),
+                'Render': Render(character=272, colour=Slime.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Slime.names[tier-1]),
                 'AI': ai.AI()\
@@ -345,7 +362,7 @@ class Mage:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='m', colour=Mage.colours[tier-1]),
+                'Render': Render(character=274, colour=Mage.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Mage.names[tier-1]),
                 'AI': ai.AI()\
@@ -1109,6 +1126,7 @@ class Witchdoctor:
             }, ttype='Witchdoctor_'+str(tier))
         return gen
 
+
 # Bosses
 
 class BossTheSneak:
@@ -1460,3 +1478,61 @@ class BossTheTowerMinion:
             }, ttype='BossTheTowerMinion_'+str(tier))
         return gen
 
+class BossMinotaur:
+    base_stats = {
+        'max_hp': round(200 * balance.monster_stat_scale['max_hp']),
+        'cur_hp': round(200 * balance.monster_stat_scale['max_hp']),
+        'max_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'cur_sp': round(40 * balance.monster_stat_scale['max_sp']),
+        'atk': round(60 * balance.monster_stat_scale['atk']),
+        'dfn': round(17 * balance.monster_stat_scale['dfn']),
+        'itl': round(8 * balance.monster_stat_scale['itl']),
+        'res': round(17 * balance.monster_stat_scale['res']),
+        'spd': round(8 * balance.monster_stat_scale['spd']),
+        'hit': round(12 * balance.monster_stat_scale['hit'])
+    }
+
+    names = ['Minotaur', 'Minotaur', 'Minotaur', 'Minotaur', 'Minotaur']
+    colours = [tcod.lighter_orange, tcod.dark_green, tcod.lighter_gray, tcod.silver, tcod.red]
+
+    def TeleportAdds():
+        return skill_factory.Skill()\
+                            .with_target_mode(WithComponents(['MinotaurWall'], TargetEveryone()))\
+                            .teleport_targets_randomly()\
+                            .print_message("You hear the grinding of stone")
+
+    def Smash():
+        formation = Formation(origin=(1,3), formation=[['x','x','x'],
+                                                       ['x','x','x'],
+                                                       ['x','x','x'],
+                                                       ['x','x','x'],
+                                                       ['x','x','x'],
+                                                       ['.','.','.']])
+        return skill_factory.Skill()\
+                            .with_target_mode(NoFriendlyFire(ExcludeItems(TargetFormation(formation, directional=True))))\
+                            .damage_targets("{} smashes {}! ({} HP)")\
+                            .with_damage(damage.MonsterAttackDamage(60, 'phys'))
+
+    def generator(tier=settings.monster_tier, level=1):
+        actual_stats = util.copy_dict(BossMinotaur.base_stats)
+        actual_stats['level'] = level
+        for stat in Stats.primary_stats | Stats.cur_stats - set(['cur_exp']):
+            actual_stats[stat] = (BossMinotaur.base_stats[stat] + BossMinotaur.base_stats[stat] * (tier - 1) * TIER_PC_STAT_INC)
+            actual_stats[stat] += math.floor(LEVEL_PC_STAT_INC * actual_stats[stat]) * (level-1)
+        def gen(position):
+            x, y = position
+            return Entity(str(uuid.uuid4()), components={
+                'Stats': Stats(actual_stats),
+                'Position': Position(x, y),
+                'Render': Render(character='M', colour=BossMinotaur.colours[tier-1]),
+                'Combat': Combat(),
+                'NPC': NPC(BossMinotaur.names[tier-1]),
+                'AI': ai.AI()\
+                .add_skill('Smash', BossMinotaur.Smash(), delay=1)\
+                .add_skill('TeleportAdds', BossMinotaur.TeleportAdds(), delay=1)\
+                .with_state('IDLE', ai.AIState()\
+                            .when_player_within_distance(2, lambda e, ai, ev_d : ai.use_skill(e, 'Smash'))\
+                            .every_n_turns(40, lambda e, ai, ev_d : ai.use_skill(e, 'TeleportAdds'))\
+                            .on_turn_otherwise(lambda e, ai, ev_d : ai.step_towards_player(e)))\
+            }, ttype='BossMinotaur_'+str(tier))
+        return gen

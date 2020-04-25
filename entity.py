@@ -1808,9 +1808,9 @@ class PlayerLogic(Component):
             elif event_data.sym in [tcod.event.K_n]:
                 self._sending_to_net_name = panel.text_prompt("Enter net name for recipient:")
                 return True
-            elif event_data.sym in [tcod.event.K_m]:
-                return self._prompt_for_message()
             elif event_data.sym in [tcod.event.K_t]:
+                return self._prompt_for_message()
+            elif event_data.sym in [tcod.event.K_z]:
                 inventory = entity.component('Inventory')
                 item = inventory.items().as_list()[0].save()
                 receiver = self._prompt_for_net_name()
@@ -1822,7 +1822,7 @@ class PlayerLogic(Component):
                 inventory.remove(inventory.items().as_list()[0])
                 director.net_director.send_events()
                 message_panel.info("Item sent!", tcod.cyan)
-            elif event_data.sym in [tcod.event.K_o]:
+            elif event_data.sym in [tcod.event.K_EQUALS]:
                 import load
                 m = load.load_save_file('save.json')
                 settings.current_map = None
@@ -1839,19 +1839,23 @@ class PlayerLogic(Component):
                 }
                 strg = json.dump(save, open('save.json', mode='w'))
                 message_panel.info("Game saved to save.json", tcod.cyan)
+            elif event_data.sym == tcod.event.K_PERIOD and event_data.mod & tcod.event.KMOD_LSHIFT == 1:
+                if resident_map.is_descendable((x, y)):
+                    director.map_director.descend()
+                return True
             elif event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 target_position = (x, y-1)
                 has_acted = True
-            elif event_data.sym == tcod.event.K_KP_7:
+            elif event_data.sym in [tcod.event.K_KP_7, tcod.event.K_u]:
                 target_position = (x-1, y-1)
                 has_acted = True
-            elif event_data.sym == tcod.event.K_KP_9:
+            elif event_data.sym in [tcod.event.K_KP_9, tcod.event.K_o]:
                 target_position = (x+1, y-1)
                 has_acted = True
-            elif event_data.sym == tcod.event.K_KP_1:
+            elif event_data.sym in [tcod.event.K_KP_1, tcod.event.K_m]:
                 target_position = (x-1, y+1)
                 has_acted = True
-            elif event_data.sym == tcod.event.K_KP_3:
+            elif event_data.sym in [tcod.event.K_KP_3, tcod.event.K_PERIOD]:
                 target_position = (x+1, y+1)
                 has_acted = True
             elif event_data.sym in [tcod.event.K_KP_4, tcod.event.K_j]:
@@ -1868,13 +1872,6 @@ class PlayerLogic(Component):
                 resident_map.entities().with_all_components(['Position', 'Item'])\
                                        .where(lambda itm: itm.component('Position').get() == position.get())\
                                        .transform(lambda itm: inventory.pick_up(entity, itm, resident_map))
-                resident_map.end_turn()
-                return True
-            elif event_data.sym == tcod.event.K_PERIOD and event_data.mod & tcod.event.KMOD_LSHIFT == 1:
-                if resident_map.is_descendable((x, y)):
-                    director.map_director.descend()
-                return True
-            elif event_data.sym == tcod.event.K_PERIOD:
                 resident_map.end_turn()
                 return True
 
