@@ -96,7 +96,7 @@ class WithDeathblow(DamageDecorator):
         if stats is not None and inflicted > 0 and stats.get_value('cur_hp') > 0:
             cur_hp = stats.get_value('cur_hp')
             stats.deal_damage(destination_entity, mapp, cur_hp)
-            mapp.entities().send_event(('DEATHBLOW_DEALT', (self._source_entity, destination_entity)))
+            mapp.entities().send_event(('DEATHBLOW_DEALT', (self._source_entity, destination_entity)), mapp)
             settings.message_panel.info("DEATHBLOW!", tcod.magenta)
             return cur_hp
         return inflicted
@@ -112,7 +112,7 @@ class WithLifeDrain(DamageDecorator):
         stats = self._source_entity.component('Stats')
         healed_amount = math.floor(inflicted * self._heal_proportion)
         stats.apply_healing(self._source_entity, mapp, math.floor(healed_amount))
-        mapp.entities().send_event(('LIFE_DRAINED', (self._source_entity, destination_entity, healed_amount)))
+        mapp.entities().send_event(('LIFE_DRAINED', (self._source_entity, destination_entity, healed_amount)), mapp)
         attacker_name = "Player" if self._source_entity.component('NPC') is None else \
                         self._source_entity.component('NPC').name()
         defender_name = "Player" if destination_entity.component('NPC') is None else \
@@ -132,7 +132,7 @@ class WithSoulDrain(DamageDecorator):
         stats = self._source_entity.component('Stats')
         refreshed_amount = math.floor(inflicted * self._refresh_proportion)
         stats.apply_refreshing(self._source_entity, mapp, math.floor(refreshed_amount))
-        mapp.entities().send_event(('SOUL_DRAINED', (self._source_entity, destination_entity, refreshed_amount)))
+        mapp.entities().send_event(('SOUL_DRAINED', (self._source_entity, destination_entity, refreshed_amount)), mapp)
         attacker_name = "Player" if self._source_entity.component('NPC') is None else \
                         self._source_entity.component('NPC').name()
         defender_name = "Player" if destination_entity.component('NPC') is None else \
