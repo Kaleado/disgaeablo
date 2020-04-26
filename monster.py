@@ -413,7 +413,7 @@ class Golem:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='G', colour=Golem.colours[tier-1]),
+                'Render': Render(character=278, colour=Golem.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Golem.names[tier-1]),
                 'AI': ai.AI()\
@@ -518,7 +518,7 @@ class Spider:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='P', colour=Spider.colours[tier-1]),
+                'Render': Render(character=280, colour=Spider.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Spider.names[tier-1]),
                 'AI': ai.AI()\
@@ -569,7 +569,7 @@ class Eye:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='e', colour=Eye.colours[tier-1]),
+                'Render': Render(character=281, colour=Eye.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Eye.names[tier-1]),
                 'AI': ai.AI()\
@@ -618,7 +618,7 @@ class Wyvern:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='W', colour=Wyvern.colours[tier-1]),
+                'Render': Render(character=286, colour=Wyvern.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Wyvern.names[tier-1]),
                 'AI': ai.AI()\
@@ -673,7 +673,7 @@ class Beholder:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='E', colour=Beholder.colours[tier-1]),
+                'Render': Render(character=283, colour=Beholder.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Beholder.names[tier-1]),
                 'AI': ai.AI()\
@@ -726,7 +726,7 @@ class Giant:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='G', colour=Giant.colours[tier-1]),
+                'Render': Render(character=284, colour=Giant.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Giant.names[tier-1]),
                 'AI': ai.AI()\
@@ -790,7 +790,7 @@ class Gremlin:
             return Entity(str(uuid.uuid4()), components={
                 'Stats': Stats(actual_stats),
                 'Position': Position(x, y),
-                'Render': Render(character='g', colour=Gremlin.colours[tier-1]),
+                'Render': Render(character=285, colour=Gremlin.colours[tier-1]),
                 'Combat': Combat(),
                 'NPC': NPC(Gremlin.names[tier-1]),
                 'AI': ai.AI()\
