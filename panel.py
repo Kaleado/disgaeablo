@@ -189,6 +189,13 @@ class MapPanel(Panel):
             self._map.entities().without_components(['Item']).with_all_components(['Render', 'Position'])\
                                                              .where(lambda e : util.distance(player_pos, e.position().get()) <= mvd)\
                                                              .transform(render_entity)
+
+        player = self._map.entity('PLAYER')
+        passmap = self._map.passability_map_for(player)
+        path = find_path(passmap, player.component('Position').get(), self._cursor_pos)
+        for xx, yy in path:
+            console.bg[x+xx][y+yy] = tcod.orange
+        
         xx, yy = self._cursor_pos
         console.bg[x+xx][y+yy] = tcod.red
 
@@ -217,6 +224,13 @@ class MapPanel(Panel):
                 new_pos = (self._cursor_pos[0]-step, self._cursor_pos[1]+step)
             elif event_data.sym in [tcod.event.K_KP_3]:
                 new_pos = (self._cursor_pos[0]+step, self._cursor_pos[1]+step)
+            elif event_data.sym in [tcod.event.K_g]:
+                # Go to the targeted position
+                settings.message_panel.info("Starting automove...")
+                self._look_mode = False
+                player = self._map.entity('PLAYER')
+                player.component('PlayerLogic').automove_to_destination(self._cursor_pos, player, self._map)
+                return True
 
             w, h = self._map.dimensions()
             if new_pos is not None and new_pos[0] >= 0 and new_pos[1] >= 0 and new_pos[0] < w and new_pos[1] < h:

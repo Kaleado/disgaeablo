@@ -64,6 +64,11 @@ class Map:
     def player_start_position(self, player):
         return self.random_passable_position_for(player)
 
+    def is_threatened(self, position):
+        return position in self._threatened_positions and \
+               self._threatened_positions[position] != {} and \
+               sum([len(delays) for delays in self._threatened_positions[position].values()]) > 0
+
     def add_threatened_positions(self, positions, delay, threatened_by_ident):
         for p in positions:
             if p not in self._threatened_positions:

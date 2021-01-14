@@ -1756,6 +1756,7 @@ class PlayerLogic(Component):
     def __init__(self):
         self._chat_mode = False
         self._sending_to_net_name = None
+        self._automove_destination = None
 
     def _prompt_for_message(self):
         import director, panel
@@ -1776,6 +1777,35 @@ class PlayerLogic(Component):
             message_panel.info("To {}: {}".format(self._sending_to_net_name, message), tcod.cyan)
             return True
         return None
+    
+    def automove_to_destination(self, position, entity, resident_map):
+        """
+        Sets the player to automove to a position.
+        """
+
+        self._automove_destination = position
+        resident_map.end_turn()
+    
+    def cancel_automove(self):
+        self._automove_destination = None
+
+    def _post_turn(self, entity, event, resident_map, target_position, lshift_held):
+        position = entity.component('Position')
+        combat = entity.component('Combat')
+        is_paralyzed = entity.component('Stats').has_status('PARALYZE')
+
+        if self._chat_mode:
+            resident_map.entities()\
+                        .at_position(target_position)\
+                        .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
+            self._chat_mode = False
+            return True
+        elif lshift_held:
+            combat.attack(entity, resident_map, target_position)
+        elif not is_paralyzed and resident_map.is_passable_for(entity, target_position):
+            position.set(target_position[0], target_position[1])
+        resident_map.end_turn()
+        return True
 
     def handle_event(self, entity, event, resident_map):
         import director, load, panel
@@ -1797,7 +1827,26 @@ class PlayerLogic(Component):
         elif event_type == 'ENTITY_KILLED' and event_data == entity:
             print("Player was killed!")
             raise GameplayException("Player died")
+        elif event_type == 'NPC_TURN' and self._automove_destination is not None:
+            # Move to the next tile in the path, unless targeted.
+            is_paralyzed = entity.component('Stats').has_status('PARALYZE')
+            passmap = settings.current_map.passability_map_for(entity)
+            source = entity.component('Position').get()
+            path = find_path(passmap, source, self._automove_destination)
+            
+            if path is None or len(path) <= 1 or is_paralyzed or resident_map.is_threatened(path[1]):
+                settings.message_panel.info('Stopping automove...', tcod.green)
+                self.cancel_automove()
+            else:
+                target_position = path[1]
+                return self._post_turn(entity, event, resident_map, target_position, False)
         elif event_type == 'TCOD' and event_data.type == 'KEYDOWN':
+            # Stop automoving if we are doing so.
+            if self._automove_destination is not None:
+                settings.message_panel.info('Cancelling automove...', tcod.red)
+                self.cancel_automove()
+                return False
+            
             position = entity.component('Position')
             combat = entity.component('Combat')
             is_paralyzed = entity.component('Stats').has_status('PARALYZE')
@@ -1816,7 +1865,7 @@ class PlayerLogic(Component):
             elif event_data.sym in [tcod.event.K_z]:
                 inventory = entity.component('Inventory')
                 item = inventory.items().as_list()[0].save()
-                receiver = self._prompt_for_net_name()
+                receiver = panel.text_prompt("Enter net name for recipient:")
                 director.net_director.queue_events([('NET_RECEIVED_ITEM', {
                     'receiver': receiver,
                     'sender': director.net_director.net_name(),
@@ -1879,16 +1928,5 @@ class PlayerLogic(Component):
                 return True
 
             if has_acted:
-                if self._chat_mode:
-                    resident_map.entities()\
-                                .at_position(target_position)\
-                                .transform(lambda ent: ent.handle_event(('PLAYER_CHAT_WITH', ent.ident()), resident_map))
-                    self._chat_mode = False
-                    return True
-                elif lshift_held:
-                    combat.attack(entity, resident_map, target_position)
-                elif not is_paralyzed and resident_map.is_passable_for(entity, target_position):
-                    position.set(target_position[0], target_position[1])
-                resident_map.end_turn()
-                return True
+                return self._post_turn(entity, event, resident_map, target_position, lshift_held)
         return False
