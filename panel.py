@@ -796,8 +796,8 @@ class ChooseItemPanel(Panel):
         inventory = self._entity.component('Inventory')
         inventory_size = inventory.items().size()
         eligible_items = inventory.items().with_all_components(self._with_all_components).as_list()
+        selected_item = inventory.items().as_list()[self._selection_index]
         if event_type == "TCOD" and event_data.type == "KEYDOWN" and inventory_size > 0:
-            selected_item = inventory.items().as_list()[self._selection_index]
             if event_data.sym in [tcod.event.K_KP_8, tcod.event.K_i]:
                 self._selection_index = max(self._selection_index - 1, 0)
                 return True
@@ -810,6 +810,21 @@ class ChooseItemPanel(Panel):
             elif event_data.sym == tcod.event.K_ESCAPE:
                 menu.resolve()
                 return True
+
+        # Set the help panel text if there is one for this menu.
+        help_panel = menu.panel('HelpPanel')
+        if help_panel is not None:
+            help_panel[1].set_text(selected_item.component('Item').description())
+        
+        # Update the stats and mods panel if necessary.
+        stats_panel = menu.panel('EntityStatsPanel')
+        if stats_panel is not None:
+            stats_panel[1].set_entity(selected_item)
+
+        mods_panel = menu.panel('ModSlotPanel')
+        if mods_panel is not None:
+            mods_panel[1].set_entity(selected_item)
+
         return False
 
     def _render(self, console, origin):
