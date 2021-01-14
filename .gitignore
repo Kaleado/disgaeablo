@@ -9,3 +9,5 @@ build
 htmlcov
 
 __pycache__
+save_error.json
+save.json
