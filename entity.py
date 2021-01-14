@@ -470,9 +470,9 @@ class LevelItem(Usable):
 
     def _choose_item(self, entity):
         if self._levels == 1:
-            title = 'Choose an item to level'
+            title = 'Choose an item to level up once'
         else:
-            title = 'Choose an item to level {} times'.format(self._levels)
+            title = 'Choose an item to level up {} times'.format(self._levels)
         choose_item_menu = Menu({
             'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, [], title=title))
         }, ['ChooseItemPanel'])
@@ -1496,7 +1496,10 @@ class Shopkeeper(Neutral):
 
     def _choose_item_to_buy(self, entity):
         choose_item_menu = Menu({
-            'ChooseItemPanel': ((1,1), ChooseItemPanel(entity, [], title="\"What'll it be today?\" (Each item costs 1 town portal)"))
+            'ChooseItemPanel': ((15,1), ChooseItemPanel(entity, [], title="\"What'll it be today?\" (Each item costs 1 town portal)")),
+            'HelpPanel': ((1,50), TextPanel("Help")),
+            'ModSlotPanel': ((1,14), ModSlotPanel(None)),
+            'EntityStatsPanel': ((1,1), EntityStatsPanel()),
         }, ['ChooseItemPanel'])
         chosen_item = choose_item_menu.run(settings.root_console)
         return chosen_item
