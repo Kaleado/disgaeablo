@@ -1086,7 +1086,7 @@ def CoupDeGraceMod(position):
         'Stats': entity.Stats({'deathblow_multiplier_vs_paralyze': 2}),
         'Position': entity.Position(x, y),
         'Render': entity.Render(character=256, colour=tcod.orange),
-        'Item': entity.Item('Coup de Grace', 'Your deathblow is doubled against paralysed enemies'),
+        'Item': entity.Item('Coup de grace', 'Your deathblow is doubled against paralysed enemies'),
         'Mod': entity.Mod(),
     }, ttype='CoupDeGraceMod')
 
