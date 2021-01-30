@@ -97,7 +97,7 @@ class ThunderTotem:
         def gen(position):
             x, y = position
             return Entity(str(uuid.uuid4()), components={
-                'Stats': Stats(actual_stats),
+                'Stats': Stats(actual_stats).with_status('.TEMPORARY', strength=1, duration=10),
                 'Position': Position(x, y),
                 'Render': Render(character='t', colour=ThunderTotem.colours[tier-1]),
                 'Combat': Combat(),

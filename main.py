@@ -35,7 +35,28 @@ settings.current_map.entity('PLAYER').component('Inventory').add(loot.TownPortal
 # settings.current_map.entity('PLAYER').component('Inventory').add(loot.ItemLeveler25((0,0)))
 # settings.current_map.entity('PLAYER').component('Inventory').add(loot.CurseBees((0,0)))
 
+def load_last_save():
+    """
+    Use the config.json to load the last save, if it exists.
+    """
+
+    settings.root_console.clear()
+    settings.root_console.print_(x=30, y=30, string="Now loading...")
+    tcod.console_flush()  # Show the console.
+
+    import load
+    with open('config.json', mode='r') as f:
+        config = json.load(f)
+
+        last_save = config["last_save"]
+        if last_save is not None:
+            m = load.load_save_file(last_save)
+            if m is not None:
+                settings.current_map = None
+                settings.set_current_map(m)
+
 try:
+    load_last_save()
     settings.root_menu.run(settings.root_console)
 except GameplayException:
     pass

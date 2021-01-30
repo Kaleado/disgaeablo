@@ -487,6 +487,29 @@ class LevelItem(Usable):
         message_panel.info('Your {} glows softly'.format(item.component('Item').name()))
         return True
 
+class RestoreHunger(Usable):
+    """
+    Restores either a flat amount of hunger, or a proportion of maximum hunger.
+    """
+
+    def __init__(self, targeting_mode=TargetUser(), amount=None, proportion=None):
+        """
+        Leave proportion as None if you want to recover a flat amount, or
+        amount as None if you want proportional recovery.
+        """
+        super().__init__(targeting_mode)
+        self._amount = amount
+        self._proportion = proportion
+
+    def use_on_targets(self, entity, user_entity, mapp, targets, menu):
+        stats = user_entity.component('Stats')
+        def replenish_target(target):
+            amount = self._amount or (stats.get_value('max_hunger') * self._proportion)
+            target.component('Stats').restore_hunger(target, mapp, amount)
+        targets[0].transform(replenish_target)
+        return False
+
+
 class Heal(Usable):
     def use_on_targets(self, entity, user_entity, mapp, targets, menu):
         stats = entity.component('Stats')
@@ -636,9 +659,13 @@ class Mod(Component):
         super().__init__()
 
 class Item(Component):
-    def __init__(self, name, description):
+    def __init__(self, name, description, sort_type='etc'):
         self._name = name
         self._description = description
+        self._sort_type = sort_type
+
+    def sort_type(self):
+        return self._sort_type
 
     def description(self):
         return self._description
@@ -761,6 +788,8 @@ class Stats(Component):
         'cur_hp',
         'max_sp',
         'cur_sp',
+        'max_hunger',
+        'cur_hunger',
         'atk',
         'dfn',
         'itl',
@@ -843,7 +872,7 @@ class Stats(Component):
         'POISON',
         'PARALYZE',
         'MIND_BREAK',
-        'GUARD_BREAK',
+        'GUARD_BREAK'
     ])
 
     buffs = set([
@@ -864,7 +893,7 @@ class Stats(Component):
         self._regen_counter = 0
         self._stats = {}
         if stats_gained_on_level is None:
-            stats_gained_on_level = list((Stats.primary_stats - set(['max_sp'])) | Stats.resistance_stats | Stats.damage_stats)
+            stats_gained_on_level = list((Stats.primary_stats - set(['max_sp', 'max_hunger'])) | Stats.resistance_stats | Stats.damage_stats)
         self._stats_gained_on_level = list(stats_gained_on_level)
         self._modifiers = {}
         for stat in Stats.all_stats:
@@ -909,9 +938,21 @@ class Stats(Component):
             dam = damage.WithSoulDrain(dam, souldrain / 100)
         return dam
 
+    def lose_hunger(self, entity, resident_map, amount):
+        new_hunger = self.sub_base('cur_hunger', amount)
+        if new_hunger <= 0:
+            self.set_base('cur_hunger', 0)
+            self.deal_damage(entity, resident_map, -1.0 * new_hunger * balance.hunger_hp_loss * self.get('max_hp'))
+
+    def restore_hunger(self, entity, resident_map, amount):
+        amount = min(math.floor(amount), self.get_value('max_hunger') - self.get_value('cur_hunger'))
+        self.add_base('cur_hunger', amount)
+        hunger_restored_event = ('HUNGER_RESTORED', {'entity': entity, 'amount': amount})
+        resident_map.entities().transform(lambda ent: ent.handle_event(hunger_restored_event, resident_map))
+
     def exp_yield(self):
         multi = 1 + self.get('exp_granted_bonus_multiplier')
-        return multi * math.floor(Stats.EXP_YIELD_SCALE * sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp'])]))
+        return multi * math.floor(Stats.EXP_YIELD_SCALE * sum([self._stats[stat] for stat in Stats.primary_stats - set(['max_hp', 'max_sp', 'max_hunger'])]))
 
     def increase_level(self, num):
         self.add_base('max_exp', num * 90)
@@ -919,8 +960,10 @@ class Stats(Component):
         for stat in self._stats_gained_on_level:
             self.add_base(stat, self._base_stats[stat] * num * self._stat_inc_per_level)
 
-    def grant_exp(self, exp):
+    def grant_exp(self, entity, exp):
         message_panel.info("Gained {} EXP".format(exp), tcod.yellow)
+        exp_gained_event = ('GAINED_EXPERIENCE', {'entity_ident': entity.ident(), "amount": exp})
+        settings.current_map.entities().transform(lambda ent: ent.handle_event(exp_gained_event, settings.current_map))
         self.add_base('cur_exp', exp)
         levels = 0
         while self.get_base('cur_exp') >= self.get_base('max_exp'):
@@ -931,6 +974,10 @@ class Stats(Component):
         if levels > 0:
             message_panel.info("Level up!" + ("" if levels == 1 else " x{}".format(levels)), tcod.yellow)
             message_panel.info("You are now level {}".format(self.get_base('level') + 1), tcod.yellow)
+            for _ in range(levels):
+                leveled_event = ('GAINED_LEVEL', {'entity_ident': entity.ident()})
+                settings.current_map.entities().transform(lambda ent: ent.handle_event(leveled_event, settings.current_map))
+
 
     def _self_poison(self, entity, resident_map):
         ent_name = entity.component('NPC').name() if entity.component('NPC') else 'Player'
@@ -938,13 +985,13 @@ class Stats(Component):
         if self_poison and entity.component('Item') is None:
             if not self.has_status('POISON'):
                 message_panel.info('{} is poisoned!'.format(ent_name))
-            self.inflict_status('POISON', strength=1, duration=5)
+            self.inflict_status(entity, 'POISON', strength=1, duration=5, resident_map=resident_map)
 
     def handle_event(self, entity, event, resident_map):
         event_type, event_data = event
         ent_name = entity.component('NPC').name() if entity.component('NPC') else 'Player'
         removed = []
-        if event_type == 'NPC_TURN':
+        if event_type == 'ENDED_TURN':
             self._self_poison(entity, resident_map)
             sp_regen = self.get('sp_regen')
             hp_regen = self.get('hp_regen')
@@ -1014,6 +1061,9 @@ class Stats(Component):
         elif status == 'UNSTOPPABLE':
             message_panel.info("{} is no longer unstoppable".format(ent_name), colour)
             self.sub_multiplicative_modifier('dfn', 3)
+        elif status == '.TEMPORARY': # Status effects with a leading dot are 'internal'.
+            resident_map.remove_threatened_positions(entity.ident())
+            resident_map.remove_entity(entity.ident())
         else:
             message_panel.info("{} no longer has {}".format(ent_name, status), colour)
 
@@ -1023,7 +1073,11 @@ class Stats(Component):
     def has_status(self, status):
         return status in self._status_effects
 
-    def inflict_status(self, status, strength, duration):
+    def with_status(self, status, strength, duration):
+        self.inflict_status(None, status, strength, duration, None)
+        return self
+
+    def inflict_status(self, entity, status, strength, duration, resident_map):
         abort = status in self._status_effects
         self._status_effects[status] = duration
         if abort:
@@ -1049,28 +1103,43 @@ class Stats(Component):
             self.add_multiplicative_modifier('res', 3)
         if status == 'UNSTOPPABLE':
             self.add_multiplicative_modifier('dfn', 3)
+        
+        # This is because we can use this as a factory method to add this status when the entity is spawned
+        if resident_map is not None:
+            status_gained_event = ('GAINED_STATUS_EFFECT', {'status_effect': status, 'entity_ident': entity.ident()})
+            resident_map.entities().transform(lambda ent: ent.handle_event(status_gained_event, resident_map))
 
     def apply_healing(self, entity, resident_map, amount):
         amount = min(math.floor(amount), self.get_value('max_hp') - self.get_value('cur_hp'))
         self.add_base('cur_hp', amount)
+        healed_event = ('HEALED_HP', {'entity_ident': entity.ident(), 'amount': amount})
+        resident_map.entities().transform(lambda ent: ent.handle_event(healed_event, resident_map))
 
     def apply_refreshing(self, entity, resident_map, amount):
         amount = min(math.floor(amount), self.get_value('max_sp') - self.get_value('cur_sp'))
         self.add_base('cur_sp', amount)
+        refreshed_event = ('REFRESHED_SP', {'entity_ident': entity.ident(), 'amount': amount})
+        resident_map.entities().transform(lambda ent: ent.handle_event(refreshed_event, resident_map))
 
     def consume_sp(self, entity, resident_map, amount):
-        if self.sub_base('cur_sp', amount) <= 0:
-            sp_usage_heals = self.get_value('sp_usage_heals') > 0
-            sp_consumed = min(self._sp, self.get_base('cur_sp'))
-            if sp_usage_heals:
-                self.apply_healing(user_entity, settings.current_map, sp_consumed)
+        initial_sp = self.get_base('cur_sp')
+        sp_usage_heals = self.get_value('sp_usage_heals') > 0
+        sp_consumed = min(amount, initial_sp)
+        self.sub_base('cur_sp', amount)
+        
+        if sp_usage_heals:
+            self.apply_healing(user_entity, settings.current_map, sp_consumed)
+        
+        consumed_event = ('CONSUMED_SP', {'entity_ident': entity.ident(), 'amount': sp_consumed})
+        resident_map.entities().transform(lambda ent: ent.handle_event(consumed_event, resident_map))
 
     def deal_damage(self, entity, resident_map, damage):
+        damage = math.ceil(damage)
         resident_map.entities().transform(lambda ent: ent.handle_event(("DEALT_DAMAGE", (entity, damage)), resident_map))
         player = resident_map.entity('PLAYER')
         if self.sub_base('cur_hp', damage) <= 0:
-            player.component('Stats').grant_exp(self.exp_yield())
-            resident_map.entities().transform(lambda ent: ent.handle_event(("ENTITY_KILLED", entity), resident_map))
+            player.component('Stats').grant_exp(player, self.exp_yield())
+            resident_map.entities().transform(lambda ent: ent.handle_event(("KILLED_ENTITY", entity), resident_map))
             resident_map.remove_entity(entity.ident())
 
     """
@@ -1088,7 +1157,7 @@ class Stats(Component):
                     return self.get('itl')
                 if stat == 'itl' and itl_becomes_atk:
                     return self.get('atk')
-        if stat in ['level', 'cur_exp', 'max_exp', 'cur_hp', 'cur_sp']:
+        if stat in ['level', 'cur_exp', 'max_exp', 'cur_hp', 'cur_sp', 'cur_hunger']:
             return self.get_base(stat)
         boost_stat = self._stats.get('boost_{}'.format(stat))
         boost_factor = (boost_stat if boost_stat is not None else 0) * 1.333
@@ -1198,7 +1267,8 @@ class Render(Component):
         stats = entity.component('Stats')
         if not stats:
             return []
-        return [eff[0] for eff in stats.status_effects()]
+        # Statuses with a leading dot are 'internal'
+        return [eff[0] for eff in stats.status_effects() if eff[0] != '.']
 
     def render(self, entity, console, origin):
         x, y = origin
@@ -1247,8 +1317,9 @@ class ConditionalRender(Render):
 
 
 class Inventory(Component):
-    def __init__(self, items=[]):
+    def __init__(self, items=[], size=20):
         self._items = items
+        self._size = size
 
     def save_subtype_string(self):
         return 'INVENTORY'
@@ -1261,19 +1332,45 @@ class Inventory(Component):
         obj['items'] = save_items()
         return obj
 
+    def size(self):
+        return self._size
+
+    def sort_items(self, category_order: list):
+        """
+        Sort the items in the inventory according to category_order, then by name.
+        """
+
+        def key(item: Entity):
+            c: Item = item.component('Item')
+            return category_order.index(c.sort_type()), c.name()
+        
+        self._items.sort(key=key)
+
     def items(self):
         return EntityListView(self._items)
 
     def add(self, item):
-        self._items.append(item)
+        """
+        Adds an item into the inventory.
+        Returns True if the item was successfully added, False
+        if it wasn't.
+        """
+
+        if len(self._items) + 1 <= self.size():
+            self._items.append(item)
+            return True
+        else:
+            return False
 
     def remove(self, item):
         self._items.remove(item)
 
     def pick_up(self, entity, item, resident_map):
         def pick_up_item(itm):
-            self.add(itm)
-            resident_map.remove_entity(itm.ident())
+            if self.add(itm):
+                resident_map.remove_entity(itm.ident())
+            else:
+                settings.message_panel.info(f"Your inventory is too full to pick up {itm.component('Item').name()}!", colour=tcod.yellow)
         resident_map.entities().with_component('Item').where(lambda itm: itm == item).transform(pick_up_item)
 
     def drop(self, entity, item, resident_map, position):
@@ -1307,25 +1404,44 @@ class EquipmentSlots(Component):
         return self._slots
 
     def equip(self, entity, item_entity, slot, resident_map):
+        """
+        Equips the given item to the given slot.
+        If the equip fails (e.g. the inventory is full),
+        returns False.
+        """
+        
         slot_type, slot_index = slot
         item = item_entity.component('Equipment')
         equipped_item = self._slots[slot_type][slot_index]
-        if equipped_item is not None:
-            self.unequip(entity, equipped_item, slot, resident_map)
-        item.equip_to(item_entity, entity, resident_map)
-        self._slots[slot_type][slot_index] = item_entity
-        inventory = entity.component('Inventory')
-        inventory.remove(item_entity)
+        if equipped_item is None or self.unequip(entity, equipped_item, slot, resident_map):
+            item.equip_to(item_entity, entity, resident_map)
+            self._slots[slot_type][slot_index] = item_entity
+            inventory = entity.component('Inventory')
+            inventory.remove(item_entity)
+            return True
+        else:
+            return False
 
     def unequip(self, entity, item_entity, slot, resident_map):
+        """
+        Unequips the given item from the given slot.
+        If the unequip fails (e.g. the inventory is full),
+        returns False.
+        """
+
         slot_type, slot_index = slot
         item = item_entity.component('Equipment')
+        
         if self._slots[slot_type][slot_index] is None:
-            return
-        self._slots[slot_type][slot_index] = None
-        item.unequip_from(item_entity, entity, resident_map)
+            return False
+        
         inventory = entity.component('Inventory')
-        inventory.add(item_entity)
+        if inventory.add(item_entity) == False:
+            return False
+        else:
+            self._slots[slot_type][slot_index] = None
+            item.unequip_from(item_entity, entity, resident_map)
+            return True
 
     def handle_event(self, entity, event, resident_map):
         for items_in_slot in self._slots.values():
@@ -1389,11 +1505,11 @@ class AI(Component):
     def handle_event(self, entity, event, resident_map):
         event_type, event_data = event
         is_paralyzed = entity.component('Stats').has_status('PARALYZE')
-        if event_type == 'ENTITY_KILLED' and event_data == entity and self._delayed_targets is not None:
+        if event_type == 'KILLED_ENTITY' and event_data == entity and self._delayed_targets is not None:
             targeted_positions = self._delayed_targets[1]
             resident_map.remove_threatened_positions(entity.ident())
             return False
-        if event_type == 'NPC_TURN':
+        if event_type == 'ENDED_TURN':
             if is_paralyzed:
                 return False
             elif self._delayed_attack is not None:
@@ -1698,7 +1814,7 @@ class Slow(AI):
 
     def _handle_event(self, entity, event, resident_map):
         event_type, _ = event
-        if event_type == 'NPC_TURN':
+        if event_type == 'ENDED_TURN':
             if self._ai._delayed_attack is not None:
                 res = self._ai._handle_delayed_attack(entity, resident_map)
                 if res is not None:
@@ -1745,7 +1861,7 @@ class Hostile(AI):
 
     def _handle_event(self, entity, event, resident_map):
         event_type, event_data = event
-        if event_type == 'NPC_TURN':
+        if event_type == 'ENDED_TURN':
             if self._ai_status == 'IDLE':
                 self._handle_idle(entity, event, resident_map)
             elif self._ai_status == 'AGGRO':
@@ -1757,6 +1873,7 @@ class PlayerLogic(Component):
         self._chat_mode = False
         self._sending_to_net_name = None
         self._automove_destination = None
+        self._ignore_damage_when_automoving = False
 
     def _prompt_for_message(self):
         import director, panel
@@ -1778,12 +1895,13 @@ class PlayerLogic(Component):
             return True
         return None
     
-    def automove_to_destination(self, position, entity, resident_map):
+    def automove_to_destination(self, position, entity, resident_map, ignore_damage=False):
         """
         Sets the player to automove to a position.
         """
 
         self._automove_destination = position
+        self._ignore_damage_when_automoving = ignore_damage
         resident_map.end_turn()
     
     def cancel_automove(self):
@@ -1824,22 +1942,24 @@ class PlayerLogic(Component):
             item_ent = load.load_entity(item_obj)
             settings.pending_items_received.append(item_ent)
             return False
-        elif event_type == 'ENTITY_KILLED' and event_data == entity:
+        elif event_type == 'KILLED_ENTITY' and event_data == entity:
             print("Player was killed!")
             raise GameplayException("Player died")
-        elif event_type == 'NPC_TURN' and self._automove_destination is not None:
-            # Move to the next tile in the path, unless targeted.
-            is_paralyzed = entity.component('Stats').has_status('PARALYZE')
-            passmap = settings.current_map.passability_map_for(entity)
-            source = entity.component('Position').get()
-            path = find_path(passmap, source, self._automove_destination)
-            
-            if path is None or len(path) <= 1 or is_paralyzed or resident_map.is_threatened(path[1]):
-                settings.message_panel.info('Stopping automove...', tcod.green)
-                self.cancel_automove()
-            else:
-                target_position = path[1]
-                return self._post_turn(entity, event, resident_map, target_position, False)
+        elif event_type == 'ENDED_TURN':
+            entity.component('Stats').lose_hunger(entity, resident_map, balance.hunger_loss_per_turn)
+            if self._automove_destination is not None:
+                # Move to the next tile in the path, unless targeted.
+                is_paralyzed = entity.component('Stats').has_status('PARALYZE')
+                passmap = settings.current_map.passability_map_for(entity)
+                source = entity.component('Position').get()
+                path = find_path(passmap, source, self._automove_destination)
+                
+                if path is None or len(path) <= 1 or is_paralyzed or (not self._ignore_damage_when_automoving and resident_map.is_threatened(path[1])):
+                    settings.message_panel.info('Stopping automove...', tcod.green)
+                    self.cancel_automove()
+                else:
+                    target_position = path[1]
+                    return self._post_turn(entity, event, resident_map, target_position, False)
         elif event_type == 'TCOD' and event_data.type == 'KEYDOWN':
             # Stop automoving if we are doing so.
             if self._automove_destination is not None:
@@ -1876,9 +1996,12 @@ class PlayerLogic(Component):
                 message_panel.info("Item sent!", tcod.cyan)
             elif event_data.sym in [tcod.event.K_EQUALS]:
                 import load
-                m = load.load_save_file('save.json')
-                settings.current_map = None
-                settings.set_current_map(m)
+                with open('config.json', mode='r+') as f:
+                    config = json.load(f)
+                    save_path = panel.text_prompt("Load game from:", config['last_save'] or "")
+                    m = load.load_save_file(save_path)
+                    settings.current_map = None
+                    settings.set_current_map(m)
             elif event_data.sym in [tcod.event.K_s]:
                 if not settings.current_map.can_save():
                     message_panel.info("You can only save in town", tcod.cyan)
@@ -1889,8 +2012,18 @@ class PlayerLogic(Component):
                     'loot_tier': settings.loot_tier,
                     'monster_tier': settings.monster_tier,
                 }
-                strg = json.dump(save, open('save.json', mode='w'))
-                message_panel.info("Game saved to save.json", tcod.cyan)
+                save_path = None
+                with open('config.json', mode='r+') as f:
+                    config = json.load(f)
+                    save_path = panel.text_prompt("Save game as:", config['last_save'] or "")
+                    if save_path:
+                        strg = json.dump(save, open(save_path, mode='w'))
+                        config['last_save'] = save_path
+                        f.seek(0)
+                        f.truncate()
+                        json.dump(config, f)
+                        message_panel.info(f"Game saved to {save_path}", tcod.cyan)
+
             elif event_data.sym == tcod.event.K_PERIOD and event_data.mod & tcod.event.KMOD_LSHIFT == 1:
                 if resident_map.is_descendable((x, y)):
                     director.map_director.descend()

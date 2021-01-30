@@ -226,10 +226,11 @@ class MapPanel(Panel):
                 new_pos = (self._cursor_pos[0]+step, self._cursor_pos[1]+step)
             elif event_data.sym in [tcod.event.K_g]:
                 # Go to the targeted position
-                settings.message_panel.info("Starting automove...")
+                fragment = " (ignoring damage)" if lshift_held else ""
+                settings.message_panel.info(f"Starting automove{fragment}...")
                 self._look_mode = False
                 player = self._map.entity('PLAYER')
-                player.component('PlayerLogic').automove_to_destination(self._cursor_pos, player, self._map)
+                player.component('PlayerLogic').automove_to_destination(self._cursor_pos, player, self._map, ignore_damage=lshift_held)
                 return True
 
             w, h = self._map.dimensions()
@@ -257,11 +258,12 @@ class MapPanel(Panel):
         return self._map.entities().for_each_until(lambda ent: ent.handle_event(event, self._map))
 
 class TextPanel(Panel):
-    def __init__(self, heading, text="", colour=tcod.white):
+    def __init__(self, heading, text="", colour=tcod.white, wrap_chars=None):
         super().__init__()
         self._heading = heading
         self._text = text
         self._colour = colour
+        self._wrap_chars = wrap_chars
 
     def set_text(self, text, colour=None):
         self._text = text
@@ -274,8 +276,44 @@ class TextPanel(Panel):
         old_fg = console.default_fg
         console.default_fg = self._colour
         x, y = origin
-        console.print_(x=x, y=y+1, string=self._text)
+        words = self._text.split(' ')
+        lines = [self._text]
+
+        if self._wrap_chars is not None:
+            lines = []
+            line = ""
+            for word in words:
+                line += f"{word} "
+                if len(line) >= self._wrap_chars:
+                    lines.append(line)
+                    line = ""
+            if line != "":
+                lines.append(line)
+
+        for dy in range(len(lines)):
+            console.print_(x=x, y=y+1+dy, string=lines[dy])
+        
         console.default_fg = old_fg
+
+class LocationPanel(TextPanel):
+    def __init__(self):
+        super().__init__(heading="")
+
+    def _render(self, console, origin):
+        import director
+        self.set_text(director.map_director.current_map_name())
+        super()._render(console, origin)
+
+class BuffsPanel(TextPanel):
+    def __init__(self, entity_id):
+        super().__init__(heading="Status")
+        self._entity_id = entity_id
+
+    def _render(self, console, origin):
+        entity = settings.current_map.entity(self._entity_id)
+        status_effects = entity.component('Stats').status_effects()
+        self.set_text(" ".join(status_effects))
+        super()._render(console, origin)
 
 class PlaceFormationOnMapPanel(MapPanel):
     _last_position = None
@@ -636,6 +674,12 @@ class InventoryPanel(Panel):
     def set_map(self, mapp):
         self._mapp = mapp
 
+    def sort_inventory(self):
+        import entity
+
+        inventory = settings.current_map.entity(self._entity_ident).component('Inventory')
+        inventory.sort_items(['spell', 'skill', 'consumable', 'mod', 'equipment', 'etc'])
+
     def focus(self):
         super().focus()
         settings.root_menu.panel('EntityStatsPanel')[1].set_entity(None)
@@ -740,6 +784,8 @@ class InventoryPanel(Panel):
                 settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
                 menu.panel('HelpPanel')[1].set_text(item_ent.component('Item').description())
                 return True
+            elif event_data.sym in [tcod.event.K_s, tcod.event.K_KP_MULTIPLY]:
+                self.sort_inventory()
             elif event_data.sym in [tcod.event.K_KP_2, tcod.event.K_k]:
                 self._selection_index = min(self._selection_index + step, inventory_size-1)
                 item_ent = items[self._selection_index] if self._selection_index < len(items) else None
@@ -747,6 +793,14 @@ class InventoryPanel(Panel):
                 settings.root_menu.panel('ModSlotPanel')[1].set_entity(item_ent)
                 menu.panel('HelpPanel')[1].set_text(item_ent.component('Item').description())
                 return True
+            elif event_data.sym in [tcod.event.K_KP_4, tcod.event.K_h]:
+                stats_panel = menu.panel('EntityStatsPanel')
+                if stats_panel is not None:
+                    stats_panel[1].prev_page()
+            elif event_data.sym in [tcod.event.K_KP_6, tcod.event.K_l]:
+                stats_panel = menu.panel('EntityStatsPanel')
+                if stats_panel is not None:
+                    stats_panel[1].next_page()
             elif event_data.sym == tcod.event.K_d:
                 item_ent = inventory.items().as_list()[self._selection_index]
                 position = entity.component("Position").get()
@@ -895,6 +949,12 @@ class StatsPanel(Panel):
     def _get_entity(self):
         return self._mapp.entity(self._entity_ident)
 
+    def next_page(self):
+        self._page = min(self._page+1, math.ceil(len(self._keys(self._get_entity()))/6)-1)
+
+    def prev_page(self):
+        self._page = max(self._page-1, 0)
+
     def _render(self, console, origin):
         import entity as entity_module
         page = self._page
@@ -943,11 +1003,29 @@ class StatsPanel(Panel):
         event_type, event_data = event
         if event_type == 'TCOD' and event_data.type == 'KEYDOWN' and self._get_entity() is not None:
             if event_data.sym in [tcod.event.K_KP_4, tcod.event.K_j]:
-                self._page = max(self._page-1, 0)
+                self.prev_page()
             elif event_data.sym in [tcod.event.K_KP_6, tcod.event.K_l]:
-                self._page = min(self._page+1, math.ceil(len(self._keys(self._get_entity()))/6)-1)
+                self.next_page()
         return True
 
+class Meter(Panel):
+    def __init__(self, heading, cur_value_fn, max_value_fn, width, colour=tcod.white):
+        super().__init__()
+        self._heading = heading
+        self._cur_value_fn = cur_value_fn
+        self._max_value_fn = max_value_fn
+        self._width = width
+        self._colour = colour
+
+    def _render(self, console, origin):
+        old_fg = console.default_fg
+        console.default_fg = self._colour
+        x, y = origin
+        bar_width = math.floor((self._cur_value_fn() / self._max_value_fn()) * self._width)
+        console.print_(x=x, y=y, string=("|" + "=" * (bar_width - 2) + "|") if bar_width == self._width else ("|" + "=" * (bar_width - 1)))
+        if bar_width > len(self._heading) or bar_width == 0:
+            console.print_(x=x, y=y, string=self._heading)
+        console.default_fg = old_fg
 
 class EntityStatsPanel(StatsPanel):
     def __init__(self, entity=None):
@@ -961,10 +1039,20 @@ class EntityStatsPanel(StatsPanel):
         return self._entity
 
 class TextInputPanel(TextPanel):
+    def __init__(self, heading, text="", colour=tcod.white):
+        super().__init__(heading, text, colour)
+        self._ignore_first = True
+
     def handle_event(self, event, menu):
         if not self._has_focus:
             return False
+
         event_type, event_data = event
+        # To ignore the first key event -- prevents the first letter from being whatever key
+        # that triggered the panel        
+        if event_type == 'TCOD' and self._ignore_first:
+            self._ignore_first = False
+            return True
         if event_type == 'TCOD' and event_data.type == 'KEYDOWN' and event_data.sym in [tcod.event.K_ESCAPE]:
             menu.resolve(None)
             return True
@@ -978,9 +1066,9 @@ class TextInputPanel(TextPanel):
             self._text += event_data.text
             return True
 
-def text_prompt(prompt):
+def text_prompt(prompt, text=""):
     text_input_menu = Menu({
-        'TextInputPanel': ((0,0), TextInputPanel(prompt))
+        'TextInputPanel': ((0,0), TextInputPanel(prompt, text))
     }, ['TextInputPanel'])
     result = text_input_menu.run(settings.root_console)
     return result

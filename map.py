@@ -7,6 +7,29 @@ import math
 import json
 from entitylistview import EntityListView
 
+class Vault:
+    """
+    Represents a self-contained, specially-added sub-area inside a map.
+    """
+
+    def __init__(self, difficulty):
+        self._difficulty = difficulty
+
+    def terrain(self):
+        """
+        Returns a 2D list with the terrain for the vault.
+        """
+
+        pass
+
+    def entities(self):
+        """
+        Returns a list of entities in the vault, with positions relative to the
+        top-left corner of the vault.
+        """
+
+        pass
+
 class Map:
     def __init__(self, map_group=None, turn_limit=None, can_escape=True,
                  floor_colour=tcod.gray, wall_colour=tcod.white,
@@ -205,8 +228,41 @@ class Map:
         self._countdown_threatened_positions()
         self._decrement_turn_limit()
         for e in self._entities.values():
-            if e.handle_event(("NPC_TURN", None), self):
+            if e.handle_event(("ENDED_TURN", None), self):
                 return
+
+    def add_vault(self, vault, position):
+        """
+        Inserts the given vault as close to the given position as possible.
+        Note that the vault may be nudged left or up if necessary.
+
+        Returns whether the addition succeeded.
+        """
+
+        terrain = vault.terrain()
+        dimensions = (len(terrain[0]), len(terrain))
+        map_dimensions = self.dimensions()
+        if dimensions[0] > map_dimensions[0] or dimensions[1] > map_dimensions[1]:
+            print("Vault too large to fit in map -- skipping...")
+            return False
+        
+        # Nudge the vault up or left as necessary.
+        position = (min(position[0], map_dimensions[0] - dimensions[0] - 1),\
+                    min(position[1], map_dimensions[1] - dimensions[1] - 1)
+                )
+        
+        print(position)
+
+        for dx in range(dimensions[0]):
+            for dy in range(dimensions[1]):
+                self._terrain[position[1] + dy][position[0] + dx] = \
+                    '>' if self._terrain[position[1] + dy][position[0] + dx] == '>' else terrain[dy][dx]
+
+        for entity in vault.entities():
+            entity.component('Position').add(position[0], position[1])
+            self.add_entity(entity)
+
+        return True
 
 class Cave(Map):
     def __init__(self, width, height, map_group=None, turn_limit=None, can_escape=True, max_view_distance=None):

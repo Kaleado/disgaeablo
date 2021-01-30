@@ -13,6 +13,17 @@ class MapDirector:
         self._current_floor = 0
         self._item_world = None # item_world = none indicates we are in the main dungeon
 
+    def current_map_name(self):
+        if self._current_floor == 0:
+            return "Town"
+        if self._current_floor == -1:
+            return "Grimmsville"
+        if self._item_world is None:
+            return f"Dungeon {self._current_floor}"
+        if self._item_world is not None:
+            item_name = self._item_world.component('Item').name()
+            return f"{item_name} World {self._current_floor}"
+
     def set_item_world(self, item):
         self._item_world = item
 
@@ -86,7 +97,7 @@ class MapDirector:
             mapp = Grimmsville(30, 30, [monster.UptierShopNPC, monster.MultiplayerItemNPC, monster.ItemEnhancerNPC] + [monster.GrimmsvilleSkeleton] * 12)
             w,h=30,30
         elif self._current_floor == 0:
-            mapp = Town(30, 30, [monster.MailmanNPC, monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC])
+            mapp = Town(30, 30, [monster.MailmanNPC, monster.ItemWorldClerkNPC, monster.ModShopNPC, monster.EquipmentShopNPC, monster.SkillShopNPC, monster.FoodShopNPC])
             w,h=30,30
         elif self._current_floor == 10:
             mapp = TheSneakArena(30, 30)
@@ -111,6 +122,22 @@ class MapDirector:
             w,h=30,30
         return mapp, w, h
 
+    def vault(self, difficulty):
+        """
+        Returns a random, difficulty-appropriate vault.
+        """
+        import vault
+
+        vaults = [
+            vault.beehive.BeehiveVault(difficulty),
+            vault.rooms.RoomsAVault(difficulty),
+            vault.rooms.RoomsBVault(difficulty),
+            vault.rooms.RoomsCVault(difficulty),
+            vault.rooms.RoomsDVault(difficulty),
+        ]
+
+        return random.choice(vaults)
+
     def map(self, level):
         if self._item_world is not None:
             mapp, w, h = self._item_world_map(level)
@@ -122,6 +149,14 @@ class MapDirector:
 
         difficulty = self.difficulty()
 
+        # Add vaults
+        n_vaults = random.randint(0, 3)
+        for _ in range(n_vaults):
+            vault = self.vault(difficulty)
+            position = (random.randint(1, w-2), random.randint(1, h-2))
+            mapp.add_vault(vault, position)
+
+        # Add items
         n_items = random.randint(2, 7)
         for _ in range(n_items):
             item = loot_director.ground_loot(level)
@@ -149,6 +184,7 @@ class MapDirector:
             n_monst = random.randint(2, 5)
         else:
             n_monst = random.randint(5, 10)
+        
         monster_set = monster_director.choose_random_monster_set(difficulty, random.randint(1, 3))
         for _ in range(n_monst):
             monst = monster_director.monster_from_set(level, monster_set)
@@ -164,7 +200,7 @@ class MapDirector:
         else:
             import entity
             stats = self._item_world.component('Stats')
-            primaries = entity.Stats.primary_stats - set(['max_hp', 'max_sp'])
+            primaries = entity.Stats.primary_stats - set(['max_hp', 'max_sp', 'max_hunger'])
             tot = sum([stats.get_base(stat) for stat in primaries])
             return 3 + (self._current_floor - 1) * 3 + math.floor(tot / 3)
 
@@ -297,9 +333,15 @@ class MonsterDirector:
 monster_director = MonsterDirector()
 
 class LootDirector:
+
+    food = set([
+        loot.Food
+    ])
+
     items = set([
         loot.Healing,
         loot.Refreshing,
+        loot.Food,
         loot.Sword,
         loot.Staff,
         loot.Cleave,
@@ -443,6 +485,8 @@ class LootDirector:
             return loot.Refreshing.generator(tier=settings.loot_tier)
         elif roll < 150:
             return loot.TownPortal
+        elif roll < 170:
+            return loot.Food
         elif roll < 300:
             return random.choice(list(LootDirector.mods))
         elif roll < 350:

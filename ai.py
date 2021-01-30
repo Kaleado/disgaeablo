@@ -12,7 +12,7 @@ class AIState:
     def handle_event(self, entity, ai, event):
         event_type, event_data = event
         if event_type in self._handlers:
-            if event_type == 'NPC_TURN':
+            if event_type == 'ENDED_TURN':
                 self._turns_in_state += 1
             for handler in self._handlers[event_type]:
                 should_stop = handler(self, entity, ai, event_data)
@@ -36,7 +36,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
     def after_n_turns(self, num_turns, handler, should_stop=True):
@@ -46,7 +46,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
     def when_under_proportion_hp(self, proportion, handler, should_stop=True):
@@ -57,7 +57,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
     def when_target_within_distance(self, distance, handler, should_stop=True):
@@ -67,7 +67,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
     def when_player_within_distance(self, distance, handler, should_stop=True):
@@ -76,7 +76,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
     def when_player_beyond_distance(self, distance, handler, should_stop=True):
@@ -85,7 +85,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
     def when_damaged(self, handler, should_stop=True):
@@ -104,7 +104,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('ENTITY_KILLED', f)
+        self._add_handler('KILLED_ENTITY', f)
         return self
 
     def on_turn_randomly(self, proportion, handler, should_stop=True):
@@ -114,7 +114,7 @@ class AIState:
                 handler(entity, ai, event_data)
                 return should_stop
             return False
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
 
@@ -122,7 +122,7 @@ class AIState:
         def f(self, entity, ai, event_data):
             handler(entity, ai, event_data)
             return should_stop
-        self._add_handler('NPC_TURN', f)
+        self._add_handler('ENDED_TURN', f)
         return self
 
 
@@ -157,16 +157,16 @@ class AI(entity.Component):
         is_paralyzed = entity.component('Stats').has_status('PARALYZE')
 
         # Remove this creature's threatened positions after they die
-        if event_type == 'ENTITY_KILLED' and event_data == entity and self._delayed_targets is not None:
+        if event_type == 'KILLED_ENTITY' and event_data == entity and self._delayed_targets is not None:
             targeted_positions = self._delayed_targets[1]
             resident_map.remove_threatened_positions(entity.ident())
             return False
 
         # Rest the target to None if the target died
-        if event_type == 'ENTITY_KILLED' and event_data.ident() == self._target:
+        if event_type == 'KILLED_ENTITY' and event_data.ident() == self._target:
             self._target = None
 
-        if event_type == 'NPC_TURN':
+        if event_type == 'ENDED_TURN':
             self._handle_passive_attacks(entity, resident_map)
             if is_paralyzed:
                 return False

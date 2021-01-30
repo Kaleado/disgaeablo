@@ -228,6 +228,33 @@ def ItemEnhancerNPC(position):
         'AI': SkullShopkeeper()
     }, ttype='ItemEnhancerNPC')
 
+def FoodShopNPC(position):
+    import director
+    x, y = position
+    items = []
+    for _ in range(8):
+        items += [loot.Food((0,0))]
+    return Entity(str(uuid.uuid4()), components={
+        'Stats': Stats({
+            'level': 999999,
+            'max_hp': 9 * 10 ** 5,
+            'cur_hp': 9 * 10 ** 5,
+            'atk': 9 * 10 ** 9,
+            'dfn': 9 * 10 ** 9,
+            'itl': 9 * 10 ** 9,
+            'res': 9 * 10 ** 9,
+            'spd': 9 * 10 ** 9,
+            'hit': 9 * 10 ** 9,
+        }),
+        'Neutral': Combat(),
+        'Position': Position(x, y),
+        'Render': Render(character=2, colour=tcod.lighter_green),
+        'Combat': Combat(),
+        'NPC': NPC('Sophie, head chef'),
+        'Inventory': Inventory(items),
+        'AI': Shopkeeper()
+    }, ttype='FoodShopNPC')
+
 def MultiplayerItemNPC(position):
     import director
     x, y = position

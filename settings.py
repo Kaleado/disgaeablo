@@ -35,15 +35,22 @@ def set_current_map(mapp):
     root_menu.panel('InventoryPanel')[1].set_map(mapp)
     root_menu.panel('EquipmentSlotPanel')[1].set_map(mapp)
 
+def get_stat(stat):
+    return lambda: current_map.entity('PLAYER').component('Stats').get(stat)
+
 panels = {
-    'MapPanel': ((15,2), MapPanel(current_map)),
-    'StatsPanel': ((1,2), StatsPanel(current_map, 'PLAYER')),
-    'InventoryPanel': ((46,2), InventoryPanel('PLAYER', current_map, root_console)),
-    'EntityStatsPanel': ((1,14), EntityStatsPanel()),
-    'EquipmentSlotPanel': ((46,28), EquipmentSlotPanel('PLAYER', current_map)),
-    'MessagePanel': ((1,34), message_panel),
-    'ModSlotPanel': ((66,28), ModSlotPanel(None)),
-    'HelpPanel': ((1,50), TextPanel("Help"))
+    'MapPanel': ((15,3), MapPanel(current_map)),
+    'StatsPanel': ((1,3), StatsPanel(current_map, 'PLAYER')),
+    'InventoryPanel': ((46,3), InventoryPanel('PLAYER', current_map, root_console)),
+    'EntityStatsPanel': ((1,15), EntityStatsPanel()),
+    'EquipmentSlotPanel': ((46,29), EquipmentSlotPanel('PLAYER', current_map)),
+    'MessagePanel': ((1,35), message_panel),
+    'ModSlotPanel': ((66,29), ModSlotPanel(None)),
+    'HelpPanel': ((1,51), TextPanel("Help", wrap_chars=70)),
+    'BuffsPanel': ((1,55), BuffsPanel('PLAYER')),
+    'LocationPanel': ((1,0), LocationPanel()),
+    'HungerMeterPanel': ((1, 57), Meter('Hunger', get_stat('cur_hunger'), get_stat('max_hunger'), 50, colour=tcod.orange)),
+    'ExperienceMeterPanel': ((1, 58), Meter('Experience', get_stat('cur_exp'), get_stat('max_exp'), 50, colour=tcod.yellow))
 }
 
 focus_list = ['MapPanel', 'InventoryPanel', 'EquipmentSlotPanel', 'MessagePanel', 'StatsPanel', 'ModSlotPanel', 'HelpPanel', 'EntityStatsPanel']

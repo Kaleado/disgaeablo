@@ -22,6 +22,14 @@ monster_stat_scale = {
         'hit': 1.0,
 }
 
+hunger_hp_loss = 0.05
+
+hunger_loss_per_turn = 1
+
+# Multiplied by the ITL on the summon spell to determine
+# the level of the summoned creature.
+summon_itl_scaling = 0.1
+
 monster_level_stat_inc = 2.0
 
 monster_tier_stat_inc = 30
@@ -32,6 +40,8 @@ player_initial_stats = {
     'cur_hp': 200,
     'max_sp': 25,
     'cur_sp': 25,
+    'max_hunger': 1000,
+    'cur_hunger': 1000,
     'atk': 200,
     'dfn': 70,
     'itl': 200,

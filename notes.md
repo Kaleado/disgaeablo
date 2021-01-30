@@ -1,0 +1,32 @@
+# Notes
+
+- **DONE**: Should show slots and description in the shop.
+- **DONE**: Auto-move to destination / stairs.
+- **DONE**: Auto-load from last save.
+- **DONE**: Choose name for save file.
+- **DONE**: Add a readout of your current buffs and debuffs.
+- **DONE**: Add a readout of the current area name in the top left.
+- **DONE**: Add hunger (which doesn't restore after returning to town) and food (which restores hunger).
+- Make items drop at higher levels in more difficult areas.
+- Limit inventory size.
+- **DONE**: Add inventory sorting by category.
+- Add ground effects like burning ground, poisonous flooring, etc.
+- Make different skills have different threat colours to differentiate them, and blink between them when two skills overlap.
+- Add tutorials.
+- **DONE**: Allow paging of statistics panel in inventory.
+- Add more vaults to maps.
+- Add items with unique item worlds.
+- Add more human-readable names for stats.
+- Increase mob variety.
+- Add a stash, possibly shared.
+- Make it somewhat harder to avoid enemy attacks.
+- Enable item use to consume a turn if appropriate.
+- Add a use for SPD and HIT.
+- Make fights less repetitive.
+- Add a mechanic for getting value out of junk items.
+- Add unique items with fixed mods.
+    - Add a difficult, grindy way to remove those mods from unique items and put them elsewhere.
+- Add a rare mod that improves item world leveling.
+- Add FOV.
+- Reduce the size of entity.py.
+- Re-organise code to have subdirectories for loot, monsters, etc. ('content').

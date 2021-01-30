@@ -44,7 +44,7 @@ class Skill(Usable):
                 if user_entity.component('Stats').get('cur_sp') < sp:
                     return False
                 else:
-                    user_entity.component('Stats').sub_base('cur_sp', sp)
+                    user_entity.component('Stats').consume_sp(user_entity, mapp, sp)
                     return use(self, entity, user_entity, mapp, menu)
         self._use = f
         return self
@@ -145,7 +145,7 @@ class Skill(Usable):
                 if entities_hit is not None and entities_hit.size() > 0:
                     has_assault = user_entity.component('Stats').get('assault') > 0
                     if has_assault:
-                        user_entity.component('Stats').inflict_status('ASSAULT', strength=1, duration=3)
+                        user_entity.component('Stats').inflict_status(user_entity, 'ASSAULT', strength=1, duration=3, resident_map=mapp)
             return use_on_targets(self, entity, user_entity, mapp, targets, menu)
         def add_deathblow(d,s,t,i):
             chance = s.stat('deathblow')/100
@@ -164,7 +164,7 @@ class Skill(Usable):
             if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
                 entities_hit, _ = self._target_mode.targets(group='x')
                 if entities_hit is not None and entities_hit.size() > 0:
-                    user_entity.component('Stats').inflict_status(status, strength=1, duration=duration)
+                    user_entity.component('Stats').inflict_status(user_entity, status, strength=1, duration=duration, resident_map=mapp)
             return res
         self._use_on_targets = f
         return self
@@ -187,3 +187,33 @@ class Skill(Usable):
             return res
         self._use_on_targets = f
         return self
+
+    def summon_allies(self, monsters, tier=settings.monster_tier, level=None, predicate=None):
+        import director
+        use_on_targets = self._use_on_targets
+        def f(self, entity, user_entity, mapp, targets, menu):
+            lev = level
+            if lev is None:
+                lev = round(entity.stat('itl') * balance.summon_itl_scaling + entity.stat('level') + user_entity.stat('level'))
+            res = use_on_targets(self, entity, user_entity, mapp, targets, menu)
+            if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
+                _, positions = self._target_mode.targets(group='x')
+                if positions is not None and len(positions) > 0:
+                    for position in positions:
+                        monster = random.choice(monsters)
+                        mon = monster.generator(tier=tier, level=lev)(position)
+                        mapp.add_entity(mon)
+            return res
+        self._use_on_targets = f
+        return self
+    
+    def trigger_skill(self, skill, predicate=None):
+        use_on_targets = self._use_on_targets
+        def f(self, entity, user_entity, mapp, targets, menu):
+            res = use_on_targets(self, entity, user_entity, mapp, targets, menu)
+            if predicate is None or predicate(self, entity, user_entity, mapp, targets, menu):
+                skill.use(entity, user_entity, mapp, menu)
+            return res
+        self._use_on_targets = f
+        return self
+

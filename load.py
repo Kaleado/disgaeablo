@@ -38,7 +38,6 @@ def load_entity(obj):
 
     if obj == 'None':
         return None
-    print(obj)
     generator_type = obj['generator_type']
     try:
         underscore = generator_type.index('_')
@@ -77,8 +76,11 @@ def load_map(obj):
     return mapp
 
 def load_save_file(filename):
-    obj = json.load(open(filename))
-    settings.main_dungeon_lowest_floor = obj['main_dungeon_lowest_floor']
-    settings.loot_tier = obj['loot_tier']
-    settings.monster_tier = obj['monster_tier']
-    return load_map(obj['current_map'])
+    try:
+        obj = json.load(open(filename))
+        settings.main_dungeon_lowest_floor = obj['main_dungeon_lowest_floor']
+        settings.loot_tier = obj['loot_tier']
+        settings.monster_tier = obj['monster_tier']
+        return load_map(obj['current_map'])
+    except:
+        return None
